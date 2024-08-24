@@ -19,6 +19,7 @@ const DrawingCanvas = React.forwardRef<HTMLCanvasElement, DrawingCanvasProps>(
     const [activeTool, setActiveTool] = useState<"draw" | "erase">("draw");
     const [canvasSize, setCanvasSize] = useState({ width, height });
     const [lineWidth, setLineWidth] = useState(3);
+    const [selectedColor, setSelectedColor] = useState("#000000");
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -79,9 +80,10 @@ const DrawingCanvas = React.forwardRef<HTMLCanvasElement, DrawingCanvasProps>(
           ctx.lineCap = "round";
           ctx.lineJoin = "round";
           ctx.lineWidth = lineWidth; // Use initial line width
+          ctx.strokeStyle = selectedColor; // Use selected color
         }
       }
-    }, [lineWidth]);
+    }, [lineWidth, selectedColor]);
 
     useEffect(() => {
       if (typeof ref === "function") {
@@ -113,6 +115,7 @@ const DrawingCanvas = React.forwardRef<HTMLCanvasElement, DrawingCanvasProps>(
         ctx.lineTo(offsetX, offsetY);
         ctx.stroke();
         ctx.lineWidth = lineWidth;
+        ctx.strokeStyle = selectedColor; // Use selected color
       }
     };
 
@@ -176,6 +179,7 @@ const DrawingCanvas = React.forwardRef<HTMLCanvasElement, DrawingCanvasProps>(
         if (ctx) {
           ctx.globalCompositeOperation = "source-over";
           ctx.lineWidth = lineWidth;
+          ctx.strokeStyle = selectedColor;
         }
         setActiveTool("draw");
         setIsErasing(false);
@@ -197,13 +201,15 @@ const DrawingCanvas = React.forwardRef<HTMLCanvasElement, DrawingCanvasProps>(
 
     return (
       <div className="relative w-full h-full">
-        <div className="-mb-2">
+        <div className="-mb-3">
           <ToolBar
             handleDraw={handleDraw}
             handleErase={handleErase}
             handleUndo={handleUndo}
             handleRedo={handleRedo}
             activeTool={activeTool}
+            selectedColor={selectedColor}
+            setSelectedColor={setSelectedColor} // Pass color setter to ToolBar
           />
         </div>
         <canvas

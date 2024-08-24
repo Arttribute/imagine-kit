@@ -8,6 +8,8 @@ interface ToolBarProps {
   handleUndo: () => void;
   handleRedo: () => void;
   activeTool: "draw" | "erase";
+  selectedColor: string;
+  setSelectedColor: (color: string) => void;
 }
 
 const ToolBar: React.FC<ToolBarProps> = ({
@@ -16,6 +18,8 @@ const ToolBar: React.FC<ToolBarProps> = ({
   handleUndo,
   handleRedo,
   activeTool,
+  selectedColor,
+  setSelectedColor,
 }) => {
   return (
     <>
@@ -28,7 +32,16 @@ const ToolBar: React.FC<ToolBarProps> = ({
           marginBottom: "10px",
         }}
       >
-        <div className="rounded-2xl p-1 m-2 bg-gray-100 border-2">
+        <div className="flex rounded-2xl p-1 m-2 bg-gray-100 border-2">
+          <div className="flex items-center p-1">
+            <input
+              type="color"
+              value={selectedColor}
+              onChange={(e) => setSelectedColor(e.target.value)}
+              className=" w-7 h-8"
+              style={{ borderRadius: "100%", border: "none" }}
+            />
+          </div>
           <Button
             onClick={handleDraw}
             variant="ghost"

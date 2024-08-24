@@ -1,10 +1,9 @@
-"use client";
-import DrawingCanvas from "@/components/imaginekit/sketchpad/DrawingCanvas";
+import SketchPad from "@/components/imaginekit/sketchpad/SketchPad";
 
 export default function Home() {
   return (
     <div>
-      <DrawingCanvas />
+      <SketchPad />
     </div>
   );
 }
