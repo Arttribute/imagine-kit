@@ -1,5 +1,7 @@
+"use client";
 import SketchPad from "@/components/imaginekit/sketchpad/SketchPad";
 import FlipCard from "@/components/imaginekit/flipcard/FlipCard";
+import WordArranger from "@/components/imaginekit/wordtiles/arrange/WordArranger";
 export default function Home() {
   const handleButtonClick = () => {
     console.log("Button clicked");
@@ -8,6 +10,10 @@ export default function Home() {
     <div>
       <SketchPad />
       <FlipCard />
+      <WordArranger
+        correctWords={["This", "Is", "A", "Test"]}
+        setIsCorrect={(isCorrect: any) => console.log("Is correct", isCorrect)}
+      />
     </div>
   );
 }
