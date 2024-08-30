@@ -1,6 +1,6 @@
-"use client";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import DraggableItem from "@/components/DraggableItem";
 
 export default function WordSelector({
   words,
@@ -25,7 +25,6 @@ export default function WordSelector({
     if (selectedWords.length === correctWords.length) {
       checkCorrectness();
     }
-    console.log("worng attempts", wrongAttempts);
   }, [selectedWords.length, correctWords.length]);
 
   const handleOptionClick = (word: string) => {
@@ -38,10 +37,9 @@ export default function WordSelector({
 
   const handleSelectedWordClick = (word: string) => {
     setSelectedWords(selectedWords.filter((w) => w !== word));
-    // Reinsert the word back into its original position based on the original 'words' list
-    const newWordOptions = [...wordOptions, word].sort((a, b) => {
-      return words.indexOf(a) - words.indexOf(b);
-    });
+    const newWordOptions = [...wordOptions, word].sort(
+      (a, b) => words.indexOf(a) - words.indexOf(b)
+    );
     setWordOptions(newWordOptions);
     setEmptySlots(emptySlots + 1);
   };
@@ -56,45 +54,47 @@ export default function WordSelector({
   };
 
   return (
-    <>
-      <div className="flex">
-        {selectedWords.map((word, index) => (
-          <Button
-            variant="ghost"
-            key={index}
-            className={` m-1 rounded-md border bg-yellow-50 border px-0.5 py-0.5 ${
-              selectedWords.length === correctWords.length
-                ? isCorrect
-                  ? "border-green-500"
-                  : "border-red-500 animate-shake"
-                : "border-slate-500"
-            } `}
-            onClick={() => handleSelectedWordClick(word)}
-          >
-            <div className="px-4 bg-white border  py-1.5 rounded-sm">
-              <p className="font-medium ">{word}</p>
-            </div>
-          </Button>
-        ))}
-        {Array.from({ length: emptySlots }).map((_, index) => (
-          <div
-            key={index}
-            className="px-4 p-1 m-1 rounded-md border border-slate-500 bg-yellow-50 py-4"
-          ></div>
-        ))}
+    <DraggableItem id="word-selector">
+      <div>
+        <div className="flex">
+          {selectedWords.map((word, index) => (
+            <Button
+              variant="ghost"
+              key={index}
+              className={`m-1 rounded-md border bg-yellow-50 border px-0.5 py-0.5 ${
+                selectedWords.length === correctWords.length
+                  ? isCorrect
+                    ? "border-green-500"
+                    : "border-red-500 animate-shake"
+                  : "border-slate-500"
+              }`}
+              onClick={() => handleSelectedWordClick(word)}
+            >
+              <div className="px-4 bg-white border py-1.5 rounded-sm">
+                <p className="font-medium">{word}</p>
+              </div>
+            </Button>
+          ))}
+          {Array.from({ length: emptySlots }).map((_, index) => (
+            <div
+              key={index}
+              className="px-4 p-1 m-1 rounded-md border border-slate-500 bg-yellow-50 py-4"
+            ></div>
+          ))}
+        </div>
+        <div className="grid grid-cols-12">
+          {wordOptions.map((wordoption: string, index: number) => (
+            <Button
+              key={index}
+              variant="ghost"
+              className="px-6 m-1 rounded-md border bg-slate-50 col-span-3 text-center"
+              onClick={() => handleOptionClick(wordoption)}
+            >
+              <p className="font-medium">{wordoption}</p>
+            </Button>
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-12">
-        {wordOptions.map((wordoption: string, index: number) => (
-          <Button
-            key={index}
-            variant="ghost"
-            className="px-6  m-1 rounded-md border bg-slate-50 col-span-3  text-center"
-            onClick={() => handleOptionClick(wordoption)}
-          >
-            <p className="font-medium">{wordoption}</p>
-          </Button>
-        ))}
-      </div>
-    </>
+    </DraggableItem>
   );
 }
