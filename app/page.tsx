@@ -24,6 +24,7 @@ import ImageDisplayNode from "@/components/imaginekit/display/imageDisplayNode";
 import SketchPadNode from "@/components/imaginekit/sketchpad/SketchPadNode";
 import CompareNode from "@/components/imaginekit/compare/CompareNode";
 import TextInputNode from "@/components/imaginekit/textinput/TextInputNode";
+import TextOutputNode from "@/components/imaginekit/textoutput/TextOutputNode";
 import "reactflow/dist/style.css";
 
 const nodeTypes = {
@@ -34,6 +35,7 @@ const nodeTypes = {
   sketchPad: SketchPadNode,
   compare: CompareNode,
   textInput: TextInputNode,
+  textOutput: TextOutputNode,
 };
 
 const HomePage: React.FC = () => {
@@ -136,6 +138,8 @@ const HomePage: React.FC = () => {
             ? "compare"
             : type === "TextInput"
             ? "textInput"
+            : type === "TextOutput"
+            ? "textOutput"
             : "custom",
         data: {
           type,
@@ -153,6 +157,8 @@ const HomePage: React.FC = () => {
                   { id: "input-0", label: "Input 1", value: "" },
                   { id: "input-1", label: "Input 2", value: "" },
                 ]
+              : type === "TextOutput"
+              ? [{ id: "input-0", label: "Text source", value: "" }]
               : [],
           outputs: [
             {
@@ -263,6 +269,12 @@ const HomePage: React.FC = () => {
           className="p-2 m-2 bg-blue-500 text-white rounded"
         >
           Add Text Input
+        </button>
+        <button
+          onClick={() => addNewNode("TextOutput")}
+          className="p-2 m-2 bg-blue-500 text-white rounded"
+        >
+          Add Text Output
         </button>
         <ReactFlow
           nodes={nodes.map((node) => ({
