@@ -31,23 +31,23 @@ const BaseNode: React.FC<BaseNodeProps> = ({
   const [isEditingName, setIsEditingName] = useState(false);
 
   const handleNameChange = (newName: string) => {
-    onDataChange(id, { name: newName });
+    onDataChange(id, { name: newName, inputs, outputs }); // Keep current inputs and outputs
   };
 
   const handleInputChange = (index: number, value: string) => {
     const newInputs = [...inputs];
     newInputs[index] = { ...newInputs[index], value };
-    onDataChange(id, { inputs: newInputs });
+    onDataChange(id, { name, inputs: newInputs, outputs }); // Preserve outputs
   };
 
   const handleOutputChange = (index: number, value: string) => {
     const newOutputs = [...outputs];
     newOutputs[index] = { ...newOutputs[index], value };
-    onDataChange(id, { outputs: newOutputs });
+    onDataChange(id, { name, inputs, outputs: newOutputs }); // Preserve inputs
   };
 
   return (
-    <div className="border p-4 m-1 rounded-xl shadow-sm bg-white w-80">
+    <div className="border p-4 m-1 rounded-lg shadow-sm bg-white w-96">
       <div className="flex justify-between mb-3">
         {isEditingName ? (
           <input
@@ -76,7 +76,7 @@ const BaseNode: React.FC<BaseNodeProps> = ({
             <Handle
               type="target"
               position={Position.Left}
-              id={`input-${input.id}`}
+              id={input.id}
               style={{
                 marginTop: `10px`,
                 marginLeft: "-18px",
@@ -116,9 +116,9 @@ const BaseNode: React.FC<BaseNodeProps> = ({
             <Handle
               type="source"
               position={Position.Right}
-              id={`output-${output.id}`}
+              id={output.id}
               style={{
-                top: "40",
+                top: "40px",
                 right: "-22px",
                 height: "12px",
                 width: "12px",
