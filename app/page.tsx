@@ -29,6 +29,8 @@ import TextOutputNode from "@/components/imaginekit/textoutput/TextOutputNode";
 import WordSelectorNode from "@/components/imaginekit/wordtiles/select/WordSelectorNode";
 import WordArrangerNode from "@/components/imaginekit/wordtiles/arrange/WordArrangerNode";
 import FlipCardNode from "@/components/imaginekit/flipcard/FlipCardNode";
+import ChatInterfaceNode from "@/components/imaginekit/chat/ChatInterfaceNode";
+import MemoryNode from "@/components/imaginekit/memory/MemoryNode";
 import "reactflow/dist/style.css";
 
 const nodeTypes = {
@@ -44,6 +46,8 @@ const nodeTypes = {
   wordSelector: WordSelectorNode,
   wordArranger: WordArrangerNode,
   flipCard: FlipCardNode,
+  chatInterface: ChatInterfaceNode,
+  memory: MemoryNode,
 };
 
 const HomePage: React.FC = () => {
@@ -76,41 +80,104 @@ const HomePage: React.FC = () => {
 
       if (sourceNode && targetNode) {
         const outputIndex = parseInt(
-          sourceHandle?.replace("output-", "") || "0",
+          sourceNode.type === "memory"
+            ? sourceHandle?.replace("field-", "") || "0"
+            : sourceHandle?.replace("output-", "") || "0",
           10
         );
         const inputIndex = parseInt(
-          targetHandle?.replace("input-", "") || "0",
+          targetNode.type === "memory"
+            ? targetHandle?.replace("field-", "") || "0"
+            : targetHandle?.replace("input-", "") || "0",
           10
         );
 
-        const outputValue = sourceNode.data.outputs?.[outputIndex]?.value || "";
+        const outputValue =
+          sourceNode.type === "memory"
+            ? sourceNode.data.memoryFields?.[outputIndex]?.value || ""
+            : sourceNode.data.outputs?.[outputIndex]?.value || "";
 
-        const newInputs = [...(targetNode.data.inputs || [])].map((input) => ({
-          ...input,
-        }));
+        // Handle MemoryNode specifically
+        if (targetNode.type === "memory") {
+          const newMemoryFields = [...(targetNode.data.memoryFields || [])].map(
+            (field) => ({
+              ...field,
+            })
+          );
 
-        if (newInputs[inputIndex]) {
-          newInputs[inputIndex] = {
-            ...newInputs[inputIndex],
-            value: outputValue,
-          };
+          // Update the connected memory field with the output value
+          if (newMemoryFields[inputIndex]) {
+            newMemoryFields[inputIndex] = {
+              ...newMemoryFields[inputIndex],
+              value: outputValue,
+            };
+          } else {
+            newMemoryFields[inputIndex] = {
+              id: `field-${inputIndex}`,
+              label: `Memory Field ${inputIndex + 1}`,
+              value: outputValue,
+            };
+          }
+
+          handleDataChange(targetNode.id, {
+            ...targetNode.data,
+            memoryFields: newMemoryFields,
+          });
+          console.log("Connected", source, target, sourceHandle, targetHandle);
+          console.log("Output Index", outputIndex);
+          console.log("Output Value", outputValue);
+          console.log("Input Index", inputIndex);
+          console.log("New Memory fields", newMemoryFields);
         } else {
-          newInputs[inputIndex] = {
-            id: `input-${inputIndex}`,
-            value: outputValue,
-          };
+          // Handle normal input nodes
+          const newInputs = [...(targetNode.data.inputs || [])].map(
+            (input) => ({
+              ...input,
+            })
+          );
+
+          if (newInputs[inputIndex]) {
+            newInputs[inputIndex] = {
+              ...newInputs[inputIndex],
+              value: outputValue,
+            };
+          } else {
+            newInputs[inputIndex] = {
+              id: `input-${inputIndex}`,
+              value: outputValue,
+            };
+          }
+
+          handleDataChange(targetNode.id, {
+            ...targetNode.data,
+            inputs: newInputs,
+          });
         }
 
-        handleDataChange(targetNode.id, {
-          ...targetNode.data,
-          inputs: newInputs,
-        });
-        console.log("Connected", source, target, sourceHandle, targetHandle);
-        console.log("Output Index", outputIndex);
-        console.log("Output Value", outputValue);
-        console.log("Input Index", inputIndex);
-        console.log("New Inputs", newInputs);
+        // Update source node when connected to memory node input
+        if (sourceNode.type === "memory") {
+          const newMemoryFields = [...(sourceNode.data.memoryFields || [])].map(
+            (field) => ({
+              ...field,
+            })
+          );
+
+          // Find the memory field associated with the output index and update its label
+          if (newMemoryFields[outputIndex]) {
+            newMemoryFields[outputIndex].label =
+              newMemoryFields[outputIndex].label || "Output Field";
+          }
+
+          handleDataChange(sourceNode.id, {
+            ...sourceNode.data,
+            memoryFields: newMemoryFields,
+          });
+          console.log("Connected", source, target, sourceHandle, targetHandle);
+          console.log("Output Index", outputIndex);
+          console.log("Output Value", outputValue);
+          console.log("Input Index", inputIndex);
+          console.log("New Memory fields", newMemoryFields);
+        }
       }
 
       const newEdge = {
@@ -156,6 +223,10 @@ const HomePage: React.FC = () => {
             ? "wordArranger"
             : type === "FlipCard"
             ? "flipCard"
+            : type === "ChatInterface"
+            ? "chatInterface"
+            : type === "MemoryNode"
+            ? "memory"
             : "custom",
         data: {
           type,
@@ -187,6 +258,11 @@ const HomePage: React.FC = () => {
                   { id: "input-2", label: "Front image", value: "" },
                   { id: "input-3", label: "Back image", value: "" },
                 ]
+              : type === "ChatInterface"
+              ? [
+                  { id: "input-0", label: "User input", value: "" },
+                  { id: "input-1", label: "Bot response", value: "" },
+                ]
               : [],
           outputs: [
             {
@@ -210,6 +286,10 @@ const HomePage: React.FC = () => {
           ],
           instruction: type === "LLMNode" ? "" : undefined,
           botName: type === "LLMNode" ? "Bot Name" : undefined,
+          memoryFields:
+            type === "MemoryNode"
+              ? [{ id: "field-0", label: "Memory Field 1", value: "" }]
+              : undefined,
           imageGenName: type === "ImageGen" ? "Image Generator" : undefined,
           imgDisplayName:
             type === "ImagesDisplay" ? "Image Display" : undefined,
@@ -325,6 +405,18 @@ const HomePage: React.FC = () => {
           className="p-2 m-2 bg-blue-500 text-white rounded"
         >
           Add Flip Card
+        </button>
+        <button
+          onClick={() => addNewNode("ChatInterface")}
+          className="p-2 m-2 bg-blue-500 text-white rounded"
+        >
+          Add Chat Interface
+        </button>
+        <button
+          onClick={() => addNewNode("MemoryNode")}
+          className="p-2 m-2 bg-blue-500 text-white rounded"
+        >
+          Add Memory Node
         </button>
         <ReactFlow
           nodes={nodes.map((node) => ({
