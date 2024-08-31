@@ -20,13 +20,15 @@ import {
 import CustomNode from "../components/CustomNode"; // Existing CustomNode
 import LLMNode from "@/components/tools/nodes/LLMNode"; // Import LLMNode
 import ImageGenerator from "@/components/tools/nodes/ImageGenerator"; // Import ImageGenerator
-import ImageDisplayNode from "@/components/imaginekit/display/imageDisplayNode"; // Import ImageDisplayNode
+import ImageDisplayNode from "@/components/imaginekit/display/ImageDisplayNode"; // Import ImageDisplayNode
+import ImageTilesNode from "@/components/imaginekit/imagetiles/ImageTilesNode";
 import SketchPadNode from "@/components/imaginekit/sketchpad/SketchPadNode";
 import CompareNode from "@/components/imaginekit/compare/CompareNode";
 import TextInputNode from "@/components/imaginekit/textinput/TextInputNode";
 import TextOutputNode from "@/components/imaginekit/textoutput/TextOutputNode";
 import WordSelectorNode from "@/components/imaginekit/wordtiles/select/WordSelectorNode";
 import WordArrangerNode from "@/components/imaginekit/wordtiles/arrange/WordArrangerNode";
+import FlipCardNode from "@/components/imaginekit/flipcard/FlipCardNode";
 import "reactflow/dist/style.css";
 
 const nodeTypes = {
@@ -34,12 +36,14 @@ const nodeTypes = {
   llm: LLMNode,
   imageGen: ImageGenerator,
   imgDisplay: ImageDisplayNode,
+  imageTiles: ImageTilesNode,
   sketchPad: SketchPadNode,
   compare: CompareNode,
   textInput: TextInputNode,
   textOutput: TextOutputNode,
   wordSelector: WordSelectorNode,
   wordArranger: WordArrangerNode,
+  flipCard: FlipCardNode,
 };
 
 const HomePage: React.FC = () => {
@@ -136,6 +140,8 @@ const HomePage: React.FC = () => {
             ? "imageGen"
             : type === "ImagesDisplay"
             ? "imgDisplay"
+            : type === "ImageTiles"
+            ? "imageTiles"
             : type === "SketchPad"
             ? "sketchPad"
             : type === "Compare"
@@ -148,6 +154,8 @@ const HomePage: React.FC = () => {
             ? "wordSelector"
             : type === "WordArranger"
             ? "wordArranger"
+            : type === "FlipCard"
+            ? "flipCard"
             : "custom",
         data: {
           type,
@@ -158,7 +166,7 @@ const HomePage: React.FC = () => {
                   { id: "input-0", label: "Prompt", value: "" },
                   { id: "input-1", label: "Reference Image", value: "" },
                 ]
-              : type === "ImagesDisplay"
+              : type === "ImagesDisplay" || type === "ImageTiles"
               ? [{ id: "input-0", label: "Image Source", value: "" }]
               : type === "Compare"
               ? [
@@ -172,6 +180,13 @@ const HomePage: React.FC = () => {
                   { id: "input-0", label: "Correct words", value: "" },
                   { id: "input-1", label: "Incorrect words", value: "" },
                 ]
+              : type === "FlipCard"
+              ? [
+                  { id: "input-0", label: "Front text", value: "" },
+                  { id: "input-1", label: "Back text", value: "" },
+                  { id: "input-2", label: "Front image", value: "" },
+                  { id: "input-3", label: "Back image", value: "" },
+                ]
               : [],
           outputs: [
             {
@@ -179,6 +194,8 @@ const HomePage: React.FC = () => {
               label:
                 type === "ImageGen"
                   ? "Generated Image"
+                  : type === "ImageTiles"
+                  ? "Arranged Images"
                   : type === "SketchPad"
                   ? "Sketch result"
                   : type === "Compare"
@@ -262,6 +279,12 @@ const HomePage: React.FC = () => {
           Add Images Display
         </button>
         <button
+          onClick={() => addNewNode("ImageTiles")}
+          className="p-2 m-2 bg-blue-500 text-white rounded"
+        >
+          Add Image Tiles
+        </button>
+        <button
           onClick={() => addNewNode("WordSelector")}
           className="p-2 m-2 bg-blue-500 text-white rounded"
         >
@@ -296,6 +319,12 @@ const HomePage: React.FC = () => {
           className="p-2 m-2 bg-blue-500 text-white rounded"
         >
           Add Word Arranger
+        </button>
+        <button
+          onClick={() => addNewNode("FlipCard")}
+          className="p-2 m-2 bg-blue-500 text-white rounded"
+        >
+          Add Flip Card
         </button>
         <ReactFlow
           nodes={nodes.map((node) => ({

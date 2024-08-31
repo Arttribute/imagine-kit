@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { ImageIcon, Trash2 } from "lucide-react";
+import { ImageIcon, StickyNote } from "lucide-react";
 import BaseNode from "@/components/BaseNode";
 
 interface FlipCardNodeProps {
@@ -23,7 +23,12 @@ const FlipCardNode: React.FC<FlipCardNodeProps> = ({ data, id }) => {
       name={flipCardName || "Flip Card"}
       type="input"
       inputs={inputs}
-      icon={<ImageIcon className="w-5 h-5 text-gray-400" />}
+      icon={
+        <div className="flex items-center">
+          <StickyNote className="w-4 h-4 text-gray-400 mr-1" />
+          <p className="text-xs text-gray-500">Flip card</p>
+        </div>
+      }
       onDataChange={onDataChange}
       onRemoveNode={onRemoveNode}
     >
