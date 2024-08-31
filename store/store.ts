@@ -2,6 +2,7 @@ import { configureStore, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 
 interface NodeData {
+  position: { x: number; y: number };
   id: string;
   type: string;
   data: any;
@@ -10,6 +11,7 @@ interface NodeData {
 }
 
 interface EdgeData {
+  id: any;
   source: string;
   target: string;
 }
