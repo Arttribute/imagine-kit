@@ -25,6 +25,8 @@ import SketchPadNode from "@/components/imaginekit/sketchpad/SketchPadNode";
 import CompareNode from "@/components/imaginekit/compare/CompareNode";
 import TextInputNode from "@/components/imaginekit/textinput/TextInputNode";
 import TextOutputNode from "@/components/imaginekit/textoutput/TextOutputNode";
+import WordSelectorNode from "@/components/imaginekit/wordtiles/select/WordSelectorNode";
+import WordArrangerNode from "@/components/imaginekit/wordtiles/arrange/WordArrangerNode";
 import "reactflow/dist/style.css";
 
 const nodeTypes = {
@@ -36,6 +38,8 @@ const nodeTypes = {
   compare: CompareNode,
   textInput: TextInputNode,
   textOutput: TextOutputNode,
+  wordSelector: WordSelectorNode,
+  wordArranger: WordArrangerNode,
 };
 
 const HomePage: React.FC = () => {
@@ -140,6 +144,10 @@ const HomePage: React.FC = () => {
             ? "textInput"
             : type === "TextOutput"
             ? "textOutput"
+            : type === "WordSelector"
+            ? "wordSelector"
+            : type === "WordArranger"
+            ? "wordArranger"
             : "custom",
         data: {
           type,
@@ -159,6 +167,11 @@ const HomePage: React.FC = () => {
                 ]
               : type === "TextOutput"
               ? [{ id: "input-0", label: "Text source", value: "" }]
+              : type === "WordSelector" || type === "WordArranger"
+              ? [
+                  { id: "input-0", label: "Correct words", value: "" },
+                  { id: "input-1", label: "Incorrect words", value: "" },
+                ]
               : [],
           outputs: [
             {
@@ -172,6 +185,8 @@ const HomePage: React.FC = () => {
                   ? "Comparison result"
                   : type === "TextInput"
                   ? "User content"
+                  : type === "WordSelector" || type === "WordArranger"
+                  ? "Selected words"
                   : "Output",
               value: "",
             },
@@ -275,6 +290,12 @@ const HomePage: React.FC = () => {
           className="p-2 m-2 bg-blue-500 text-white rounded"
         >
           Add Text Output
+        </button>
+        <button
+          onClick={() => addNewNode("WordArranger")}
+          className="p-2 m-2 bg-blue-500 text-white rounded"
+        >
+          Add Word Arranger
         </button>
         <ReactFlow
           nodes={nodes.map((node) => ({
