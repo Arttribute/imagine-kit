@@ -74,7 +74,7 @@ export default function AdvancedOptions({
   setColorGrading: (value: string) => void;
   setNegativePrompt: (value: string) => void;
 }) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>

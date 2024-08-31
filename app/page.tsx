@@ -20,12 +20,20 @@ import {
 import CustomNode from "../components/CustomNode"; // Existing CustomNode
 import LLMNode from "@/components/tools/nodes/LLMNode"; // Import LLMNode
 import ImageGenerator from "@/components/tools/nodes/ImageGenerator"; // Import ImageGenerator
+import ImageDisplayNode from "@/components/imaginekit/display/imageDisplayNode"; // Import ImageDisplayNode
+import SketchPadNode from "@/components/imaginekit/sketchpad/SketchPadNode";
+import CompareNode from "@/components/imaginekit/compare/CompareNode";
+import TextInputNode from "@/components/imaginekit/textinput/TextInputNode";
 import "reactflow/dist/style.css";
 
 const nodeTypes = {
   custom: CustomNode,
   llm: LLMNode,
   imageGen: ImageGenerator,
+  imgDisplay: ImageDisplayNode,
+  sketchPad: SketchPadNode,
+  compare: CompareNode,
+  textInput: TextInputNode,
 };
 
 const HomePage: React.FC = () => {
@@ -92,7 +100,7 @@ const HomePage: React.FC = () => {
         console.log("Output Index", outputIndex);
         console.log("Output Value", outputValue);
         console.log("Input Index", inputIndex);
-        console.log("Input Value", outputValue);
+        console.log("New Inputs", newInputs);
       }
 
       const newEdge = {
@@ -120,6 +128,14 @@ const HomePage: React.FC = () => {
             ? "llm"
             : type === "ImageGen"
             ? "imageGen"
+            : type === "ImagesDisplay"
+            ? "imgDisplay"
+            : type === "SketchPad"
+            ? "sketchPad"
+            : type === "Compare"
+            ? "compare"
+            : type === "TextInput"
+            ? "textInput"
             : "custom",
         data: {
           type,
@@ -130,11 +146,35 @@ const HomePage: React.FC = () => {
                   { id: "input-0", label: "Prompt", value: "" },
                   { id: "input-1", label: "Reference Image", value: "" },
                 ]
+              : type === "ImagesDisplay"
+              ? [{ id: "input-0", label: "Image Source", value: "" }]
+              : type === "Compare"
+              ? [
+                  { id: "input-0", label: "Input 1", value: "" },
+                  { id: "input-1", label: "Input 2", value: "" },
+                ]
               : [],
-          outputs: [{ id: "output-0", value: "" }],
+          outputs: [
+            {
+              id: "output-0",
+              label:
+                type === "ImageGen"
+                  ? "Generated Image"
+                  : type === "SketchPad"
+                  ? "Sketch result"
+                  : type === "Compare"
+                  ? "Comparison result"
+                  : type === "TextInput"
+                  ? "User content"
+                  : "Output",
+              value: "",
+            },
+          ],
           instruction: type === "LLMNode" ? "" : undefined,
           botName: type === "LLMNode" ? "Bot Name" : undefined,
-          imageGenName: type === "ImageGen" ? "Image Gen Name" : undefined,
+          imageGenName: type === "ImageGen" ? "Image Generator" : undefined,
+          imgDisplayName:
+            type === "ImagesDisplay" ? "Image Display" : undefined,
           onRemoveNode: handleRemoveNode,
           onDataChange: handleDataChange,
         },
@@ -206,7 +246,24 @@ const HomePage: React.FC = () => {
         >
           Add Word Selector
         </button>
-
+        <button
+          onClick={() => addNewNode("SketchPad")}
+          className="p-2 m-2 bg-blue-500 text-white rounded"
+        >
+          Add SketchPad
+        </button>
+        <button
+          onClick={() => addNewNode("Compare")}
+          className="p-2 m-2 bg-blue-500 text-white rounded"
+        >
+          Add Compare
+        </button>
+        <button
+          onClick={() => addNewNode("TextInput")}
+          className="p-2 m-2 bg-blue-500 text-white rounded"
+        >
+          Add Text Input
+        </button>
         <ReactFlow
           nodes={nodes.map((node) => ({
             ...node,

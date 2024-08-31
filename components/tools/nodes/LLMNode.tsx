@@ -70,7 +70,7 @@ const LLMNode: React.FC<LLMNodeProps> = ({ data, id }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl border p-4 m-1 w-64 shadow-sm">
+    <div className="bg-white rounded-xl border p-4 m-1 w-80 shadow-sm">
       <div className="flex justify-between mb-3">
         {/* Editable Bot Name */}
         {isEditingBotName ? (
