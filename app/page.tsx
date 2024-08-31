@@ -19,25 +19,40 @@ import {
 } from "../store/store";
 import CustomNode from "../components/CustomNode"; // Existing CustomNode
 import LLMNode from "@/components/tools/nodes/LLMNode"; // Import LLMNode
+import ImageGenerator from "@/components/tools/nodes/ImageGenerator"; // Import ImageGenerator
 import "reactflow/dist/style.css";
 
 const nodeTypes = {
   custom: CustomNode,
-  llm: LLMNode, // Register LLMNode type
+  llm: LLMNode,
+  imageGen: ImageGenerator,
 };
 
 const HomePage: React.FC = () => {
   const dispatch = useAppDispatch();
   const nodesFromStore = useAppSelector((state) => state.flow.nodes);
   const edgesFromStore = useAppSelector((state) => state.flow.edges);
-  const [nodes, setNodes, onNodesChange] = useNodesState(nodesFromStore);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(edgesFromStore);
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(
+    nodesFromStore.map((node) => ({
+      ...node,
+      position: node.position || {
+        x: Math.random() * 250,
+        y: Math.random() * 150,
+      },
+    }))
+  );
+
+  const [edges, setEdges, onEdgesChange] = useEdgesState(
+    edgesFromStore.map((edge) => ({
+      ...edge,
+      id: edge.id?.toString() || `${edge.source}-${edge.target}`,
+    }))
+  );
 
   const onConnect = useCallback(
     (params: Edge | Connection) => {
       const { source, target, sourceHandle, targetHandle } = params;
-
-      // Find the source node and output field
       const sourceNode = nodes.find((node) => node.id === source);
       const targetNode = nodes.find((node) => node.id === target);
 
@@ -51,72 +66,118 @@ const HomePage: React.FC = () => {
           10
         );
 
-        const outputValue = sourceNode.data.outputs[outputIndex].value;
+        const outputValue = sourceNode.data.outputs?.[outputIndex]?.value || "";
 
-        // Update the target node's input with the source node's output value
-        const newInputs = [...targetNode.data.inputs];
-        newInputs[inputIndex] = {
-          ...newInputs[inputIndex],
-          value: outputValue,
-        };
+        const newInputs = [...(targetNode.data.inputs || [])].map((input) => ({
+          ...input,
+        }));
+
+        if (newInputs[inputIndex]) {
+          newInputs[inputIndex] = {
+            ...newInputs[inputIndex],
+            value: outputValue,
+          };
+        } else {
+          newInputs[inputIndex] = {
+            id: `input-${inputIndex}`,
+            value: outputValue,
+          };
+        }
 
         handleDataChange(targetNode.id, {
           ...targetNode.data,
           inputs: newInputs,
         });
+        console.log("Connected", source, target, sourceHandle, targetHandle);
+        console.log("Output Index", outputIndex);
+        console.log("Output Value", outputValue);
+        console.log("Input Index", inputIndex);
+        console.log("Input Value", outputValue);
       }
 
-      // Add the connection
       const newEdge = {
         ...params,
+        id: `${params.source}-${params.target}`,
         data: {
           sourceHandle: params.sourceHandle,
           targetHandle: params.targetHandle,
         },
       };
-      setEdges((eds) => addEdge(newEdge, eds));
-      dispatch(addEdgeAction(newEdge));
+
+      setEdges((eds) => addEdge(newEdge as Edge, eds));
+      dispatch(addEdgeAction(newEdge as Edge));
     },
     [setEdges, dispatch, nodes]
   );
 
-  const addNewNode = (type: string) => {
-    const id = `${type}-${nodes.length + 1}`;
-    const newNode: Node = {
-      id,
-      type: type === "LLMNode" ? "llm" : "custom", // Specify node type
-      data: {
-        type,
-        label: `${type} Node`,
-        inputs: [],
-        outputs: [],
-        instruction: "", // For LLMNode specific fields
-        botName: "Bot Name", // Default bot name for LLMNode
-        onRemoveNode: handleRemoveNode,
-        onDataChange: handleDataChange,
-      },
-      position: { x: Math.random() * 250, y: Math.random() * 150 },
-    };
-    setNodes((nds) => nds.concat(newNode));
-    dispatch(addNode({ id, type, data: newNode.data }));
-  };
+  const addNewNode = useCallback(
+    (type: string) => {
+      const id = `${type}-${nodes.length + 1}`;
+      const newNode: Node = {
+        id,
+        type:
+          type === "LLMNode"
+            ? "llm"
+            : type === "ImageGen"
+            ? "imageGen"
+            : "custom",
+        data: {
+          type,
+          label: `${type} Node`,
+          inputs:
+            type === "ImageGen"
+              ? [
+                  { id: "input-0", label: "Prompt", value: "" },
+                  { id: "input-1", label: "Reference Image", value: "" },
+                ]
+              : [],
+          outputs: [{ id: "output-0", value: "" }],
+          instruction: type === "LLMNode" ? "" : undefined,
+          botName: type === "LLMNode" ? "Bot Name" : undefined,
+          imageGenName: type === "ImageGen" ? "Image Gen Name" : undefined,
+          onRemoveNode: handleRemoveNode,
+          onDataChange: handleDataChange,
+        },
+        position: { x: Math.random() * 250, y: Math.random() * 150 },
+      };
+      setNodes((nds) => nds.concat(newNode));
+      dispatch(
+        addNode({
+          id,
+          type,
+          data: newNode.data,
+          position: {
+            x: 0,
+            y: 0,
+          },
+        })
+      );
+    },
+    [nodes, setNodes, dispatch]
+  );
 
-  const handleDataChange = (id: string, data: any) => {
-    setNodes((nds) =>
-      nds.map((node) => (node.id === id ? { ...node, data } : node))
-    );
-    dispatch(updateNodeData({ id, data }));
-  };
+  const handleDataChange = useCallback(
+    (id: string, data: any) => {
+      setNodes((nds) =>
+        nds.map((node) => (node.id === id ? { ...node, data } : node))
+      );
+      dispatch(updateNodeData({ id, data }));
+    },
+    [setNodes, dispatch]
+  );
 
-  const handleRemoveNode = (nodeId: string) => {
-    const newNodes = nodes.filter((node) => node.id !== nodeId);
-    const newEdges = edges.filter(
-      (edge) => edge.source !== nodeId && edge.target !== nodeId
-    );
+  const handleRemoveNode = useCallback(
+    (nodeId: string) => {
+      const newNodes = nodes.filter((node) => node.id !== nodeId);
+      const newEdges = edges.filter(
+        (edge) => edge.source !== nodeId && edge.target !== nodeId
+      );
 
-    setNodes(newNodes);
-    setEdges(newEdges);
-  };
+      setNodes(newNodes);
+      setEdges(newEdges);
+    },
+    [nodes, edges, setNodes, setEdges]
+  );
 
   return (
     <ReactFlowProvider>
@@ -128,7 +189,7 @@ const HomePage: React.FC = () => {
           Add LLM Node
         </button>
         <button
-          onClick={() => addNewNode("ImageGenerator")}
+          onClick={() => addNewNode("ImageGen")}
           className="p-2 m-2 bg-blue-500 text-white rounded"
         >
           Add Image Generator
