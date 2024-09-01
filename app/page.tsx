@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import ReactFlow, {
   addEdge,
   Background,
@@ -32,6 +32,8 @@ import FlipCardNode from "@/components/imaginekit/flipcard/FlipCardNode";
 import ChatInterfaceNode from "@/components/imaginekit/chat/ChatInterfaceNode";
 import MemoryNode from "@/components/imaginekit/memory/MemoryNode";
 import AppToolbar from "@/components/tools/toolbar/AppToolbar";
+import UIEditor from "@/components/UIEditor"; // Import UIEditor
+
 import "reactflow/dist/style.css";
 
 const nodeTypes = {
@@ -50,6 +52,19 @@ const nodeTypes = {
   chatInterface: ChatInterfaceNode,
   memory: MemoryNode,
 };
+
+interface ComponentPosition {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface UIComponent {
+  id: string;
+  label: string;
+  type: string; // Type to determine the preview
+}
 
 const HomePage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -71,6 +86,44 @@ const HomePage: React.FC = () => {
       ...edge,
       id: edge.id?.toString() || `${edge.source}-${edge.target}`,
     }))
+  );
+
+  // Manage UI components and their positions
+  const [uiComponents, setUIComponents] = useState<UIComponent[]>([]);
+  const [savedComponentPositions, setSavedComponentPositions] = useState<{
+    [key: string]: ComponentPosition;
+  }>({});
+
+  // Automatically add a corresponding UI component when a node is added
+  useEffect(() => {
+    const uiNodes = nodes
+      .filter((node) =>
+        [
+          "imgDisplay",
+          "imageTiles",
+          "sketchPad",
+          "textInput",
+          "textOutput",
+          "wordSelector",
+          "wordArranger",
+          "flipCard",
+          "chatInterface",
+        ].includes(node.type ?? "")
+      )
+      .map((node) => ({
+        id: node.id,
+        label: node.data.label,
+        type: node.type ?? "",
+      }));
+
+    setUIComponents(uiNodes);
+  }, [nodes]);
+
+  const saveComponentPositions = useCallback(
+    (positions: { [key: string]: ComponentPosition }) => {
+      setSavedComponentPositions(positions);
+    },
+    []
   );
 
   const onConnect = useCallback(
@@ -332,7 +385,7 @@ const HomePage: React.FC = () => {
     <ReactFlowProvider>
       <div style={{ display: "flex", height: "100vh" }}>
         <AppToolbar addNewNode={addNewNode} />
-        <div style={{ flexGrow: 1 }}>
+        <div style={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
           <ReactFlow
             nodes={nodes.map((node) => ({
               ...node,
@@ -353,6 +406,12 @@ const HomePage: React.FC = () => {
             <Controls />
           </ReactFlow>
         </div>
+        {/* UIEditor to display UI components */}
+        <UIEditor
+          uiComponents={uiComponents}
+          savedPositions={savedComponentPositions}
+          savePositions={saveComponentPositions}
+        />
       </div>
     </ReactFlowProvider>
   );
