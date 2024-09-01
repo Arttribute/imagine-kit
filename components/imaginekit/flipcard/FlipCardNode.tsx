@@ -20,7 +20,9 @@ const FlipCardNode: React.FC<FlipCardNodeProps> = ({ data, id }) => {
   return (
     <BaseNode
       id={id}
-      name={flipCardName || "Flip Card"}
+      name={flipCardName}
+      defaultName="Flip Card"
+      nameKey="flipCardName"
       type="input"
       inputs={inputs}
       icon={

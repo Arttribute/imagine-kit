@@ -18,7 +18,9 @@ const TextOutputNode: React.FC<TextOutputNodeProps> = ({ data, id }) => {
   return (
     <BaseNode
       id={id}
-      name={textOutputName || "Text Output"}
+      name={textOutputName}
+      defaultName="Text Output"
+      nameKey="textOutputName"
       type="input"
       inputs={inputs}
       icon={<AlignLeftIcon className="w-5 h-5 text-gray-400" />}

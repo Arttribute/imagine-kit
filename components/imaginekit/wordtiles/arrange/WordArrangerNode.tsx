@@ -21,7 +21,9 @@ const WordArrangerNode: React.FC<WordArrangerNodeProps> = ({ data, id }) => {
   return (
     <BaseNode
       id={id}
-      name={WordArrangerName || "Word Arranger"}
+      name={WordArrangerName}
+      defaultName="Word Arranger"
+      nameKey="WordArrangerName"
       type="both"
       inputs={inputs}
       outputs={outputs}

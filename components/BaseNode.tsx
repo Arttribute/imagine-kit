@@ -7,7 +7,9 @@ import { Trash2 } from "lucide-react";
 
 interface BaseNodeProps {
   id: string;
-  name: string;
+  nameKey: string; // Dynamically pass the specific name key
+  name: string; // Node name
+  defaultName: string; // Default name if name is empty
   type: "input" | "output" | "both"; // Type of node
   inputs?: { id: string; label: string; value: string }[]; // Optional inputs
   outputs?: { id: string; label: string; value: string }[]; // Optional outputs
@@ -19,7 +21,9 @@ interface BaseNodeProps {
 
 const BaseNode: React.FC<BaseNodeProps> = ({
   id,
+  nameKey,
   name,
+  defaultName,
   type,
   inputs = [],
   outputs = [],
@@ -31,19 +35,19 @@ const BaseNode: React.FC<BaseNodeProps> = ({
   const [isEditingName, setIsEditingName] = useState(false);
 
   const handleNameChange = (newName: string) => {
-    onDataChange(id, { name: newName, inputs, outputs }); // Keep current inputs and outputs
+    onDataChange(id, { [nameKey]: newName, inputs, outputs }); // Update using the dynamic name key
   };
 
   const handleInputChange = (index: number, value: string) => {
     const newInputs = [...inputs];
     newInputs[index] = { ...newInputs[index], value };
-    onDataChange(id, { name, inputs: newInputs, outputs }); // Preserve outputs
+    onDataChange(id, { [nameKey]: name, inputs: newInputs, outputs }); // Preserve the specific node name key
   };
 
   const handleOutputChange = (index: number, value: string) => {
     const newOutputs = [...outputs];
     newOutputs[index] = { ...newOutputs[index], value };
-    onDataChange(id, { name, inputs, outputs: newOutputs }); // Preserve inputs
+    onDataChange(id, { [nameKey]: name, inputs, outputs: newOutputs }); // Preserve the specific node name key
   };
 
   return (
@@ -63,7 +67,7 @@ const BaseNode: React.FC<BaseNodeProps> = ({
             className="text-sm font-semibold cursor-pointer"
             onClick={() => setIsEditingName(true)}
           >
-            {name}
+            {name || defaultName}
           </p>
         )}
         {icon && <div className="flex items-center">{icon}</div>}

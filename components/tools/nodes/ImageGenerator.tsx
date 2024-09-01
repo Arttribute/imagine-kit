@@ -23,7 +23,9 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ data, id }) => {
   return (
     <BaseNode
       id={id}
-      name={imageGenName || "Generator"}
+      name={imageGenName}
+      defaultName="Image Generator"
+      nameKey="imageGenName"
       type="both"
       inputs={inputs}
       outputs={outputs}

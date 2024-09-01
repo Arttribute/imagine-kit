@@ -18,7 +18,9 @@ const ChatInterfaceNode: React.FC<ChatInterfaceNodeProps> = ({ data, id }) => {
   return (
     <BaseNode
       id={id}
-      name={chatInterfaceName || "Chat Interface"}
+      name={chatInterfaceName}
+      defaultName="Chat Interface"
+      nameKey="chatInterfaceName"
       type="input"
       inputs={inputs}
       icon={

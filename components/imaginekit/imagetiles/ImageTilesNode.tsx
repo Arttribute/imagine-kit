@@ -33,7 +33,9 @@ const ImageTilesNode: React.FC<ImageTilesNodeProps> = ({ data, id }) => {
   return (
     <BaseNode
       id={id}
-      name={imageTilesName || "Image Tiles"}
+      name={imageTilesName}
+      defaultName="Image Tiles"
+      nameKey="imageTilesName"
       type="both"
       inputs={inputs}
       outputs={outputs}

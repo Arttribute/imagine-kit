@@ -18,7 +18,9 @@ const SketchPadNode: React.FC<SketchPadNodeProps> = ({ data, id }) => {
   return (
     <BaseNode
       id={id}
-      name={sketchName || "SketchPad"}
+      name={sketchName}
+      defaultName="Sketch Pad"
+      nameKey="sketchName"
       type="output"
       outputs={outputs}
       icon={<PencilLine className="w-5 h-5 text-gray-400" />}

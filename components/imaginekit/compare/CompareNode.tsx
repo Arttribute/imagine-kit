@@ -21,7 +21,9 @@ const CompareNode: React.FC<CompareNodeProps> = ({ data, id }) => {
   return (
     <BaseNode
       id={id}
-      name={compareName || "Compare Node"}
+      name={compareName}
+      defaultName="Compare"
+      nameKey="compareName"
       type="both"
       inputs={inputs}
       outputs={outputs}

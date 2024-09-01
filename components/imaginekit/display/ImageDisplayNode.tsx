@@ -20,7 +20,9 @@ const ImagesDisplayNode: React.FC<ImagesDisplayNodeProps> = ({ data, id }) => {
   return (
     <BaseNode
       id={id}
-      name={imgDisplayName || "Images Display"}
+      name={imgDisplayName}
+      defaultName="Images Display"
+      nameKey="imgDisplayName"
       type="input"
       inputs={inputs}
       icon={<ImageIcon className="w-5 h-5 text-gray-400" />}

@@ -21,7 +21,9 @@ const WordSelectorNode: React.FC<WordSelectorNodeProps> = ({ data, id }) => {
   return (
     <BaseNode
       id={id}
-      name={WordSelectorName || "Word Selector"}
+      name={WordSelectorName}
+      defaultName="Word Selector"
+      nameKey="WordSelectorName"
       type="both"
       inputs={inputs}
       outputs={outputs}
