@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useCallback } from "react";
 import Draggable from "react-draggable";
-import SketchPadPreview from "@/components/imaginekit/sketchpad/SkethPadPreview";
+import SketchPadPreview from "@/components/imaginekit/previews/SkethPadPreview";
 
 interface ComponentPosition {
   x: number;

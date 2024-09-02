@@ -18,19 +18,19 @@ import {
   addEdge as addEdgeAction,
 } from "../store/store";
 import CustomNode from "../components/CustomNode"; // Existing CustomNode
-import LLMNode from "@/components/tools/nodes/LLMNode"; // Import LLMNode
-import ImageGenerator from "@/components/tools/nodes/ImageGenerator"; // Import ImageGenerator
-import ImageDisplayNode from "@/components/imaginekit/display/ImageDisplayNode"; // Import ImageDisplayNode
-import ImageTilesNode from "@/components/imaginekit/imagetiles/ImageTilesNode";
-import SketchPadNode from "@/components/imaginekit/sketchpad/SketchPadNode";
-import CompareNode from "@/components/imaginekit/compare/CompareNode";
-import TextInputNode from "@/components/imaginekit/textinput/TextInputNode";
-import TextOutputNode from "@/components/imaginekit/textoutput/TextOutputNode";
-import WordSelectorNode from "@/components/imaginekit/wordtiles/select/WordSelectorNode";
-import WordArrangerNode from "@/components/imaginekit/wordtiles/arrange/WordArrangerNode";
-import FlipCardNode from "@/components/imaginekit/flipcard/FlipCardNode";
-import ChatInterfaceNode from "@/components/imaginekit/chat/ChatInterfaceNode";
-import MemoryNode from "@/components/imaginekit/memory/MemoryNode";
+import LLMNode from "@/components/imaginekit/nodes/LLMNode"; // Import LLMNode
+import ImageGeneratorNode from "@/components/imaginekit/nodes/ImageGeneratorNode"; // Import ImageGeneratorNode
+import ImageDisplayNode from "@/components/imaginekit/nodes/ImageDisplayNode"; // Import ImageDisplayNode
+import ImageTilesNode from "@/components/imaginekit/nodes/ImageTilesNode";
+import SketchPadNode from "@/components/imaginekit/nodes/SketchPadNode";
+import CompareNode from "@/components/imaginekit/nodes/CompareNode";
+import TextInputNode from "@/components/imaginekit/nodes/TextInputNode";
+import TextOutputNode from "@/components/imaginekit/nodes/TextOutputNode";
+import WordSelectorNode from "@/components/imaginekit/nodes/WordSelectorNode";
+import WordArrangerNode from "@/components/imaginekit/nodes/WordArrangerNode";
+import FlipCardNode from "@/components/imaginekit/nodes/FlipCardNode";
+import ChatInterfaceNode from "@/components/imaginekit/nodes/ChatInterfaceNode";
+import MemoryNode from "@/components/imaginekit/nodes/MemoryNode";
 import AppToolbar from "@/components/tools/toolbar/AppToolbar";
 import UIEditor from "@/components/UIEditor"; // Import UIEditor
 
@@ -39,7 +39,7 @@ import "reactflow/dist/style.css";
 const nodeTypes = {
   custom: CustomNode,
   llm: LLMNode,
-  imageGen: ImageGenerator,
+  imageGen: ImageGeneratorNode,
   imgDisplay: ImageDisplayNode,
   imageTiles: ImageTilesNode,
   sketchPad: SketchPadNode,

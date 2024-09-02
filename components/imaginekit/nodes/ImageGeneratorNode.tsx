@@ -5,7 +5,7 @@ import { Sparkles, Trash2 } from "lucide-react";
 import AdvancedOptions from "@/components/tools/AdvancedOptions";
 import BaseNode from "@/components/BaseNode";
 
-interface ImageGeneratorProps {
+interface ImageGeneratorNodeProps {
   data: {
     imageGenName: string;
     inputs: { id: string; label: string; value: string }[];
@@ -17,7 +17,10 @@ interface ImageGeneratorProps {
   id: string;
 }
 
-const ImageGenerator: React.FC<ImageGeneratorProps> = ({ data, id }) => {
+const ImageGeneratorNode: React.FC<ImageGeneratorNodeProps> = ({
+  data,
+  id,
+}) => {
   const { imageGenName, inputs, outputs, onDataChange, onRemoveNode } = data;
 
   return (
@@ -68,4 +71,4 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({ data, id }) => {
   );
 };
 
-export default ImageGenerator;
+export default ImageGeneratorNode;
