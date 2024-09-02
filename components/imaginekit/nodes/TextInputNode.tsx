@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { KeyboardIcon, Plus, Minus } from "lucide-react";
-import BaseNode from "@/components/BaseNode";
+import BaseNode from "@/components/imaginekit/nodes/BaseNode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 

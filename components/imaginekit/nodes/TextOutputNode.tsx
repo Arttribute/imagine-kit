@@ -1,6 +1,6 @@
 import React from "react";
 import { TypeOutlineIcon, AlignLeftIcon } from "lucide-react";
-import BaseNode from "@/components/BaseNode";
+import BaseNode from "@/components/imaginekit/nodes/BaseNode";
 
 interface TextOutputNodeProps {
   data: {

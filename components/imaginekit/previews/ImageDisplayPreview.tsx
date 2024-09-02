@@ -1,8 +1,6 @@
 "use client";
 import React from "react";
-import { Input } from "@/components/ui/input";
-import { ImageIcon, Trash2 } from "lucide-react";
-import BaseNode from "@/components/BaseNode";
+import { ImageIcon } from "lucide-react";
 
 interface ImagesDisplayPreviewProps {}
 

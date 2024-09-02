@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
-import { MousePointer, TypeOutlineIcon } from "lucide-react";
-import BaseNode from "@/components/BaseNode";
+import { TypeOutlineIcon } from "lucide-react";
 
 interface WordSelectorPreviewProps {}
 

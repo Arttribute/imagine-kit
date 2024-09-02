@@ -1,9 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Sparkles, Trash2 } from "lucide-react";
 import AdvancedOptions from "@/components/tools/AdvancedOptions";
-import BaseNode from "@/components/BaseNode";
+import BaseNode from "@/components/imaginekit/nodes/BaseNode";
 
 interface ImageGeneratorNodeProps {
   data: {

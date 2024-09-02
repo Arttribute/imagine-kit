@@ -1,6 +1,6 @@
 import React from "react";
 import { PencilLine } from "lucide-react";
-import BaseNode from "@/components/BaseNode"; // Import BaseNode
+import BaseNode from "@/components/imaginekit/nodes/BaseNode";
 import { Pencil, Eraser, Undo, Redo } from "lucide-react";
 
 interface SketchPadNodeProps {

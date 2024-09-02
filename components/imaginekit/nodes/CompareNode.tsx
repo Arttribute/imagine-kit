@@ -1,8 +1,6 @@
 "use client";
 import React from "react";
-import { Input } from "@/components/ui/input";
-import { Trash2 } from "lucide-react";
-import BaseNode from "@/components/BaseNode";
+import BaseNode from "@/components/imaginekit/nodes/BaseNode";
 
 interface CompareNodeProps {
   data: {

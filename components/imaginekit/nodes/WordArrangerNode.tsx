@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { MousePointer, TypeOutlineIcon, Shuffle } from "lucide-react";
-import BaseNode from "@/components/BaseNode";
+import BaseNode from "@/components/imaginekit/nodes/BaseNode";
 
 interface WordArrangerNodeProps {
   data: {

@@ -1,26 +1,10 @@
 "use client";
 import React from "react";
-import { MousePointer, TypeOutlineIcon, Shuffle } from "lucide-react";
-import BaseNode from "@/components/BaseNode";
+import { TypeOutlineIcon } from "lucide-react";
 
-interface WordArrangerPreviewProps {
-  data: {
-    WordArrangerName: string; // Name of the WordArrangerPreview node
-    inputs: { id: string; label: string; value: string }[]; // Inputs for the node
-    outputs: { id: string; label: string; value: string }[]; // Outputs for the node
-    onDataChange: (id: string, data: any) => void;
-    onRemoveNode: (id: string) => void;
-  };
-  id: string;
-}
+interface WordArrangerPreviewProps {}
 
-const WordArrangerPreview: React.FC<WordArrangerPreviewProps> = ({
-  data,
-  id,
-}) => {
-  const { WordArrangerName, inputs, outputs, onDataChange, onRemoveNode } =
-    data;
-
+const WordArrangerPreview: React.FC<WordArrangerPreviewProps> = ({}) => {
   return (
     <div className="w-80">
       <div className="grid grid-cols-4">

@@ -18,7 +18,7 @@ import {
   addEdge as addEdgeAction,
 } from "@/store/store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import CustomNode from "../components/CustomNode"; // Existing CustomNode
+import CustomNode from "../components/imaginekit/nodes/CustomNode"; // Existing CustomNode
 import LLMNode from "@/components/imaginekit/nodes/LLMNode"; // Import LLMNode
 import ImageGeneratorNode from "@/components/imaginekit/nodes/ImageGeneratorNode"; // Import ImageGeneratorNode
 import ImageDisplayNode from "@/components/imaginekit/nodes/ImageDisplayNode"; // Import ImageDisplayNode

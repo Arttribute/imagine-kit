@@ -1,6 +1,5 @@
 import React from "react";
 import { TypeOutlineIcon, AlignLeftIcon } from "lucide-react";
-import BaseNode from "@/components/BaseNode";
 
 interface TextOutputPreviewProps {}
 
