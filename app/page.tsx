@@ -16,7 +16,8 @@ import {
   addNode,
   updateNodeData,
   addEdge as addEdgeAction,
-} from "../store/store";
+} from "@/store/store";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CustomNode from "../components/CustomNode"; // Existing CustomNode
 import LLMNode from "@/components/imaginekit/nodes/LLMNode"; // Import LLMNode
 import ImageGeneratorNode from "@/components/imaginekit/nodes/ImageGeneratorNode"; // Import ImageGeneratorNode
@@ -40,7 +41,7 @@ const nodeTypes = {
   custom: CustomNode,
   llm: LLMNode,
   imageGen: ImageGeneratorNode,
-  imgDisplay: ImageDisplayNode,
+  imageDisplay: ImageDisplayNode,
   imageTiles: ImageTilesNode,
   sketchPad: SketchPadNode,
   compare: CompareNode,
@@ -99,7 +100,7 @@ const HomePage: React.FC = () => {
     const uiNodes = nodes
       .filter((node) =>
         [
-          "imgDisplay",
+          "imageDisplay",
           "imageTiles",
           "sketchPad",
           "textInput",
@@ -250,7 +251,7 @@ const HomePage: React.FC = () => {
             : type === "ImageGen"
             ? "imageGen"
             : type === "ImagesDisplay"
-            ? "imgDisplay"
+            ? "imageDisplay"
             : type === "ImageTiles"
             ? "imageTiles"
             : type === "SketchPad"
@@ -335,7 +336,7 @@ const HomePage: React.FC = () => {
               ? [{ id: "field-0", label: "Memory Field 1", value: "" }]
               : undefined,
           imageGenName: type === "ImageGen" ? "Image Generator" : undefined,
-          imgDisplayName:
+          imageDisplayName:
             type === "ImagesDisplay" ? "Image Display" : undefined,
           onRemoveNode: handleRemoveNode,
           onDataChange: handleDataChange,
@@ -385,33 +386,54 @@ const HomePage: React.FC = () => {
     <ReactFlowProvider>
       <div style={{ display: "flex", height: "100vh" }}>
         <AppToolbar addNewNode={addNewNode} />
-        <div style={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
-          <ReactFlow
-            nodes={nodes.map((node) => ({
-              ...node,
-              data: {
-                ...node.data,
-                onRemoveNode: handleRemoveNode,
-                onDataChange: handleDataChange,
-              },
-            }))}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            nodeTypes={nodeTypes}
-            fitView
-          >
-            <Background />
-            <Controls />
-          </ReactFlow>
-        </div>
-        {/* UIEditor to display UI components */}
-        <UIEditor
-          uiComponents={uiComponents}
-          savedPositions={savedComponentPositions}
-          savePositions={saveComponentPositions}
-        />
+
+        <Tabs defaultValue="nodes" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 w-[400px] m-2">
+            <TabsTrigger value="nodes">Logic flow</TabsTrigger>
+            <TabsTrigger value="preview">UI preview</TabsTrigger>
+          </TabsList>
+          <TabsContent value="nodes">
+            <div style={{ display: "flex", height: "100vh" }}>
+              <div
+                style={{
+                  flexGrow: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <ReactFlow
+                  nodes={nodes.map((node) => ({
+                    ...node,
+                    data: {
+                      ...node.data,
+                      onRemoveNode: handleRemoveNode,
+                      onDataChange: handleDataChange,
+                    },
+                  }))}
+                  edges={edges}
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  onConnect={onConnect}
+                  nodeTypes={nodeTypes}
+                  fitView
+                >
+                  <Background />
+                  <Controls />
+                </ReactFlow>
+              </div>
+            </div>
+          </TabsContent>
+          {/* UIEditor to display UI components */}
+          <TabsContent value="preview">
+            <div style={{ display: "flex", height: "80vh", width: "64vw" }}>
+              <UIEditor
+                uiComponents={uiComponents}
+                savedPositions={savedComponentPositions}
+                savePositions={saveComponentPositions}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </ReactFlowProvider>
   );

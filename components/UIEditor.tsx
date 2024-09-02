@@ -2,6 +2,14 @@
 import React, { useState, useCallback } from "react";
 import Draggable from "react-draggable";
 import SketchPadPreview from "@/components/imaginekit/previews/SkethPadPreview";
+import ImagesDisplayPreview from "@/components/imaginekit/previews/ImageDisplayPreview";
+import WordSelectorPreview from "@/components/imaginekit/previews/WordSelectorPreview";
+import ImageTilesPreview from "@/components/imaginekit/previews/IImageTilesPreview";
+import WordArrangerPreview from "@/components/imaginekit/previews/WordArrangerPreview";
+import TextInputPreview from "@/components/imaginekit/previews/TextInputPreview";
+import TextOutputPreview from "@/components/imaginekit/previews/TextOutputPreview";
+import ChatInterfacePreview from "@/components/imaginekit/previews/ChatInterfacePreview";
+import FlipCardPreview from "@/components/imaginekit/previews/FlipCardPreview";
 
 interface ComponentPosition {
   x: number;
@@ -66,18 +74,17 @@ const UIEditor: React.FC<UIEditorProps> = ({
   // Mapping component types to their preview components
   const componentPreviews: { [key: string]: React.FC } = {
     sketchPad: SketchPadPreview,
+    imageDisplay: ImagesDisplayPreview,
+    wordSelector: WordSelectorPreview,
+    imageTiles: ImageTilesPreview,
+    textInput: TextInputPreview,
+    textOutput: TextOutputPreview,
+    chatInterface: ChatInterfacePreview,
+    flipCard: FlipCardPreview,
   };
 
   return (
-    <div
-      style={{
-        width: "50%",
-        height: "100%",
-        borderLeft: "1px solid #ddd",
-        overflowY: "auto", // Add scrolling for overflow
-        padding: "10px",
-      }}
-    >
+    <div className="border h-full w-full rounded-xl">
       {uiComponents.map((component, index) => {
         const position =
           positions[component.id] || calculateInitialPosition(index);
@@ -97,6 +104,7 @@ const UIEditor: React.FC<UIEditorProps> = ({
               style={{
                 position: "absolute",
                 boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                borderRadius: "10px",
                 padding: "0px",
               }}
             >
