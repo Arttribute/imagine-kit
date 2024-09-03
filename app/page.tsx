@@ -270,7 +270,7 @@ const HomePage: React.FC = () => {
             ? "flipCard"
             : type === "ChatInterface"
             ? "chatInterface"
-            : type === "MemoryNode"
+            : type === "Memory"
             ? "memory"
             : "custom",
         data: {
@@ -332,7 +332,7 @@ const HomePage: React.FC = () => {
           instruction: type === "LLMNode" ? "" : undefined,
           botName: type === "LLMNode" ? "Bot Name" : undefined,
           memoryFields:
-            type === "MemoryNode"
+            type === "Memory"
               ? [{ id: "field-0", label: "Memory Field 1", value: "" }]
               : undefined,
           imageGenName: type === "ImageGen" ? "Image Generator" : undefined,

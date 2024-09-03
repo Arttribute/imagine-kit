@@ -2,23 +2,25 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 export default function WordSelector({
-  words,
   correctWords,
-  isCorrect,
-  wrongAttempts,
-  setIsCorrect,
-  setWrongAttempts,
+  incorrectWords,
 }: {
-  words: string[];
   correctWords: string[];
-  isCorrect: boolean;
-  wrongAttempts: number;
-  setIsCorrect: (isCorrect: boolean) => void;
-  setWrongAttempts: (wrongAttempts: number) => void;
+  incorrectWords: string[];
 }) {
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
-  const [wordOptions, setWordOptions] = useState<string[]>(words);
+  const [words, setWords] = useState<string[]>([]);
+  const [wordOptions, setWordOptions] = useState<string[]>([]);
   const [emptySlots, setEmptySlots] = useState(correctWords.length);
+  const [isCorrect, setIsCorrect] = useState(false);
+  const [wrongAttempts, setWrongAttempts] = useState(0);
+
+  useEffect(() => {
+    setWordOptions(
+      [...correctWords, ...incorrectWords].sort(() => Math.random() - 0.5)
+    );
+    setWords([...correctWords, ...incorrectWords]);
+  }, []);
 
   useEffect(() => {
     if (selectedWords.length === correctWords.length) {

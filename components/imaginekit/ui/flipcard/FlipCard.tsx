@@ -1,9 +1,21 @@
 "use client";
 import React, { useState } from "react";
 
-interface FlipCardProps {}
+interface FlipCardProps {
+  backTitle?: string;
+  frontTitle?: string;
+  frontContentText?: string;
+  frotnImageUrl?: string;
+  backImageUrl?: string;
+}
 
-const FlipCard: React.FC<FlipCardProps> = ({}) => {
+const FlipCard: React.FC<FlipCardProps> = ({
+  backTitle,
+  frontTitle,
+  frontContentText,
+  frotnImageUrl,
+  backImageUrl,
+}) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const flipCard = () => {
@@ -32,28 +44,47 @@ const FlipCard: React.FC<FlipCardProps> = ({}) => {
           }}
         >
           <div className="flex flex-col justify-center items-center bg-white rounded-2xl shadow-xl p-1">
-            <div className="relative w-full h-full overflow-hidden rounded-xl">
-              <img
-                src={"imageUrl"}
-                alt={"frontTitle"}
-                className="w-full h-full object-cover aspect-[6/9] rounded-xl"
-              />
-              <div className="absolute top-0 right-0 w-full h-15 bg-gray-700 bg-opacity-50 flex justify-center items-center">
-                <h3 className="text-sm text-white font-semibold">
-                  {"frontTitle"}
-                </h3>
+            {backImageUrl && (
+              <div className="relative w-full h-full overflow-hidden rounded-xl">
+                <img
+                  src={backImageUrl}
+                  alt={frontTitle}
+                  className="w-full h-full object-cover aspect-[6/9] rounded-xl"
+                />
+                {frontTitle && (
+                  <div className="absolute top-0 right-0 w-full h-15 bg-gray-700 bg-opacity-50 flex justify-center items-center">
+                    <h3 className="text-sm text-white font-semibold">
+                      {frontTitle}
+                    </h3>
+                  </div>
+                )}
+                {frontContentText && (
+                  <div className="absolute bottom-2 w-full flex justify-center items-center">
+                    <div className="bg-black bg-opacity-50 text-white py-2 px-4 rounded-sm hover:bg-opacity-70">
+                      {frontContentText}
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="absolute bottom-2 w-full flex justify-center items-center">
-                <button
-                  className="bg-black bg-opacity-50 text-white py-2 px-4 rounded-sm hover:bg-opacity-70"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                >
-                  {"buttonText"}
-                </button>
+            )}
+            {!backImageUrl && (
+              <div className="relative w-full h-72 overflow-hidden rounded-xl border ">
+                {frontTitle && (
+                  <div className="absolute top-0 right-0 w-full h-15 bg-gray-700 bg-opacity-50 flex justify-center items-center">
+                    <h3 className="text-sm text-white font-semibold">
+                      {frontTitle}
+                    </h3>
+                  </div>
+                )}
+                {frontContentText && (
+                  <div className="flex flex-col items-center justify-center items-center h-full">
+                    <div className="text-gray-600 py-2 px-4 rounded-sm hover:bg-opacity-70 text-center">
+                      {frontContentText}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -65,7 +96,7 @@ const FlipCard: React.FC<FlipCardProps> = ({}) => {
           }}
         >
           <div className="flex flex-col items-center justify-center h-full">
-            <h1 className="text-3xl font-semibold">{"backTitle"}</h1>
+            <h1 className="text-3xl font-semibold">{backTitle}</h1>
           </div>
         </div>
       </div>
