@@ -79,6 +79,7 @@ const UIEditor: React.FC<UIEditorProps> = ({
     imageTiles: ImageTilesPreview,
     textInput: TextInputPreview,
     textOutput: TextOutputPreview,
+    wordArranger: WordArrangerPreview,
     chatInterface: ChatInterfacePreview,
     flipCard: FlipCardPreview,
   };
