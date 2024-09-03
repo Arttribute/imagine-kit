@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 interface AppToolBarProps {
-  addNewNode: (type: string) => void;
+  addNewNode: any;
 }
 
 type ToolButtonProps = {
