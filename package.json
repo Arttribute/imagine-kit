@@ -21,6 +21,8 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.0",
     "@xmtp/content-type-remote-attachment": "^1.1.9",
+    "@xmtp/message-kit": "^0.0.11",
+    "@xmtp/mls-client": "^0.0.14",
     "@xmtp/xmtp-js": "^12.1.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",

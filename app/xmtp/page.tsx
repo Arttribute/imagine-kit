@@ -1,14 +1,12 @@
 "use client";
-import SketchPad from "@/components/imaginekit/sketchpad/SketchPad";
-import FlipCard from "@/components/imaginekit/flipcard/FlipCard";
-import WordArranger from "@/components/imaginekit/wordtiles/arrange/WordArranger";
 import ChatInteface from "@/components/imaginekit/chat/ChatInteface";
-import LLMNode from "@/components/tools/nodes/LLMNode";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { BrowserProvider, ethers, JsonRpcSigner, Wallet } from "ethers";
-import { Client, Conversation } from "@xmtp/xmtp-js";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Client, Conversation } from "@xmtp/xmtp-js";
+import { BrowserProvider, ethers, JsonRpcSigner } from "ethers";
+import { useCallback, useEffect, useState } from "react";
+
+import { HandlerContext, run } from "@xmtp/message-kit";
 
 export default function Home() {
   const [signer, setSigner] = useState<JsonRpcSigner | null>();
@@ -23,6 +21,7 @@ export default function Home() {
   };
 
   useEffect(() => {
+    console.log(process.env);
     if (window?.ethereum && !provider) {
       setProvider(new ethers.BrowserProvider(window.ethereum));
     }
@@ -39,7 +38,7 @@ export default function Home() {
 
   useEffect(() => {
     if (signer) {
-      Client.create(signer, { env: "dev" }).then(async (client) => {
+      Client.create(signer, { env: "production" }).then(async (client) => {
         setXMTPClient(client);
       });
     }
