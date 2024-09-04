@@ -1,6 +1,7 @@
 // Req -> Get Json -> Create State Machine -> Run State Machine -> Get Response -> Send Response
 
 import { HandlerContext, run } from "@xmtp/message-kit";
+import EventEmitter from "events";
 
 // Engine
 
@@ -45,14 +46,21 @@ const state: State = {
 class Bot {
   private context: HandlerContext | undefined;
 
-  constructor() {}
+  private eventEmitter: EventEmitter = new EventEmitter();
+  private runPromise;
+
+  constructor() {
+    this.runPromise = run(async (context: HandlerContext) => {
+      this.context = context;
+      this.eventEmitter.emit("message", context);
+    });
+  }
 
   async getOutput() {
     return new Promise((resolve) => {
-      run(async (context: HandlerContext) => {
-        this.context = context;
+      this.eventEmitter.once("message", (context: HandlerContext) => {
         console.log(`Bot > ${this.context?.message.content.content}`);
-        resolve(this.context?.message.content.content);
+        resolve(context?.message.content.content);
       });
     });
   }
@@ -91,7 +99,7 @@ class Machine {
       console.log(state.flow);
       let resolution = state.flow.reduce((acc, curr: any) => {
         return acc.then(async (val) => {
-          curr.module = new ((ModuleMap as any)[curr.id] as any)();
+          curr.module ||= new ((ModuleMap as any)[curr.id] as any)();
           if (val) {
             await curr.module.useInput(val);
           }
