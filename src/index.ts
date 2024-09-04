@@ -2,6 +2,8 @@
 
 import { HandlerContext, run } from "@xmtp/message-kit";
 import EventEmitter from "events";
+import { get } from "lodash-es";
+import OpenAI from "openai";
 
 // Engine
 
@@ -10,38 +12,67 @@ interface State {
   loop: boolean;
   flow: Array<{ id: string; props: any[]; module?: any }>;
 }
+class LLM {
+  private openai;
+  private input: undefined | string = undefined;
 
-const state: State = {
-  endAtStart: true,
-  loop: true,
-  flow: [
-    {
-      id: "bot",
-      props: [{}],
-    },
-    { id: "constant", props: ["Hello"] },
-  ],
-};
+  constructor(private systemPrompt: string) {
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
 
-// class LLM {
-// 	private endpoint = ""
-// 	output = ""
-// 	constructor() {
+  async useInput(input: string) {
+    console.log(`LLM < ${input}`);
+    this.input = input;
+    // this.output = request();
+  }
 
-// 	}
+  async getOutput() {
+    if (!this.input) {
+      return undefined;
+    }
+    const response = await this.openai.chat.completions.create({
+      model: "gpt-3.5-turbo-0125",
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: this.systemPrompt,
+        },
+        { role: "user", content: this.input },
+      ],
+      temperature: 1,
+      max_tokens: 1600,
+      top_p: 1.0,
+      frequency_penalty: 0.0,
+      presence_penalty: 0.0,
+    });
 
-// 	private request() {
-// 		return fetch(this.endpoint)
-// 	}
+    const story = (response.choices[0].message.content as any)["story"];
 
-// 	async useInput(input: string) {
-// 		this.output = request()
-// 	}
+    console.log(`LLM > ${response.choices[0].message.content}`);
+    return (
+      response.choices[0].message.content &&
+      JSON.parse(response.choices[0].message.content)
+    );
+  }
+}
 
-// 	getOutput() {
-// 		return this.output;
-// 	}
-// }
+class Accessor {
+  private value: any;
+  constructor(private key: string) {}
+
+  async useInput(input: string) {
+    console.log(`Accessor < ${input}`);
+    this.value = get(input, this.key);
+  }
+
+  async getOutput() {
+    console.log(`Accessor > ${this.value}`);
+    return this.value;
+  }
+}
 
 class Bot {
   private context: HandlerContext | undefined;
@@ -89,17 +120,21 @@ class Constant {
 const ModuleMap = {
   bot: Bot,
   constant: Constant,
+  llm: LLM,
+  accessor: Accessor,
 };
 
 class Machine {
   constructor(private state: State) {}
 
   async resolve() {
-    while (state.loop) {
-      console.log(state.flow);
-      let resolution = state.flow.reduce((acc, curr: any) => {
+    while (this.state.loop) {
+      console.log(this.state.flow);
+      let resolution = this.state.flow.reduce((acc, curr: any) => {
         return acc.then(async (val) => {
-          curr.module ||= new ((ModuleMap as any)[curr.id] as any)();
+          curr.module ||= new ((ModuleMap as any)[curr.id] as any)(
+            ...curr.props
+          );
           if (val) {
             await curr.module.useInput(val);
           }
@@ -107,15 +142,42 @@ class Machine {
         });
       }, Promise.resolve(undefined));
 
-      if (state.endAtStart) {
+      if (this.state.endAtStart) {
         resolution = resolution.then(async (val) => {
-          return await state.flow[0].module.useInput(val);
+          return await this.state.flow[0].module.useInput(val);
         });
       }
       await resolution;
     }
   }
 }
+
+const state: State = {
+  endAtStart: true,
+  loop: true,
+  flow: [
+    {
+      id: "bot",
+      props: [{}],
+    },
+    {
+      id: "llm",
+      props: [
+        "You are an assistant whose goal is to generate stories. \
+		  The format of your JSON response as given in the example below:\
+        {\
+          'story': 'Once upon a time',\
+        }\
+		Generate a story that is related to the theme given.",
+      ],
+    },
+    {
+      id: "accessor",
+      props: ["story"],
+    },
+    // { id: "constant", props: ["Hello"] },
+  ],
+};
 
 const machine = new Machine(state);
 
