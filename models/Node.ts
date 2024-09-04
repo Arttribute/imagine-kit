@@ -8,11 +8,9 @@ const InputOutputSchema = new mongoose.Schema({
   },
   label: {
     type: String,
-    required: true,
   },
   value: {
     type: String,
-    required: true,
   },
 });
 

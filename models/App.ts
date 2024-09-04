@@ -3,9 +3,10 @@ import mongoose from "mongoose";
 
 const AppSchema = new mongoose.Schema(
   {
-    user_id: {
+    owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", // Reference as a string
+      required: true,
     },
     name: {
       type: String,

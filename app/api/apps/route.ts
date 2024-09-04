@@ -23,10 +23,10 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     await dbConnect();
-    const { user_id, name, description, banner_url } = await request.json();
+    const { owner, name, description, banner_url } = await request.json();
 
     const app = new App({
-      user_id,
+      owner,
       name,
       description,
       banner_url,

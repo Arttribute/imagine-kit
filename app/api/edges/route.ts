@@ -23,23 +23,33 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     await dbConnect();
-    const { source, target, sourceHandle, targetHandle, app_id } =
-      await request.json();
+    const { edges } = await request.json(); // Destructure edges array from request
 
-    const edge = new Edge({
-      source,
-      target,
-      sourceHandle,
-      targetHandle,
-      app_id,
-    });
+    if (!edges || !Array.isArray(edges)) {
+      return new NextResponse("Invalid edges data", { status: 400 });
+    }
 
-    await edge.save();
+    const savedEdges = await Promise.all(
+      edges.map(async (edgeData) => {
+        const { source, target, sourceHandle, targetHandle, app_id } = edgeData;
 
-    return NextResponse.json(edge, { status: 201 });
+        // Validate and save each edge
+        if (!source || !target || !sourceHandle || !targetHandle || !app_id) {
+          throw new Error("Missing required edge fields.");
+        }
+
+        return Edge.findOneAndUpdate(
+          { source, target, sourceHandle, targetHandle, app_id },
+          { source, target, sourceHandle, targetHandle, app_id },
+          { upsert: true, new: true, runValidators: true }
+        );
+      })
+    );
+
+    return new NextResponse(JSON.stringify(savedEdges), { status: 200 });
   } catch (error: any) {
-    console.error("Error creating edge:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Error creating edges:", error.message);
+    return new NextResponse(error.message, { status: 500 });
   }
 }
 

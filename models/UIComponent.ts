@@ -12,13 +12,12 @@ const UIComponentSchema = new mongoose.Schema({
   },
   label: {
     type: String,
-    required: true,
   },
   position: {
     x: { type: Number, required: true },
     y: { type: Number, required: true },
-    width: { type: Number, required: true },
-    height: { type: Number, required: true },
+    width: { type: Number },
+    height: { type: Number },
   },
   app_id: {
     type: mongoose.Schema.Types.ObjectId,

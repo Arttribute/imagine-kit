@@ -11,6 +11,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
 } from "reactflow";
+import axios from "axios"; // Use axios for API requests
 import { useAppDispatch, useAppSelector } from "../store/store";
 import {
   addNode,
@@ -21,7 +22,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AppToolbar from "@/components/tools/toolbar/AppToolbar";
 import UIEditor from "@/components/UIEditor";
 import "reactflow/dist/style.css";
-
 import nodeTypes, {
   NODE_TYPE_MAPPING,
 } from "@/components/imaginekit/nodes/nodeTypes";
@@ -66,6 +66,36 @@ const HomePage: React.FC = () => {
     [key: string]: ComponentPosition;
   }>({});
 
+  // Effect to load existing UI components and their positions
+  useEffect(() => {
+    const loadUIComponents = async () => {
+      try {
+        const response = await axios.get("/api/uicomponents");
+        const uiComponentsData = response.data;
+        setSavedComponentPositions(
+          uiComponentsData.reduce(
+            (acc: any, component: any) => ({
+              ...acc,
+              [component.component_id]: {
+                x: component.position.x,
+                y: component.position.y,
+                width: component.position.width,
+                height: component.position.height,
+              },
+            }),
+            {}
+          )
+        );
+        console.log("Loaded UI Components Positions: ", uiComponentsData); // Debugging log
+      } catch (error) {
+        console.error("Failed to load UI components:", error);
+      }
+    };
+
+    loadUIComponents();
+  }, []);
+
+  // Effect to filter out UI components from nodes
   useEffect(() => {
     const uiNodes = nodes
       .filter((node) => NODE_TYPE_MAPPING.ui.includes((node.type as any) ?? ""))
@@ -75,15 +105,76 @@ const HomePage: React.FC = () => {
         type: node.type ?? "",
       }));
 
+    console.log("Filtered UI Components from nodes: ", uiNodes); // Debugging log for UI nodes
     setUIComponents(uiNodes);
   }, [nodes]);
 
   const saveComponentPositions = useCallback(
-    (positions: { [key: string]: ComponentPosition }) => {
+    async (positions: { [key: string]: ComponentPosition }) => {
       setSavedComponentPositions(positions);
+
+      const uiComponentsToSave = uiComponents.map((component) => ({
+        component_id: component.id,
+        type: component.type, // Ensure type is provided
+        label: component.label, // Ensure label is provided
+        position: {
+          x: positions[component.id]?.x || 0,
+          y: positions[component.id]?.y || 0,
+          width: positions[component.id]?.width,
+          height: positions[component.id]?.height,
+        },
+        app_id: "66d8301bf24af376594fb6b7", // Replace with actual app ID
+      }));
+
+      try {
+        // Save updated positions to the database
+        await axios.post("/api/uicomponents", {
+          uiComponents: uiComponentsToSave,
+        });
+        console.log("Saved UI Component Positions:", uiComponentsToSave); // Debugging log
+      } catch (error) {
+        console.error("Failed to save UI component positions:", error);
+      }
     },
-    []
+    [uiComponents] // Add `uiComponents` to the dependency array
   );
+
+  const saveNodesAndEdges = useCallback(async () => {
+    try {
+      const nodeData = nodes.map((node) => ({
+        node_id: node.id, // Ensure node ID is correctly set
+        type: node.type, // Ensure node type is correctly set
+        name: node.data.label, // Use node label as the name
+        data: {
+          inputs: node.data.inputs || [], // Ensure inputs are an array
+          outputs: node.data.outputs || [], // Ensure outputs are an array
+          instruction: node.data.instruction || "", // Use empty string if instruction is not present
+          memoryFields: node.data.memoryFields || [], // Ensure memoryFields are an array
+        },
+        position: {
+          x: node.position.x || 0,
+          y: node.position.y || 0,
+        },
+        app_id: "66d8301bf24af376594fb6b7", // Replace with actual app ID
+      }));
+
+      const edgeData = edges.map((edge) => ({
+        source: edge.source,
+        target: edge.target,
+        sourceHandle: edge.sourceHandle,
+        targetHandle: edge.targetHandle,
+        app_id: "66d8301bf24af376594fb6b7", // Replace with actual app ID
+      }));
+
+      // Save nodes and edges to the database
+      await axios.post("/api/nodes", { nodes: nodeData });
+      await axios.post("/api/edges", { edges: edgeData });
+
+      console.log("Nodes and Edges saved successfully"); // Debugging log
+    } catch (error) {
+      console.error("Failed to save nodes and edges:", error);
+    }
+  }, [nodes, edges]);
 
   const handleDataChange = useCallback(
     (id: string, data: any) => {
@@ -96,11 +187,21 @@ const HomePage: React.FC = () => {
   );
 
   const handleRemoveNode = useCallback(
-    (nodeId: string) => {
-      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-      setEdges((eds) =>
-        eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
-      );
+    async (nodeId: string, appId: string) => {
+      try {
+        // Use node_id instead of ObjectId _id
+        await axios.delete(
+          `/api/nodes?id=${nodeId}&appId=${"66d8301bf24af376594fb6b7"}`
+        );
+
+        // Update state on the frontend
+        setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+        setEdges((eds) =>
+          eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
+        );
+      } catch (error) {
+        console.error("Error deleting node:", error);
+      }
     },
     [setNodes, setEdges]
   );
@@ -214,6 +315,11 @@ const HomePage: React.FC = () => {
     },
     [nodes, setNodes, dispatch, handleDataChange, handleRemoveNode]
   );
+
+  // Call saveNodesAndEdges when nodes or edges change
+  useEffect(() => {
+    saveNodesAndEdges();
+  }, [nodes, edges, saveNodesAndEdges]);
 
   return (
     <ReactFlowProvider>

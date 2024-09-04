@@ -23,58 +23,28 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     await dbConnect();
-    const { component_id, type, label, position, app_id } =
-      await request.json();
+    const { uiComponents } = await request.json(); // Destructure uiComponents array from request
 
-    const uiComponent = new UIComponent({
-      component_id,
-      type,
-      label,
-      position,
-      app_id,
-    });
-
-    await uiComponent.save();
-
-    return NextResponse.json(uiComponent, { status: 201 });
-  } catch (error: any) {
-    console.error("Error creating UI component:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
-
-/**
- * PUT /api/uicomponents/:id - Update a UI component by ID
- */
-export async function PUT(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
-
-  if (!id) {
-    return NextResponse.json(
-      { error: "UI Component ID is required" },
-      { status: 400 }
-    );
-  }
-
-  try {
-    await dbConnect();
-    const data = await request.json();
-    const updatedUIComponent = await UIComponent.findByIdAndUpdate(id, data, {
-      new: true,
-    });
-
-    if (!updatedUIComponent) {
-      return NextResponse.json(
-        { error: "UI Component not found" },
-        { status: 404 }
-      );
+    if (!uiComponents || !Array.isArray(uiComponents)) {
+      return new NextResponse("Invalid UI components data", { status: 400 });
     }
 
-    return NextResponse.json(updatedUIComponent, { status: 200 });
+    const savedComponents = await Promise.all(
+      uiComponents.map(async (component) => {
+        const { component_id, type, label, position, app_id } = component;
+
+        return UIComponent.findOneAndUpdate(
+          { component_id, app_id },
+          { component_id, type, label, position, app_id }, // Include type and label
+          { upsert: true, new: true, runValidators: true }
+        );
+      })
+    );
+
+    return new NextResponse(JSON.stringify(savedComponents), { status: 200 });
   } catch (error: any) {
-    console.error("Error updating UI component:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Error creating UI component:", error.message);
+    return new NextResponse(error.message, { status: 500 });
   }
 }
 
