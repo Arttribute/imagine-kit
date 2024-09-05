@@ -4,18 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
-function TextInput({
-  fields,
-}: {
+interface TextInputProps {
   fields: Array<{
     label: string;
     value: string;
   }>;
-}) {
+  onSubmit: (fields: Array<{ label: string; value: string }>) => void; // Callback function
+}
+
+function TextInput({ fields, onSubmit }: TextInputProps) {
   const [inputFields, setInputFields] = useState(fields);
 
-  const onSubmit = () => {
-    console.log(inputFields);
+  const handleSubmit = () => {
+    // Trigger the callback with the current input field values
+    console.log("Inputs", inputFields);
+    onSubmit(inputFields);
+    // Clear the input fields after submission
+    setInputFields(fields);
   };
 
   const handleInputChange = (index: number, value: string) => {
@@ -37,7 +42,7 @@ function TextInput({
           />
         </div>
       ))}
-      <Button className="w-full m-2" onClick={onSubmit}>
+      <Button className="w-full m-2" onClick={handleSubmit}>
         Submit
       </Button>
     </div>

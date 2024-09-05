@@ -33,10 +33,11 @@ export async function POST(request: Request) {
       edges.map(async (edgeData) => {
         const { source, target, sourceHandle, targetHandle, app_id } = edgeData;
 
-        // Validate and save each edge
-        if (!source || !target || !sourceHandle || !targetHandle || !app_id) {
-          throw new Error("Missing required edge fields.");
-        }
+        // // Validate and save each edge
+        // if (!source || !target || !sourceHandle || !targetHandle || !app_id) {
+        //   const missingFields = Object.entries(edgeData);
+        //   throw new Error("Missing required edge fields." + missingFields);
+        // }
 
         return Edge.findOneAndUpdate(
           { source, target, sourceHandle, targetHandle, app_id },

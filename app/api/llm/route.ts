@@ -8,23 +8,21 @@ const openai = new OpenAI({
 
 export async function POST(request: Request) {
   try {
-    const requestbody = await request.json();
-    const { instruction, inputs, outputs } = requestbody;
+    const requestBody = await request.json();
+    const { instruction, inputs, outputs } = requestBody;
 
     const prompt = `
-    You are an assistant designed to output JSON.
-    Your goal is to  ${instruction}
+      You are an assistant designed to output JSON.
+      Your goal is to ${instruction}
 
-    This is the input: ${inputs}
+      This is the input: ${inputs}
 
-    and you should output the json on the following format:
-    ${outputs}
-    
+      and you should output the json in the following format:
+      ${outputs}
     `;
 
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo-0125",
-      response_format: { type: "json_object" },
       messages: [
         {
           role: "system",
@@ -39,11 +37,14 @@ export async function POST(request: Request) {
       presence_penalty: 0.0,
     });
 
-    return new NextResponse(response.choices[0].message.content, {
-      status: 200,
-    });
+    return new NextResponse(
+      JSON.stringify(response.choices[0].message.content),
+      {
+        status: 200,
+      }
+    );
   } catch (error: any) {
-    return new NextResponse(error.message, {
+    return new NextResponse(JSON.stringify({ error: error.message }), {
       status: 500,
     });
   }

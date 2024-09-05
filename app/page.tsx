@@ -178,6 +178,20 @@ const HomePage: React.FC = () => {
 
   const handleDataChange = useCallback(
     (id: string, data: any) => {
+      //update node input fand output field labels with field values
+      if (data.inputs) {
+        data.inputs = data.inputs.map((input: any) => ({
+          ...input,
+          label: input.value,
+        }));
+      }
+      if (data.outputs) {
+        data.outputs = data.outputs.map((output: any) => ({
+          ...output,
+          label: output.value,
+        }));
+      }
+
       setNodes((nds) =>
         nds.map((node) => (node.id === id ? { ...node, data } : node))
       );

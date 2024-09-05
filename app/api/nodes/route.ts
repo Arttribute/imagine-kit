@@ -36,9 +36,10 @@ export async function POST(request: Request) {
         const { node_id, type, name, data, position, app_id } = nodeData;
 
         // Validate and save each node
-        if (!node_id || !type || !name || !position || !app_id) {
-          throw new Error("Missing required node fields.");
-        }
+        // if (!node_id || !type || !name || !position || !app_id) {
+        //   const missingFields = Object.entries(nodeData);
+        //   throw new Error("Missing required node fields." + missingFields);
+        // }
 
         return Node.findOneAndUpdate(
           { node_id, app_id },

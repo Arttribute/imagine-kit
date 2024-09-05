@@ -13,7 +13,7 @@ import TextInput from "@/components/imaginekit/ui/textinput/TextInput";
 export default function Play() {
   return (
     <div>
-      <SketchPad />
+      <SketchPad onSubmit={(imageData) => console.log(imageData)} />
       <TextOutput text="Hello, world!" />
       <ImageTiles
         src="https://res.cloudinary.com/arttribute/image/upload/v1723823036/m25z496he3yykfk3elsz.jpg"
@@ -33,6 +33,7 @@ export default function Play() {
           { label: "First name", value: "" },
           { label: "Last name", value: "" },
         ]}
+        onSubmit={(fields) => console.log(fields)}
       />
       <FlipCard
         backTitle="Back title"
