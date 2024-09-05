@@ -40,6 +40,7 @@ interface UIComponent {
 }
 
 const HomePage: React.FC = () => {
+  const appId = "66d8301bf24af376594fb6b7"; // Replace with actual app ID
   const dispatch = useAppDispatch();
   const nodesFromStore = useAppSelector((state) => state.flow.nodes);
   const edgesFromStore = useAppSelector((state) => state.flow.edges);
@@ -66,11 +67,40 @@ const HomePage: React.FC = () => {
     [key: string]: ComponentPosition;
   }>({});
 
+  // Fetch nodes and edges from the database on component mount
+  useEffect(() => {
+    const fetchNodesAndEdges = async () => {
+      try {
+        const [nodesResponse, edgesResponse] = await Promise.all([
+          axios.get(`/api/nodes?appId=${appId}`),
+          axios.get(`/api/edges?appId=${appId}`),
+        ]);
+
+        const fetchedNodes = await nodesResponse.data.map((node: any) => ({
+          ...node,
+          id: node.node_id,
+          position: node.position,
+        }));
+        const fetchedEdges = await edgesResponse.data.map((edge: any) => ({
+          ...edge,
+          id: edge.id?.toString(),
+        }));
+        console.log("Fetched Nodes:", fetchedNodes); // Debugging log
+        setNodes(fetchedNodes);
+        setEdges(fetchedEdges);
+      } catch (error) {
+        console.error("Failed to fetch nodes and edges:", error);
+      }
+    };
+
+    fetchNodesAndEdges();
+  }, []);
+
   // Effect to load existing UI components and their positions
   useEffect(() => {
     const loadUIComponents = async () => {
       try {
-        const response = await axios.get("/api/uicomponents");
+        const response = await axios.get(`/api/uicomponents?appId=${appId}`);
         const uiComponentsData = response.data;
         setSavedComponentPositions(
           uiComponentsData.reduce(
@@ -123,7 +153,7 @@ const HomePage: React.FC = () => {
           width: positions[component.id]?.width,
           height: positions[component.id]?.height,
         },
-        app_id: "66d8301bf24af376594fb6b7", // Replace with actual app ID
+        app_id: appId, // Replace with actual app ID
       }));
 
       try {
@@ -155,7 +185,7 @@ const HomePage: React.FC = () => {
           x: node.position.x || 0,
           y: node.position.y || 0,
         },
-        app_id: "66d8301bf24af376594fb6b7", // Replace with actual app ID
+        app_id: appId, // Replace with actual app ID
       }));
 
       const edgeData = edges.map((edge) => ({
@@ -163,7 +193,7 @@ const HomePage: React.FC = () => {
         target: edge.target,
         sourceHandle: edge.sourceHandle,
         targetHandle: edge.targetHandle,
-        app_id: "66d8301bf24af376594fb6b7", // Replace with actual app ID
+        app_id: appId, // Replace with actual app ID
       }));
 
       // Save nodes and edges to the database
@@ -201,12 +231,11 @@ const HomePage: React.FC = () => {
   );
 
   const handleRemoveNode = useCallback(
-    async (nodeId: string, appId: string) => {
+    async (nodeId: string, app_id: string) => {
       try {
         // Use node_id instead of ObjectId _id
-        await axios.delete(
-          `/api/nodes?id=${nodeId}&appId=${"66d8301bf24af376594fb6b7"}`
-        );
+        console.log("Deleting node with ID:", nodeId, "and app Id:", appId); // Debugging log
+        await axios.delete(`/api/nodes?id=${nodeId}&appId=${appId}`);
 
         // Update state on the frontend
         setNodes((nds) => nds.filter((node) => node.id !== nodeId));
@@ -332,6 +361,7 @@ const HomePage: React.FC = () => {
 
   // Call saveNodesAndEdges when nodes or edges change
   useEffect(() => {
+    console.log("Nodes to be saves", nodes); // Debugging log
     saveNodesAndEdges();
   }, [nodes, edges, saveNodesAndEdges]);
 

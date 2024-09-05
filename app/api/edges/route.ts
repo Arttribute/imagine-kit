@@ -6,10 +6,12 @@ import { NextResponse } from "next/server";
 /**
  * GET /api/edges - Get all edges
  */
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const app_id = searchParams.get("appId");
   try {
     await dbConnect();
-    const edges = await Edge.find().sort({ createdAt: -1 });
+    const edges = await Edge.find({ app_id }).sort({ createdAt: -1 });
     return NextResponse.json(edges, { status: 200 });
   } catch (error: any) {
     console.error("Error fetching edges:", error.message);

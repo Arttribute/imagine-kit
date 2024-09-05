@@ -5,13 +5,16 @@ import Edge from "@/models/Edge";
 import UIComponent from "@/models/UIComponent";
 import { NextResponse } from "next/server";
 
+export const revalidate = 0;
 /**
  * GET /api/nodes - Get all nodes
  */
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const app_id = searchParams.get("appId");
   try {
     await dbConnect();
-    const nodes = await Node.find().sort({ createdAt: -1 });
+    const nodes = await Node.find({ app_id }).sort({ createdAt: -1 });
     return NextResponse.json(nodes, { status: 200 });
   } catch (error: any) {
     console.error("Error fetching nodes:", error.message);
@@ -35,11 +38,10 @@ export async function POST(request: Request) {
       nodes.map(async (nodeData) => {
         const { node_id, type, name, data, position, app_id } = nodeData;
 
-        // Validate and save each node
-        // if (!node_id || !type || !name || !position || !app_id) {
-        //   const missingFields = Object.entries(nodeData);
-        //   throw new Error("Missing required node fields." + missingFields);
-        // }
+        //Validate and save each node
+        if (!node_id) {
+          throw new Error("Missing required node id.");
+        }
 
         return Node.findOneAndUpdate(
           { node_id, app_id },
@@ -65,6 +67,8 @@ export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const nodeId = searchParams.get("id"); // This is now the `node_id`
   const appId = searchParams.get("appId");
+  console.log("nodeId", nodeId);
+  console.log("appId", appId);
 
   if (!nodeId) {
     return NextResponse.json({ error: "Node ID is required" }, { status: 400 });

@@ -6,10 +6,15 @@ import { NextResponse } from "next/server";
 /**
  * GET /api/uicomponents - Get all UI components
  */
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const app_id = searchParams.get("appId");
+  console.log("app_id", app_id);
   try {
     await dbConnect();
-    const uiComponents = await UIComponent.find().sort({ createdAt: -1 });
+    const uiComponents = await UIComponent.find({ app_id }).sort({
+      createdAt: -1,
+    });
     return NextResponse.json(uiComponents, { status: 200 });
   } catch (error: any) {
     console.error("Error fetching UI components:", error.message);
