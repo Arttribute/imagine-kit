@@ -13,7 +13,7 @@ import WordArranger from "@/components/imaginekit/ui/wordtiles/arrange/WordArran
 import SketchPad from "@/components/imaginekit/ui/sketchpad/SketchPad";
 
 // Utility function for calling LLM API
-import { callLLMApi } from "@/utils/llm";
+import { callGPTApi } from "@/utils/apicalls/gpt";
 
 // Types for node, edge, and UI component data
 interface NodeData {
@@ -122,7 +122,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 
     try {
       // Call the LLM API
-      const generatedOutput = await callLLMApi(
+      const generatedOutput = await callGPTApi(
         instruction ?? "",
         inputValues,
         outputFormat
