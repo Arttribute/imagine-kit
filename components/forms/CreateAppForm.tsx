@@ -49,9 +49,9 @@ const CreateAppForm = () => {
         placeholder="Enter the description of the app"
       />
       {error && <p className="text-red-500 text-sm">{error}</p>}
-      <Button onClick={handleSubmit} loading={loading}>
-        Create App
-      </Button>
+
+      {!loading && <Button onClick={handleSubmit}>Create App</Button>}
+      {loading && <Button disabled>Loading...</Button>}
     </div>
   );
 };
