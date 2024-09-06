@@ -376,7 +376,7 @@ export default function EditWorld({ params }: { params: { id: string } }) {
             <TabsTrigger value="preview">UI preview</TabsTrigger>
           </TabsList>
           <TabsContent value="nodes">
-            <div style={{ display: "flex", height: "100vh" }}>
+            <div style={{ display: "flex", height: "93vh" }}>
               <div
                 style={{
                   flexGrow: 1,
@@ -407,7 +407,7 @@ export default function EditWorld({ params }: { params: { id: string } }) {
             </div>
           </TabsContent>
           <TabsContent value="preview">
-            <div style={{ display: "flex", height: "80vh", width: "64vw" }}>
+            <div style={{ display: "flex", height: "86vh", width: "80vw" }}>
               <UIEditor
                 uiComponents={uiComponents}
                 savedPositions={savedComponentPositions}

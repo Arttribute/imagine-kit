@@ -26,7 +26,7 @@ const CreateAppForm = () => {
       const response = await axios.post("/api/apps", appData);
       console.log("Response", response.data);
       const appId = response.data._id;
-      router.push(`/worlds/edit/${appId}`);
+      router.push(`/${"username"}/worlds/${appId}/edit`);
     } catch (error) {
       setError((error as any).response.data.message);
     }

@@ -160,7 +160,7 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
   ];
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-xl border m-4 w-64">
+    <div className="p-4 bg-white rounded-xl shadow-xl border border-purple-200 m-4 w-64">
       <h2 className="text-lg font-bold mb-2">Imagine Kit</h2>
       <div className="flex flex-col gap-4">
         {buttons.map(({ section, icon, tools }) => (
