@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       model: "dall-e-3",
       prompt: input,
       n: 1,
-      size: "512x512",
+      size: "1024x1024",
     });
     return new NextResponse(JSON.stringify(response.data[0].url), {
       status: 200,

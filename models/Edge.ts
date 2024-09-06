@@ -1,5 +1,6 @@
 // models/Edge.js
 import mongoose from "mongoose";
+import App from "@/models/App";
 
 const EdgeSchema = new mongoose.Schema({
   source: {
@@ -20,7 +21,7 @@ const EdgeSchema = new mongoose.Schema({
   },
   app_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "App",
+    ref: App,
     required: true,
   },
 });

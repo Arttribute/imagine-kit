@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     await dbConnect();
-    const apps = await App.find().sort({ createdAt: -1 });
+    const apps = await App.find().populate("owner").sort({ createdAt: -1 });
     return NextResponse.json(apps, { status: 200 });
   } catch (error: any) {
     console.error("Error fetching apps:", error.message);

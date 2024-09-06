@@ -14,6 +14,7 @@ import SketchPad from "@/components/imaginekit/ui/sketchpad/SketchPad";
 
 // Utility function for calling LLM API
 import { callGPTApi } from "@/utils/apicalls/gpt";
+import { callDalleApi } from "@/utils/apicalls/dalle";
 
 // Types for node, edge, and UI component data
 interface NodeData {
@@ -91,7 +92,6 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   const executeNode = useCallback(
     async (node: NodeData) => {
       if (executedNodes.has(node.node_id)) return; // Skip if node has already been executed
-
       switch (node.type) {
         case "llm":
           await executeLLMNode(node); // Execute LLM Node
@@ -112,6 +112,12 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 
   // Function to execute an LLM Node
   const executeLLMNode = async (node: NodeData) => {
+    const promptInput = node.data.inputs[0].value;
+    const promptLabel = node.data.inputs[0].label;
+    if (!promptInput) return;
+    //if the prompt input is the same as the prompt label ut means that the user has not made an input then return
+    if (promptInput === promptLabel) return;
+
     const { instruction, inputs, outputs } = node.data;
 
     // Get input values from the node's inputs
@@ -194,33 +200,72 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   };
 
-  // Example function to execute an Image Generator Node
   const executeImageGeneratorNode = async (node: NodeData) => {
-    const promptInput = node.data.inputs.find(
-      (input) => input.label === "Prompt"
-    )?.value;
-
+    const promptInput = node.data.inputs[0].value;
+    const promptLabel = node.data.inputs[0].label;
     if (!promptInput) return;
+    //if the prompt input is the same as the prompt label ut means that the user has not made an input then return
+    if (promptInput === promptLabel) return;
 
-    // Assume some API call to generate an image URL
-    const generatedImageUrl = await mockImageGenApiCall(promptInput);
+    try {
+      // Call DALL-E API to generate image
+      console.log("Generating image with prompt", promptInput);
+      const generatedImageUrl = await callDalleApi(promptInput);
+      console.log("Image Generator Node output:", generatedImageUrl);
+      // Update the node's outputs with the generated image URL
+      setNodes((prev) =>
+        prev.map((n) =>
+          n.node_id === node.node_id
+            ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  outputs: n.data.outputs.map((output) =>
+                    output.id === "output-0"
+                      ? { ...output, value: generatedImageUrl }
+                      : output
+                  ),
+                },
+              }
+            : n
+        )
+      );
 
-    // Set the output for this node
-    setNodeOutputs((prev) => ({
-      ...prev,
-      [node.node_id]: { ...prev[node.node_id], "output-0": generatedImageUrl },
-    }));
-  };
+      // Propagate the output to connected nodes
+      const connectedEdges = edges.filter(
+        (edge) => edge.source === node.node_id
+      );
+      connectedEdges.forEach((edge) => {
+        const targetNodeIndex = nodes.findIndex(
+          (node) => node.node_id === edge.target
+        );
 
-  // Mock function to simulate an Image Generator API call
-  const mockImageGenApiCall = async (prompt: string) => {
-    // Simulate a delay and return a mock image URL
-    return new Promise((resolve) =>
-      setTimeout(
-        () => resolve(`https://dummyimage.com/600x400/000/fff&text=${prompt}`),
-        1000
-      )
-    );
+        console.log("Connected Edges:", connectedEdges);
+        console.log("ImageGen Target Node Index:", targetNodeIndex);
+        if (targetNodeIndex !== -1) {
+          const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
+            (input) => input.id === edge.targetHandle
+          );
+          console.log("ImageGenTarget Input Index:", targetInputIndex);
+
+          if (targetInputIndex !== -1) {
+            nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
+              generatedImageUrl;
+
+            // Trigger a re-render to propagate the data change
+            setNodes([...nodes]);
+
+            // Execute the target node after updating its input
+            executeNode(nodes[targetNodeIndex]);
+          }
+        }
+      });
+    } catch (error) {
+      console.error(
+        `Error executing Image Generator Node (${node.node_id}):`,
+        error
+      );
+    }
   };
 
   // Execute all nodes and manage the data flow
@@ -413,7 +458,11 @@ const renderUIComponent = (
 ): React.ReactNode => {
   switch (component.type) {
     case "imageDisplay":
-      return <ImageDisplay images={[nodeOutput?.["output-0"]]} />;
+      return (
+        <div>
+          <ImageDisplay images={[nodeData.data.inputs[0].value]} />
+        </div>
+      );
     case "flipCard":
       return (
         <FlipCard

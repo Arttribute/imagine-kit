@@ -41,7 +41,7 @@ export default function Play() {
         frontContentText="Front test with a lot of words again and again"
         backContentText="Back text with a lot of words again and again"
       />
-      <ImageDisplay images={["https://github.com/shadcn.png"]} />
+      <ImageDisplay images={[]} />
     </div>
   );
 }

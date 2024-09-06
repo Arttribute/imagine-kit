@@ -1,5 +1,6 @@
 // models/UIComponent.js
 import mongoose from "mongoose";
+import App from "@/models/App";
 
 const UIComponentSchema = new mongoose.Schema({
   component_id: {
@@ -21,7 +22,7 @@ const UIComponentSchema = new mongoose.Schema({
   },
   app_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "App",
+    ref: App,
     required: true,
   },
 });

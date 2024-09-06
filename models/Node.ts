@@ -1,5 +1,6 @@
 // models/Node.js
 import mongoose from "mongoose";
+import App from "@/models/App";
 
 const InputOutputSchema = new mongoose.Schema({
   id: {
@@ -39,7 +40,7 @@ const NodeSchema = new mongoose.Schema({
   },
   app_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "App", // Reference as a string
+    ref: App,
     required: true,
   },
 });

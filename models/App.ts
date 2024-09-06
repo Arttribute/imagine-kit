@@ -1,11 +1,12 @@
 // models/App.js
 import mongoose from "mongoose";
+import User from "@/models/User";
 
 const AppSchema = new mongoose.Schema(
   {
     owner: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Reference as a string
+      ref: User,
       required: true,
     },
     name: {
