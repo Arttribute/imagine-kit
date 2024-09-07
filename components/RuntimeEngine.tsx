@@ -112,8 +112,8 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 
   // Function to execute an LLM Node
   const executeLLMNode = async (node: NodeData) => {
-    const promptInput = node.data.inputs[0].value;
-    const promptLabel = node.data.inputs[0].label;
+    const promptInput = node.data.inputs[0]?.value || "start";
+    const promptLabel = node.data.inputs[0]?.label;
     if (!promptInput) return;
     //if the prompt input is the same as the prompt label ut means that the user has not made an input then return
     if (promptInput === promptLabel) return;
@@ -471,7 +471,7 @@ const renderUIComponent = (
         />
       );
     case "imageTiles":
-      return <ImageTiles src={nodeOutput?.["output-0"]} numCols={3} />;
+      return <ImageTiles src={nodeData.data.inputs[0].value} numCols={3} />;
     case "textInput":
       return (
         <TextInput
@@ -487,14 +487,14 @@ const renderUIComponent = (
     case "wordSelector":
       return (
         <WordSelector
-          correctWords={nodeOutput?.["input-0"]}
-          incorrectWords={nodeOutput?.["input-1"]}
+          correctWords={nodeData.data.inputs[0].value}
+          incorrectWords={nodeData.data.inputs[1].value.toString()}
         />
       );
     case "wordArranger":
       return (
         <WordArranger
-          correctWords={nodeOutput?.["input-0"]}
+          correctWords={nodeData.data.inputs[0].value}
           setIsCorrect={() => {}}
         />
       );

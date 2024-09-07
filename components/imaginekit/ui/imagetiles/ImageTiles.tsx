@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-
+import axios from "axios";
 interface Props {
   src: string;
   numCols: number;
@@ -21,7 +21,16 @@ const ImageTiles: React.FC<Props> = ({ src, numCols }) => {
 
   useEffect(() => {
     const fetchImage = async (url: string) => {
-      const response = await fetch(url);
+      //uplaod image to cloudinary
+      const data = new FormData();
+      data.append("file", url);
+      data.append("upload_preset", "studio-upload");
+      const res = await axios.post(
+        "https://api.cloudinary.com/v1_1/arttribute/upload",
+        data
+      );
+      const response = await fetch(res.data.secure_url);
+
       const blob = await response.blob();
       return URL.createObjectURL(blob);
     };

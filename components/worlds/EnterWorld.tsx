@@ -1,9 +1,5 @@
 import * as React from "react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import AnimatedGridPattern from "@/components/magicui/animated-grid-pattern";
-import DotPattern from "@/components/magicui/dot-pattern";
-import GridPattern from "@/components/magicui/grid-pattern";
 import FlickeringGrid from "@/components/magicui/flickering-grid";
 
 export default function EnterWorld({

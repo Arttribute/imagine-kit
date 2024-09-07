@@ -27,31 +27,42 @@ const CreateAppForm = () => {
       console.log("Response", response.data);
       const appId = response.data._id;
       router.push(`/${"username"}/worlds/${appId}/edit`);
+      setLoading(false);
     } catch (error) {
       setError((error as any).response.data.message);
     }
-
-    setLoading(false);
   };
 
   return (
-    <div className="w-96 m-auto">
-      <Label>Name</Label>
-      <Input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Enter the name of the app"
-      />
-      <Label>Description</Label>
-      <Input
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder="Enter the description of the app"
-      />
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+    <div className="border border-gray-500 shadow-xl rounded-2xl bg-white z-10 p-2 w-96 lg:w-[460px]">
+      <div className="p-6 border  border-gray-300 rounded-xl">
+        <div className="p-6 flex flex-col items-center justify-center">
+          <h1 className="text-2xl font-semibold">Create new world</h1>
+          <p className="text-gray-500">
+            Build your unique interactive experience
+          </p>
+        </div>
 
-      {!loading && <Button onClick={handleSubmit}>Create App</Button>}
-      {loading && <Button disabled>Loading...</Button>}
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Name your world"
+        />
+
+        {!loading && (
+          <Button
+            onClick={handleSubmit}
+            className="w-full mt-2  bg-indigo-500 hover:bg-indigo-600"
+          >
+            Create World
+          </Button>
+        )}
+        {loading && (
+          <Button disabled className="w-full mt-2  bg-indigo-500">
+            Loading...
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
