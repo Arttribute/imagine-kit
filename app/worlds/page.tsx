@@ -19,9 +19,10 @@ export default function Worlds() {
 
   return (
     <div>
-      <h1>Worlds</h1>
-      {loading && <p>Loading...</p>}
-      {apps && <WorldsList apps={apps} />}
+      <div className="p-8">
+        {loading && <p>Loading...</p>}
+        {apps && <WorldsList apps={apps} />}
+      </div>
     </div>
   );
 }
