@@ -90,7 +90,7 @@ class Bot {
   async getOutput() {
     return new Promise((resolve) => {
       this.eventEmitter.once("message", (context: HandlerContext) => {
-        console.log(`Bot > ${this.context?.message.content.content}`);
+        console.log(`Bot > ${context?.message.content.content}`);
         resolve(context?.message.content.content);
       });
     });
@@ -179,9 +179,44 @@ const state: State = {
   ],
 };
 
-const machine = new Machine(state);
+import express from "express";
+import ky from "ky";
 
-machine.resolve();
+const app = express();
+const port = 3200;
+
+let botPromise;
+let bot: Bot;
+
+app.use(express.json());
+
+app.post("/xmtp", (req, res) => {
+  bot = new Bot();
+  const body = req.body;
+  botPromise = new Promise(async (res) => {
+    while (true) {
+      const output = await bot.getOutput();
+      // send a request to Engine, response is the input
+      const { response } = await ky
+        .post("http://localhost:3000/api/xmtp", {
+          json: { appId: body.appId, input: output },
+          timeout: false,
+        })
+        .json<{ response: string }>();
+
+      await bot.useInput(response);
+    }
+  });
+  res.send("Bot listening");
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
+
+// const machine = new Machine(state);
+
+// machine.resolve();
 
 // function module(privateKey: string = "") {
 //   const wallet = new Wallet("");
