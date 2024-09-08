@@ -30,7 +30,7 @@ export default function Profile({ params }: { params: { username: string } }) {
     <div>
       {loading && <p>Loading...</p>}
       <div className="container grid grid-cols-12 gap-4 px-12 mt-12">
-        <div className="col-span-3">{!user && <UserDetails user={user} />}</div>
+        <div className="col-span-3">{user && <UserDetails user={user} />}</div>
         <div className="col-span-9 border rounded-xl p-2">
           <Tabs defaultValue="account" className="h-full space-y-6">
             <div className="flex ">

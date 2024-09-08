@@ -7,9 +7,22 @@ const UserSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  name: {
+  fullname: {
     type: String,
     required: true,
+  },
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  bio: {
+    type: String,
+    default: "",
+  },
+  profile_image: {
+    type: String,
+    default: "",
   },
   onchain_address: {
     type: String,
@@ -17,6 +30,14 @@ const UserSchema = new mongoose.Schema({
   },
   password: {
     type: String,
+  },
+  followercount: {
+    type: Number,
+    default: 0,
+  },
+  followingcount: {
+    type: Number,
+    default: 0,
   },
 });
 
