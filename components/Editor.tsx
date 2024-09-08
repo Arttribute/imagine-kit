@@ -25,6 +25,9 @@ import "reactflow/dist/style.css";
 import nodeTypes, {
   NODE_TYPE_MAPPING,
 } from "@/components/imaginekit/nodes/nodeTypes";
+import { Button } from "@/components/ui/button";
+import { PlayIcon } from "lucide-react";
+import Link from "next/link";
 
 interface ComponentPosition {
   x: number;
@@ -39,7 +42,13 @@ interface UIComponent {
   type: string;
 }
 
-export default function Editor({ appId }: { appId: string }) {
+export default function Editor({
+  appId,
+  owner,
+}: {
+  appId: string;
+  owner: string;
+}) {
   const dispatch = useAppDispatch();
   const nodesFromStore = useAppSelector((state) => state.flow.nodes);
   const edgesFromStore = useAppSelector((state) => state.flow.edges);
@@ -370,10 +379,18 @@ export default function Editor({ appId }: { appId: string }) {
         <AppToolbar addNewNode={addNewNode} />
 
         <Tabs defaultValue="nodes" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 w-[400px] m-2">
-            <TabsTrigger value="nodes">Logic flow</TabsTrigger>
-            <TabsTrigger value="preview">UI preview</TabsTrigger>
-          </TabsList>
+          <div className="flex">
+            <TabsList className="grid w-full grid-cols-2 w-[400px] m-2">
+              <TabsTrigger value="nodes">Logic flow</TabsTrigger>
+              <TabsTrigger value="preview">UI preview</TabsTrigger>
+            </TabsList>
+            <Link href={`/${owner}/worlds/${appId}`} passHref>
+              <Button className="m-2 px-6 bg-indigo-500 hover:bg-ingido-600">
+                Experience
+                <PlayIcon className="w-4 h-4 ml-1 " />
+              </Button>
+            </Link>
+          </div>
           <TabsContent value="nodes">
             <div style={{ display: "flex", height: "93vh" }}>
               <div

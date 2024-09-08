@@ -1,6 +1,7 @@
 "use client";
 import { Menubar, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
 import { Sparkles } from "lucide-react";
+import Image from "next/image";
 
 export default function AppBar() {
   return (
@@ -18,7 +19,17 @@ export default function AppBar() {
           </MenubarTrigger>
         </MenubarMenu>
         <div className="grow" />
-        <div className="flex"></div>
+        <div className="flex">
+          <Image
+            src={
+              "https://res.cloudinary.com/arttribute/image/upload/v1723823036/m25z496he3yykfk3elsz.jpg"
+            }
+            width={30}
+            height={30}
+            alt={"game"}
+            className="aspect-[1] rounded-full  m-1 "
+          />
+        </div>
       </Menubar>
     </div>
   );
