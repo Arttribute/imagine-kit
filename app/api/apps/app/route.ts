@@ -11,10 +11,10 @@ export async function GET(request: Request) {
   const _id = searchParams.get("appId");
   try {
     await dbConnect();
-    const apps = await App.findOne({ _id })
+    const app = await App.findOne({ _id })
       .populate("owner")
       .sort({ createdAt: -1 });
-    return NextResponse.json(apps, { status: 200 });
+    return NextResponse.json(app, { status: 200 });
   } catch (error: any) {
     console.error("Error fetching apps:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });

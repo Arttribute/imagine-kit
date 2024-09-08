@@ -34,7 +34,7 @@ const CreateAppForm = () => {
   };
 
   return (
-    <div className="border border-gray-500 shadow-xl rounded-2xl bg-white z-10 p-2 w-96 lg:w-[460px]">
+    <div className="border border-gray-500 shadow-2xl shadow-indigo-200 rounded-2xl bg-white z-10 p-2 w-96 lg:w-[460px]">
       <div className="p-6 border  border-gray-300 rounded-xl">
         <div className="p-6 flex flex-col items-center justify-center">
           <h1 className="text-2xl font-semibold">Create new world</h1>

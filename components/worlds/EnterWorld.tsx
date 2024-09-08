@@ -14,7 +14,7 @@ export default function EnterWorld({
   };
   return (
     <div className="h-screen flex flex-col items-center justify-center">
-      <div className="border border-gray-500 shadow-xl rounded-2xl bg-white z-10 p-2 w-96 lg:w-[460px]">
+      <div className="border border-gray-500 shadow-2xl shadow-indigo-200 rounded-2xl bg-white z-10 p-2 w-96 lg:w-[460px]">
         <div className="p-6 border  border-gray-300 rounded-xl">
           <div className="p-6 mb-4 flex flex-col items-center justify-center">
             <h1 className="text-2xl font-semibold">{app.name}</h1>
@@ -39,7 +39,7 @@ export default function EnterWorld({
         gridGap={12}
         color="#3f51b5"
         maxOpacity={0.5}
-        flickerChance={0.1}
+        flickerChance={0.5}
       />
     </div>
   );
