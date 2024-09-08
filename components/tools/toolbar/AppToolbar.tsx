@@ -161,7 +161,12 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
 
   return (
     <div className="p-4 bg-white rounded-xl shadow-xl border border-purple-200 m-4 w-64">
-      <h2 className="text-lg font-bold mb-2">Imagine Kit</h2>
+      <div className="flex  justify-center">
+        <p className="p-1 whitespace-pre-wrap bg-gradient-to-r from-orange-500 via-pink-500 to-indigo-500 bg-clip-text text-center text-xl font-bold leading-none tracking-tighter text-transparent">
+          Imagine kit
+        </p>
+        <Sparkles className="h-4 w-4 mt-0.5 text-indigo-500" />
+      </div>
       <div className="flex flex-col gap-4">
         {buttons.map(({ section, icon, tools }) => (
           <ToolSection key={section} title={section} icon={icon}>
