@@ -34,24 +34,36 @@ const CreateAppForm = () => {
       };
 
       if (createPrompt !== "") {
+        const genData = await handleGodPrompt();
         const generatedappData = {
-          owner: session.user.id || "66dd548dfa3ec069d5f49fd6",
-          name,
-          description,
+          owner: session?.user?.id || "66dd548dfa3ec069d5f49fd6",
+          name: genData.name,
+          description: genData.description,
         };
-        await handleGodPrompt();
         const response = await axios.post("/api/apps", generatedappData);
         console.log("Response", response.data);
         const appId = response.data._id;
-        const nodesResponse = await axios.post("/api/nodes", { appId, nodes });
-        console.log("Nodes response", nodesResponse.data);
-        const edgesResponse = await axios.post("/api/edges", { appId, edges });
-        console.log("Edges response", edgesResponse.data);
-        const uiComponentsResponse = await axios.post("/api/uicomponents", {
-          appId,
-          uiComponents,
+
+        const nodeData = genData.nodes.map((node: any) => ({
+          ...node,
+          app_id: appId,
+        }));
+        const edgeData = genData.edges.map((edge: any) => ({
+          ...edge,
+          app_id: appId,
+        }));
+        const uiComponentsToSave = genData.uiComponents.map(
+          (uiComponent: any) => ({
+            ...uiComponent,
+            app_id: appId,
+          })
+        );
+
+        await axios.post("/api/nodes", { nodes: nodeData });
+        await axios.post("/api/edges", { edges: edgeData });
+        await axios.post("/api/uicomponents", {
+          uiComponents: uiComponentsToSave,
         });
-        console.log("UI Components response", uiComponentsResponse.data);
         router.push(`/${session?.user?.name || "bashy"}/worlds/${appId}/edit`);
         setLoading(false);
       } else {
@@ -85,11 +97,14 @@ const CreateAppForm = () => {
 
     const result = await response.json();
     console.log("Result", result);
-    setName(result.name);
-    setDescription(result.description);
-    setNodes(result.nodes);
-    setEdges(result.edges);
-    setUiComponents(result.uiComponents);
+    const data = JSON.parse(result);
+    console.log("Data", data);
+    setName(data.name);
+    setDescription(data.description);
+    setNodes(data.nodes);
+    setEdges(data.edges);
+    setUiComponents(data.uiComponents);
+    return data;
   };
 
   return (
