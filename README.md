@@ -28,7 +28,7 @@ Integration and Flexibility: The platform is designed to be extensible, allowing
 
 **AssistantBot** contract deployed to 0xBeA27901a93469fd0F096F3150E56511C186983f - Galadriel Devnet
 
-**ImagineKitRegistry** contract deployed to 0xe222dfCD63076757Ed009EDC0C8a5A71f788DD31 - Chhills Spicy testnet
+**ImagineKitRegistry** contract deployed to 0xe222dfCD63076757Ed009EDC0C8a5A71f788DD31 - Chills Spicy testnet
 
 ## Running DrawDash Locally
 
