@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import ReactFlow, {
   addEdge,
   Background,
@@ -74,6 +74,12 @@ export default function Editor({
   const [savedComponentPositions, setSavedComponentPositions] = useState<{
     [key: string]: ComponentPosition;
   }>({});
+
+  const [isSaved, setIsSaved] = useState(true); // Track saved status
+  const [pendingRemovals, setPendingRemovals] = useState<Set<string>>(
+    new Set()
+  ); // Track pending removals
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref to store timeout ID
 
   // Fetch nodes and edges from the database on component mount
   useEffect(() => {
@@ -170,6 +176,7 @@ export default function Editor({
           uiComponents: uiComponentsToSave,
         });
         console.log("Saved UI Component Positions:", uiComponentsToSave); // Debugging log
+        setIsSaved(true); // Set as saved
       } catch (error) {
         console.error("Failed to save UI component positions:", error);
       }
@@ -179,44 +186,61 @@ export default function Editor({
 
   const saveNodesAndEdges = useCallback(async () => {
     try {
-      const nodeData = nodes.map((node) => ({
-        node_id: node.id, // Ensure node ID is correctly set
-        type: node.type, // Ensure node type is correctly set
-        name: node.data.label, // Use node label as the name
-        data: {
-          inputs: node.data.inputs || [], // Ensure inputs are an array
-          outputs: node.data.outputs || [], // Ensure outputs are an array
-          instruction: node.data.instruction || "", // Use empty string if instruction is not present
-          memoryFields: node.data.memoryFields || [], // Ensure memoryFields are an array
-        },
-        position: {
-          x: node.position.x || 0,
-          y: node.position.y || 0,
-        },
-        app_id: appId, // Replace with actual app ID
-      }));
+      const nodeData = nodes
+        .filter((node) => !pendingRemovals.has(node.id)) // Exclude nodes marked for removal
+        .map((node) => ({
+          node_id: node.id, // Ensure node ID is correctly set
+          type: node.type, // Ensure node type is correctly set
+          name: node.data.label, // Use node label as the name
+          data: {
+            inputs: node.data.inputs || [], // Ensure inputs are an array
+            outputs: node.data.outputs || [], // Ensure outputs are an array
+            instruction: node.data.instruction || "", // Use empty string if instruction is not present
+            memoryFields: node.data.memoryFields || [], // Ensure memoryFields are an array
+          },
+          position: {
+            x: node.position.x || 0,
+            y: node.position.y || 0,
+          },
+          app_id: appId, // Replace with actual app ID
+        }));
 
-      const edgeData = edges.map((edge) => ({
-        source: edge.source,
-        target: edge.target,
-        sourceHandle: edge.sourceHandle,
-        targetHandle: edge.targetHandle,
-        app_id: appId, // Replace with actual app ID
-      }));
+      const edgeData = edges
+        .filter((edge) => {
+          // Exclude edges connected to nodes marked for removal
+          return (
+            !pendingRemovals.has(edge.source) &&
+            !pendingRemovals.has(edge.target)
+          );
+        })
+        .map((edge) => ({
+          source: edge.source,
+          target: edge.target,
+          sourceHandle: edge.sourceHandle,
+          targetHandle: edge.targetHandle,
+          app_id: appId, // Replace with actual app ID
+        }));
 
       // Save nodes and edges to the database
       await axios.post("/api/nodes", { nodes: nodeData });
       await axios.post("/api/edges", { edges: edgeData });
 
       console.log("Nodes and Edges saved successfully"); // Debugging log
+      setIsSaved(true); // Set as saved
+
+      // Remove nodes marked for deletion after saving
+      for (const nodeId of pendingRemovals) {
+        await axios.delete(`/api/nodes?id=${nodeId}&appId=${appId}`);
+      }
+      setPendingRemovals(new Set()); // Clear pending removals
     } catch (error) {
       console.error("Failed to save nodes and edges:", error);
     }
-  }, [nodes, edges]);
+  }, [nodes, edges, pendingRemovals]);
 
   const handleDataChange = useCallback(
     (id: string, data: any) => {
-      //update node input fand output field labels with field values
+      // Update node input and output field labels with field values
       if (data.inputs) {
         data.inputs = data.inputs.map((input: any) => ({
           ...input,
@@ -234,25 +258,22 @@ export default function Editor({
         nds.map((node) => (node.id === id ? { ...node, data } : node))
       );
       dispatch(updateNodeData({ id, data }));
+      setIsSaved(false); // Mark as unsaved
     },
     [setNodes, dispatch]
   );
 
   const handleRemoveNode = useCallback(
-    async (nodeId: string, app_id: string) => {
-      try {
-        // Use node_id instead of ObjectId _id
-        console.log("Deleting node with ID:", nodeId, "and app Id:", appId); // Debugging log
-        await axios.delete(`/api/nodes?id=${nodeId}&appId=${appId}`);
+    (nodeId: string) => {
+      // Update state on the frontend immediately
+      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+      setEdges((eds) =>
+        eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
+      );
 
-        // Update state on the frontend
-        setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-        setEdges((eds) =>
-          eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
-        );
-      } catch (error) {
-        console.error("Error deleting node:", error);
-      }
+      // Mark the node for deletion on next save
+      setPendingRemovals((prev) => new Set(prev).add(nodeId));
+      setIsSaved(false); // Mark as unsaved
     },
     [setNodes, setEdges]
   );
@@ -333,6 +354,7 @@ export default function Editor({
 
       setEdges((eds) => addEdge(newEdge as Edge, eds));
       dispatch(addEdgeAction(newEdge as Edge));
+      setIsSaved(false); // Mark as unsaved
     },
     [setEdges, dispatch, nodes, handleDataChange]
   );
@@ -363,15 +385,29 @@ export default function Editor({
           },
         })
       );
+      setIsSaved(false); // Mark as unsaved
     },
     [nodes, setNodes, dispatch, handleDataChange, handleRemoveNode]
   );
 
-  // Call saveNodesAndEdges when nodes or edges change
+  // Debounced save effect to save nodes and edges every 30-45 seconds after changes
   useEffect(() => {
-    console.log("Nodes to be saves", nodes); // Debugging log
-    saveNodesAndEdges();
-  }, [nodes, edges, saveNodesAndEdges]);
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(() => {
+      if (!isSaved) {
+        saveNodesAndEdges();
+      }
+    }, 30000); // 30 seconds delay (adjust as needed)
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [nodes, edges, isSaved, saveNodesAndEdges]);
 
   return (
     <ReactFlowProvider>
@@ -390,6 +426,14 @@ export default function Editor({
                 <PlayIcon className="w-4 h-4 ml-1 " />
               </Button>
             </Link>
+            {/* Save Button */}
+            <Button
+              className="m-2 px-6 bg-green-500 hover:bg-green-600"
+              onClick={saveNodesAndEdges}
+              disabled={isSaved}
+            >
+              {isSaved ? "Saved" : "Save Changes"}
+            </Button>
           </div>
           <TabsContent value="nodes">
             <div style={{ display: "flex", height: "93vh" }}>
