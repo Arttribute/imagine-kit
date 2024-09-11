@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import ReactFlow, {
   addEdge,
   Background,
@@ -74,6 +74,9 @@ export default function Editor({
   const [savedComponentPositions, setSavedComponentPositions] = useState<{
     [key: string]: ComponentPosition;
   }>({});
+
+  const [isSaved, setIsSaved] = useState(true); // Track saved status
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref to store timeout ID
 
   // Fetch nodes and edges from the database on component mount
   useEffect(() => {
@@ -170,6 +173,7 @@ export default function Editor({
           uiComponents: uiComponentsToSave,
         });
         console.log("Saved UI Component Positions:", uiComponentsToSave); // Debugging log
+        setIsSaved(true); // Set as saved
       } catch (error) {
         console.error("Failed to save UI component positions:", error);
       }
@@ -209,6 +213,7 @@ export default function Editor({
       await axios.post("/api/edges", { edges: edgeData });
 
       console.log("Nodes and Edges saved successfully"); // Debugging log
+      setIsSaved(true); // Set as saved
     } catch (error) {
       console.error("Failed to save nodes and edges:", error);
     }
@@ -234,6 +239,7 @@ export default function Editor({
         nds.map((node) => (node.id === id ? { ...node, data } : node))
       );
       dispatch(updateNodeData({ id, data }));
+      setIsSaved(false); // Mark as unsaved
     },
     [setNodes, dispatch]
   );
@@ -250,6 +256,7 @@ export default function Editor({
         setEdges((eds) =>
           eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
         );
+        setIsSaved(false); // Mark as unsaved
       } catch (error) {
         console.error("Error deleting node:", error);
       }
@@ -333,6 +340,7 @@ export default function Editor({
 
       setEdges((eds) => addEdge(newEdge as Edge, eds));
       dispatch(addEdgeAction(newEdge as Edge));
+      setIsSaved(false); // Mark as unsaved
     },
     [setEdges, dispatch, nodes, handleDataChange]
   );
@@ -363,15 +371,29 @@ export default function Editor({
           },
         })
       );
+      setIsSaved(false); // Mark as unsaved
     },
     [nodes, setNodes, dispatch, handleDataChange, handleRemoveNode]
   );
 
-  // Call saveNodesAndEdges when nodes or edges change
+  // Debounced save effect to save nodes and edges every 30-45 seconds after changes
   useEffect(() => {
-    console.log("Nodes to be saves", nodes); // Debugging log
-    saveNodesAndEdges();
-  }, [nodes, edges, saveNodesAndEdges]);
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(() => {
+      if (!isSaved) {
+        saveNodesAndEdges();
+      }
+    }, 30000); // 30 seconds delay (adjust as needed)
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [nodes, edges, isSaved, saveNodesAndEdges]);
 
   return (
     <ReactFlowProvider>
@@ -390,6 +412,14 @@ export default function Editor({
                 <PlayIcon className="w-4 h-4 ml-1 " />
               </Button>
             </Link>
+            {/* Save Button */}
+            <Button
+              className="m-2 px-6 bg-green-500 hover:bg-green-600"
+              onClick={saveNodesAndEdges}
+              disabled={isSaved}
+            >
+              {isSaved ? "Saved" : "Save Changes"}
+            </Button>
           </div>
           <TabsContent value="nodes">
             <div style={{ display: "flex", height: "93vh" }}>
