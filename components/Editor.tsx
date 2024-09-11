@@ -76,6 +76,9 @@ export default function Editor({
   }>({});
 
   const [isSaved, setIsSaved] = useState(true); // Track saved status
+  const [pendingRemovals, setPendingRemovals] = useState<Set<string>>(
+    new Set()
+  ); // Track pending removals
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref to store timeout ID
 
   // Fetch nodes and edges from the database on component mount
@@ -183,30 +186,40 @@ export default function Editor({
 
   const saveNodesAndEdges = useCallback(async () => {
     try {
-      const nodeData = nodes.map((node) => ({
-        node_id: node.id, // Ensure node ID is correctly set
-        type: node.type, // Ensure node type is correctly set
-        name: node.data.label, // Use node label as the name
-        data: {
-          inputs: node.data.inputs || [], // Ensure inputs are an array
-          outputs: node.data.outputs || [], // Ensure outputs are an array
-          instruction: node.data.instruction || "", // Use empty string if instruction is not present
-          memoryFields: node.data.memoryFields || [], // Ensure memoryFields are an array
-        },
-        position: {
-          x: node.position.x || 0,
-          y: node.position.y || 0,
-        },
-        app_id: appId, // Replace with actual app ID
-      }));
+      const nodeData = nodes
+        .filter((node) => !pendingRemovals.has(node.id)) // Exclude nodes marked for removal
+        .map((node) => ({
+          node_id: node.id, // Ensure node ID is correctly set
+          type: node.type, // Ensure node type is correctly set
+          name: node.data.label, // Use node label as the name
+          data: {
+            inputs: node.data.inputs || [], // Ensure inputs are an array
+            outputs: node.data.outputs || [], // Ensure outputs are an array
+            instruction: node.data.instruction || "", // Use empty string if instruction is not present
+            memoryFields: node.data.memoryFields || [], // Ensure memoryFields are an array
+          },
+          position: {
+            x: node.position.x || 0,
+            y: node.position.y || 0,
+          },
+          app_id: appId, // Replace with actual app ID
+        }));
 
-      const edgeData = edges.map((edge) => ({
-        source: edge.source,
-        target: edge.target,
-        sourceHandle: edge.sourceHandle,
-        targetHandle: edge.targetHandle,
-        app_id: appId, // Replace with actual app ID
-      }));
+      const edgeData = edges
+        .filter((edge) => {
+          // Exclude edges connected to nodes marked for removal
+          return (
+            !pendingRemovals.has(edge.source) &&
+            !pendingRemovals.has(edge.target)
+          );
+        })
+        .map((edge) => ({
+          source: edge.source,
+          target: edge.target,
+          sourceHandle: edge.sourceHandle,
+          targetHandle: edge.targetHandle,
+          app_id: appId, // Replace with actual app ID
+        }));
 
       // Save nodes and edges to the database
       await axios.post("/api/nodes", { nodes: nodeData });
@@ -214,14 +227,20 @@ export default function Editor({
 
       console.log("Nodes and Edges saved successfully"); // Debugging log
       setIsSaved(true); // Set as saved
+
+      // Remove nodes marked for deletion after saving
+      for (const nodeId of pendingRemovals) {
+        await axios.delete(`/api/nodes?id=${nodeId}&appId=${appId}`);
+      }
+      setPendingRemovals(new Set()); // Clear pending removals
     } catch (error) {
       console.error("Failed to save nodes and edges:", error);
     }
-  }, [nodes, edges]);
+  }, [nodes, edges, pendingRemovals]);
 
   const handleDataChange = useCallback(
     (id: string, data: any) => {
-      //update node input fand output field labels with field values
+      // Update node input and output field labels with field values
       if (data.inputs) {
         data.inputs = data.inputs.map((input: any) => ({
           ...input,
@@ -245,21 +264,16 @@ export default function Editor({
   );
 
   const handleRemoveNode = useCallback(
-    async (nodeId: string, app_id: string) => {
-      try {
-        // Use node_id instead of ObjectId _id
-        console.log("Deleting node with ID:", nodeId, "and app Id:", appId); // Debugging log
-        await axios.delete(`/api/nodes?id=${nodeId}&appId=${appId}`);
+    (nodeId: string) => {
+      // Update state on the frontend immediately
+      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+      setEdges((eds) =>
+        eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
+      );
 
-        // Update state on the frontend
-        setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-        setEdges((eds) =>
-          eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
-        );
-        setIsSaved(false); // Mark as unsaved
-      } catch (error) {
-        console.error("Error deleting node:", error);
-      }
+      // Mark the node for deletion on next save
+      setPendingRemovals((prev) => new Set(prev).add(nodeId));
+      setIsSaved(false); // Mark as unsaved
     },
     [setNodes, setEdges]
   );
