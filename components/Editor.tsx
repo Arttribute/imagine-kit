@@ -26,9 +26,13 @@ import nodeTypes, {
   NODE_TYPE_MAPPING,
 } from "@/components/imaginekit/nodes/nodeTypes";
 import { Button } from "@/components/ui/button";
-import { PlayIcon } from "lucide-react";
+import {
+  PlayIcon,
+  CircleCheckBigIcon,
+  Loader2Icon,
+  AlertTriangleIcon,
+} from "lucide-react";
 import Link from "next/link";
-import { CircleCheckBigIcon, Loader2Icon } from "lucide-react";
 
 interface ComponentPosition {
   x: number;
@@ -42,6 +46,8 @@ interface UIComponent {
   label: string;
   type: string;
 }
+
+type SaveStatus = "save changes" | "saving" | "saved" | "failed to save";
 
 export default function Editor({
   appId,
@@ -76,7 +82,7 @@ export default function Editor({
     [key: string]: ComponentPosition;
   }>({});
 
-  const [isSaved, setIsSaved] = useState(true); // Track saved status
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved"); // Manage save status
   const [pendingRemovals, setPendingRemovals] = useState<Set<string>>(
     new Set()
   ); // Track pending removals
@@ -170,15 +176,17 @@ export default function Editor({
           uiComponents: uiComponentsToSave,
         });
         console.log("Saved UI Component Positions:", uiComponentsToSave); // Debugging log
-        setIsSaved(true); // Set as saved
+        setSaveStatus("saved"); // Set as saved
       } catch (error) {
         console.error("Failed to save UI component positions:", error);
+        setSaveStatus("failed to save"); // Set to failed
       }
     },
     [uiComponents] // Add `uiComponents` to the dependency array
   );
 
   const saveNodesEdgesAndUIComponents = useCallback(async () => {
+    setSaveStatus("saving"); // Set status to 'saving'
     try {
       const nodeData = nodes
         .filter((node) => !pendingRemovals.has(node.id)) // Exclude nodes marked for removal
@@ -236,7 +244,7 @@ export default function Editor({
       });
 
       console.log("Nodes, Edges, and UI Components saved successfully"); // Debugging log
-      setIsSaved(true); // Set as saved
+      setSaveStatus("saved"); // Set as saved
 
       // Remove nodes marked for deletion after saving
       for (const nodeId of pendingRemovals) {
@@ -245,6 +253,7 @@ export default function Editor({
       setPendingRemovals(new Set()); // Clear pending removals
     } catch (error) {
       console.error("Failed to save nodes, edges, or UI components:", error);
+      setSaveStatus("failed to save"); // Set to failed
     }
   }, [nodes, edges, uiComponents, savedComponentPositions, pendingRemovals]);
 
@@ -268,7 +277,7 @@ export default function Editor({
         nds.map((node) => (node.id === id ? { ...node, data } : node))
       );
       dispatch(updateNodeData({ id, data }));
-      setIsSaved(false); // Mark as unsaved
+      setSaveStatus("save changes"); // Mark as unsaved
     },
     [setNodes, dispatch]
   );
@@ -283,7 +292,7 @@ export default function Editor({
 
       // Mark the node for deletion on next save
       setPendingRemovals((prev) => new Set(prev).add(nodeId));
-      setIsSaved(false); // Mark as unsaved
+      setSaveStatus("save changes"); // Mark as unsaved
     },
     [setNodes, setEdges]
   );
@@ -364,7 +373,7 @@ export default function Editor({
 
       setEdges((eds) => addEdge(newEdge as Edge, eds));
       dispatch(addEdgeAction(newEdge as Edge));
-      setIsSaved(false); // Mark as unsaved when edges are changed
+      setSaveStatus("save changes"); // Mark as unsaved when edges are changed
     },
     [setEdges, dispatch, nodes, handleDataChange]
   );
@@ -395,7 +404,7 @@ export default function Editor({
           },
         })
       );
-      setIsSaved(false); // Mark as unsaved when a new node is added
+      setSaveStatus("save changes"); // Mark as unsaved when a new node is added
     },
     [nodes, setNodes, dispatch, handleDataChange, handleRemoveNode]
   );
@@ -407,10 +416,10 @@ export default function Editor({
     }
 
     saveTimeoutRef.current = setTimeout(() => {
-      if (!isSaved) {
+      if (saveStatus === "save changes") {
         saveNodesEdgesAndUIComponents();
       }
-    }, 1000); // 30 seconds delay (adjust as needed)
+    }, 5000); // 5 seconds delay (adjust as needed)
 
     return () => {
       if (saveTimeoutRef.current) {
@@ -422,7 +431,7 @@ export default function Editor({
     edges,
     uiComponents,
     savedComponentPositions,
-    isSaved,
+    saveStatus,
     saveNodesEdgesAndUIComponents,
   ]);
 
@@ -438,26 +447,39 @@ export default function Editor({
               <TabsTrigger value="preview">UI preview</TabsTrigger>
             </TabsList>
             <Link href={`/${owner}/worlds/${appId}`} passHref>
-              <Button className="m-2 px-6 bg-indigo-500 hover:bg-ingido-600">
+              <Button className="m-2 px-6 bg-indigo-500 hover:bg-indigo-600">
                 Experience
                 <PlayIcon className="w-4 h-4 ml-1 " />
               </Button>
             </Link>
+
             {/* Save Button */}
             <button
               className={`flex items-center justify-center text-xs m-2 px-6 py-1 border rounded-full bg-white  ${
-                isSaved
-                  ? "text-green-600  border-green-500"
-                  : "text-gray-700  border-gray-400"
-              }  hover:bg-gray-100`}
+                saveStatus === "saved"
+                  ? "text-green-600 border-green-500"
+                  : saveStatus === "failed to save"
+                  ? "text-red-600 border-red-500"
+                  : saveStatus === "saving"
+                  ? "text-gray-700 border-gray-400"
+                  : "text-blue-700 border-blue-400"
+              } hover:bg-gray-100`}
               onClick={saveNodesEdgesAndUIComponents}
-              disabled={isSaved}
+              disabled={saveStatus === "saving"} // Disable button while saving
             >
-              {isSaved ? "Saved" : "Saving"}
-              {isSaved ? (
-                <CircleCheckBigIcon className="w-3 h-3 ml-1" />
-              ) : (
+              {saveStatus === "saving" && "Saving"}
+              {saveStatus === "save changes" && "Save Changes"}
+              {saveStatus === "saved" && "Saved"}
+              {saveStatus === "failed to save" && "Failed to Save"}
+
+              {saveStatus === "saving" && (
                 <Loader2Icon className="w-3 h-3 ml-1 animate-spin" />
+              )}
+              {saveStatus === "saved" && (
+                <CircleCheckBigIcon className="w-3 h-3 ml-1" />
+              )}
+              {saveStatus === "failed to save" && (
+                <AlertTriangleIcon className="w-3 h-3 ml-1" />
               )}
             </button>
           </div>
@@ -482,11 +504,11 @@ export default function Editor({
                   edges={edges}
                   onNodesChange={(changes) => {
                     onNodesChange(changes);
-                    setIsSaved(false); // Mark as unsaved when nodes are changed
+                    setSaveStatus("save changes"); // Mark as unsaved when nodes are changed
                   }}
                   onEdgesChange={(changes) => {
                     onEdgesChange(changes);
-                    setIsSaved(false); // Mark as unsaved when edges are changed
+                    setSaveStatus("save changes"); // Mark as unsaved when edges are changed
                   }}
                   onConnect={onConnect}
                   nodeTypes={nodeTypes}
@@ -505,7 +527,7 @@ export default function Editor({
                 savedPositions={savedComponentPositions}
                 savePositions={(positions) => {
                   saveComponentPositions(positions);
-                  setIsSaved(false); // Mark as unsaved when UI components are changed
+                  setSaveStatus("save changes"); // Mark as unsaved when UI components are changed
                 }}
               />
             </div>
