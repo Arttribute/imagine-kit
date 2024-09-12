@@ -28,6 +28,7 @@ import nodeTypes, {
 import { Button } from "@/components/ui/button";
 import { PlayIcon } from "lucide-react";
 import Link from "next/link";
+import { CircleCheckBigIcon, Loader2Icon } from "lucide-react";
 
 interface ComponentPosition {
   x: number;
@@ -81,14 +82,16 @@ export default function Editor({
   ); // Track pending removals
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref to store timeout ID
 
-  // Fetch nodes and edges from the database on component mount
+  // Fetch nodes, edges, and UI components from the database on component mount
   useEffect(() => {
-    const fetchNodesAndEdges = async () => {
+    const fetchData = async () => {
       try {
-        const [nodesResponse, edgesResponse] = await Promise.all([
-          axios.get(`/api/nodes?appId=${appId}`),
-          axios.get(`/api/edges?appId=${appId}`),
-        ]);
+        const [nodesResponse, edgesResponse, uiComponentsResponse] =
+          await Promise.all([
+            axios.get(`/api/nodes?appId=${appId}`),
+            axios.get(`/api/edges?appId=${appId}`),
+            axios.get(`/api/uicomponents?appId=${appId}`),
+          ]);
 
         const fetchedNodes = await nodesResponse.data.map((node: any) => ({
           ...node,
@@ -99,23 +102,15 @@ export default function Editor({
           ...edge,
           id: edge.id?.toString(),
         }));
+        const uiComponentsData = uiComponentsResponse.data;
+
         console.log("Fetched Nodes:", fetchedNodes); // Debugging log
+        console.log("Fetched Edges:", fetchedEdges); // Debugging log
+        console.log("Fetched UI Components Positions: ", uiComponentsData); // Debugging log
+
         setNodes(fetchedNodes);
         setEdges(fetchedEdges);
-      } catch (error) {
-        console.error("Failed to fetch nodes and edges:", error);
-      }
-    };
-
-    fetchNodesAndEdges();
-  }, []);
-
-  // Effect to load existing UI components and their positions
-  useEffect(() => {
-    const loadUIComponents = async () => {
-      try {
-        const response = await axios.get(`/api/uicomponents?appId=${appId}`);
-        const uiComponentsData = response.data;
+        setUIComponents(uiComponentsData);
         setSavedComponentPositions(
           uiComponentsData.reduce(
             (acc: any, component: any) => ({
@@ -130,13 +125,12 @@ export default function Editor({
             {}
           )
         );
-        console.log("Loaded UI Components Positions: ", uiComponentsData); // Debugging log
       } catch (error) {
-        console.error("Failed to load UI components:", error);
+        console.error("Failed to fetch data:", error);
       }
     };
 
-    loadUIComponents();
+    fetchData();
   }, []);
 
   // Effect to filter out UI components from nodes
@@ -184,7 +178,7 @@ export default function Editor({
     [uiComponents] // Add `uiComponents` to the dependency array
   );
 
-  const saveNodesAndEdges = useCallback(async () => {
+  const saveNodesEdgesAndUIComponents = useCallback(async () => {
     try {
       const nodeData = nodes
         .filter((node) => !pendingRemovals.has(node.id)) // Exclude nodes marked for removal
@@ -221,11 +215,27 @@ export default function Editor({
           app_id: appId, // Replace with actual app ID
         }));
 
-      // Save nodes and edges to the database
+      const uiComponentsToSave = uiComponents.map((component) => ({
+        component_id: component.id,
+        type: component.type,
+        label: component.label,
+        position: {
+          x: savedComponentPositions[component.id]?.x || 0,
+          y: savedComponentPositions[component.id]?.y || 0,
+          width: savedComponentPositions[component.id]?.width,
+          height: savedComponentPositions[component.id]?.height,
+        },
+        app_id: appId, // Replace with actual app ID
+      }));
+
+      // Save nodes, edges, and UI components to the database
       await axios.post("/api/nodes", { nodes: nodeData });
       await axios.post("/api/edges", { edges: edgeData });
+      await axios.post("/api/uicomponents", {
+        uiComponents: uiComponentsToSave,
+      });
 
-      console.log("Nodes and Edges saved successfully"); // Debugging log
+      console.log("Nodes, Edges, and UI Components saved successfully"); // Debugging log
       setIsSaved(true); // Set as saved
 
       // Remove nodes marked for deletion after saving
@@ -234,9 +244,9 @@ export default function Editor({
       }
       setPendingRemovals(new Set()); // Clear pending removals
     } catch (error) {
-      console.error("Failed to save nodes and edges:", error);
+      console.error("Failed to save nodes, edges, or UI components:", error);
     }
-  }, [nodes, edges, pendingRemovals]);
+  }, [nodes, edges, uiComponents, savedComponentPositions, pendingRemovals]);
 
   const handleDataChange = useCallback(
     (id: string, data: any) => {
@@ -354,7 +364,7 @@ export default function Editor({
 
       setEdges((eds) => addEdge(newEdge as Edge, eds));
       dispatch(addEdgeAction(newEdge as Edge));
-      setIsSaved(false); // Mark as unsaved
+      setIsSaved(false); // Mark as unsaved when edges are changed
     },
     [setEdges, dispatch, nodes, handleDataChange]
   );
@@ -385,12 +395,12 @@ export default function Editor({
           },
         })
       );
-      setIsSaved(false); // Mark as unsaved
+      setIsSaved(false); // Mark as unsaved when a new node is added
     },
     [nodes, setNodes, dispatch, handleDataChange, handleRemoveNode]
   );
 
-  // Debounced save effect to save nodes and edges every 30-45 seconds after changes
+  // Debounced save effect to save nodes, edges, and UI components every 30-45 seconds after changes
   useEffect(() => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -398,16 +408,23 @@ export default function Editor({
 
     saveTimeoutRef.current = setTimeout(() => {
       if (!isSaved) {
-        saveNodesAndEdges();
+        saveNodesEdgesAndUIComponents();
       }
-    }, 30000); // 30 seconds delay (adjust as needed)
+    }, 1000); // 30 seconds delay (adjust as needed)
 
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [nodes, edges, isSaved, saveNodesAndEdges]);
+  }, [
+    nodes,
+    edges,
+    uiComponents,
+    savedComponentPositions,
+    isSaved,
+    saveNodesEdgesAndUIComponents,
+  ]);
 
   return (
     <ReactFlowProvider>
@@ -427,13 +444,22 @@ export default function Editor({
               </Button>
             </Link>
             {/* Save Button */}
-            <Button
-              className="m-2 px-6 bg-green-500 hover:bg-green-600"
-              onClick={saveNodesAndEdges}
+            <button
+              className={`flex items-center justify-center text-xs m-2 px-6 py-1 border rounded-full bg-white  ${
+                isSaved
+                  ? "text-green-600  border-green-500"
+                  : "text-gray-700  border-gray-400"
+              }  hover:bg-gray-100`}
+              onClick={saveNodesEdgesAndUIComponents}
               disabled={isSaved}
             >
-              {isSaved ? "Saved" : "Save Changes"}
-            </Button>
+              {isSaved ? "Saved" : "Saving"}
+              {isSaved ? (
+                <CircleCheckBigIcon className="w-3 h-3 ml-1" />
+              ) : (
+                <Loader2Icon className="w-3 h-3 ml-1 animate-spin" />
+              )}
+            </button>
           </div>
           <TabsContent value="nodes">
             <div style={{ display: "flex", height: "93vh" }}>
@@ -454,8 +480,14 @@ export default function Editor({
                     },
                   }))}
                   edges={edges}
-                  onNodesChange={onNodesChange}
-                  onEdgesChange={onEdgesChange}
+                  onNodesChange={(changes) => {
+                    onNodesChange(changes);
+                    setIsSaved(false); // Mark as unsaved when nodes are changed
+                  }}
+                  onEdgesChange={(changes) => {
+                    onEdgesChange(changes);
+                    setIsSaved(false); // Mark as unsaved when edges are changed
+                  }}
                   onConnect={onConnect}
                   nodeTypes={nodeTypes}
                   fitView
@@ -471,7 +503,10 @@ export default function Editor({
               <UIEditor
                 uiComponents={uiComponents}
                 savedPositions={savedComponentPositions}
-                savePositions={saveComponentPositions}
+                savePositions={(positions) => {
+                  saveComponentPositions(positions);
+                  setIsSaved(false); // Mark as unsaved when UI components are changed
+                }}
               />
             </div>
           </TabsContent>
