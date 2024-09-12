@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Draggable from "react-draggable";
 import SketchPadPreview from "@/components/imaginekit/previews/SkethPadPreview";
 import ImagesDisplayPreview from "@/components/imaginekit/previews/ImageDisplayPreview";
@@ -10,6 +10,7 @@ import TextInputPreview from "@/components/imaginekit/previews/TextInputPreview"
 import TextOutputPreview from "@/components/imaginekit/previews/TextOutputPreview";
 import ChatInterfacePreview from "@/components/imaginekit/previews/ChatInterfacePreview";
 import FlipCardPreview from "@/components/imaginekit/previews/FlipCardPreview";
+import _ from "lodash"; // Import lodash for debounce
 
 interface ComponentPosition {
   x: number;
@@ -39,6 +40,8 @@ const UIEditor: React.FC<UIEditorProps> = ({
     [key: string]: ComponentPosition;
   }>(savedPositions);
 
+  const [unsavedChanges, setUnsavedChanges] = useState<boolean>(false); // Track unsaved changes
+
   // Calculate initial position based on the number of components to stack them vertically
   const calculateInitialPosition = (index: number): ComponentPosition => ({
     x: 50,
@@ -53,6 +56,7 @@ const UIEditor: React.FC<UIEditorProps> = ({
         ...prevPositions,
         [id]: { ...prevPositions[id], x: newX, y: newY },
       }));
+      setUnsavedChanges(true); // Mark changes as unsaved
     },
     [setPositions]
   );
@@ -63,13 +67,32 @@ const UIEditor: React.FC<UIEditorProps> = ({
         ...prevPositions,
         [id]: { ...prevPositions[id], width: newWidth, height: newHeight },
       }));
+      setUnsavedChanges(true); // Mark changes as unsaved
     },
     [setPositions]
   );
 
+  // Debounced save function to save positions after 1 second of inactivity
+  const debouncedSavePositions = useCallback(
+    _.debounce(() => {
+      if (unsavedChanges) {
+        savePositions(positions); // Save positions to the parent component
+        setUnsavedChanges(false); // Reset unsaved changes flag after saving
+      }
+    }, 1000), // 1-second delay
+    [positions, savePositions, unsavedChanges]
+  );
+
   const handleStop = useCallback(() => {
-    savePositions(positions);
-  }, [positions, savePositions]);
+    debouncedSavePositions(); // Trigger the debounced save on stop
+  }, [debouncedSavePositions]);
+
+  // Clean up debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSavePositions.cancel();
+    };
+  }, [debouncedSavePositions]);
 
   // Mapping component types to their preview components
   const componentPreviews: { [key: string]: React.FC } = {
