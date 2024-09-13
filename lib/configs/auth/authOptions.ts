@@ -75,6 +75,7 @@ export const authOptions: NextAuthOptions = {
             username: username,
             email: user.email,
             fullname: user.name,
+            profile_image: user.image,
             isProfileCompleted: false,
           });
           console.log("New user created: ", newUser);
@@ -84,6 +85,7 @@ export const authOptions: NextAuthOptions = {
           console.log("ExistingUser: ", existingUser);
           user.id = existingUser._id;
           user.username = existingUser.username;
+          user.profile_image = existingUser.profile_image;
         }
       }
       return user;
@@ -93,7 +95,8 @@ export const authOptions: NextAuthOptions = {
       if (account) {
         token.accessToken = account.access_token;
         token.id = user._id || user.id;
-        token.name = user.username;
+        token.username = user.username;
+        token.image = user.profile_image;
       }
       return token;
     },
@@ -101,7 +104,8 @@ export const authOptions: NextAuthOptions = {
       // Send properties to the client, like an access_token and user id from a provider.
       session.accessToken = token.accessToken;
       session.user.id = token.id;
-      session.user.name = token.name;
+      session.user.username = token.username;
+      session.user.image = token.image;
       return session;
     },
   },

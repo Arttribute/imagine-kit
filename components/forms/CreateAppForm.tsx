@@ -7,7 +7,6 @@ import { useSession } from "next-auth/react";
 import { Sparkles } from "lucide-react";
 import GodPromptDialog from "./GodPromptDialog";
 import axios from "axios";
-import { set } from "mongoose";
 
 const CreateAppForm = () => {
   const [name, setName] = useState("");
@@ -28,7 +27,7 @@ const CreateAppForm = () => {
 
     try {
       const appData = {
-        owner: session?.user?.id || "66dd548dfa3ec069d5f49fd6",
+        owner: session.user.id,
         name,
         description,
       };
@@ -36,7 +35,7 @@ const CreateAppForm = () => {
       if (createPrompt !== "") {
         const genData = await handleGodPrompt();
         const generatedappData = {
-          owner: session?.user?.id || "66dd548dfa3ec069d5f49fd6",
+          owner: session.user.id,
           name: genData.name,
           description: genData.description,
         };

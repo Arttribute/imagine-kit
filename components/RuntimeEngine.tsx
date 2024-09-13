@@ -460,7 +460,7 @@ const renderUIComponent = (
     case "imageDisplay":
       return (
         <div>
-          <ImageDisplay images={[nodeData.data.inputs[0].value]} />
+          <ImageDisplay images={[nodeData?.data.inputs[0].value]} />
         </div>
       );
     case "flipCard":
@@ -471,11 +471,11 @@ const renderUIComponent = (
         />
       );
     case "imageTiles":
-      return <ImageTiles src={nodeData.data.inputs[0].value} numCols={3} />;
+      return <ImageTiles src={nodeData?.data.inputs[0].value} numCols={3} />;
     case "textInput":
       return (
         <TextInput
-          fields={nodeData.data.outputs.map((output: any) => ({
+          fields={nodeData?.data.outputs.map((output: any) => ({
             label: output.label,
             value: "",
           }))}
@@ -483,18 +483,18 @@ const renderUIComponent = (
         />
       );
     case "textOutput":
-      return <TextOutput text={nodeData.data.inputs[0].value} />;
+      return <TextOutput text={nodeData?.data.inputs[0].value} />;
     case "wordSelector":
       return (
         <WordSelector
-          correctWords={nodeData.data.inputs[0].value}
-          incorrectWords={nodeData.data.inputs[1].value.toString()}
+          correctWords={nodeData?.data.inputs[0].value}
+          incorrectWords={nodeData?.data.inputs[1].value.toString()}
         />
       );
     case "wordArranger":
       return (
         <WordArranger
-          correctWords={nodeData.data.inputs[0].value}
+          correctWords={nodeData?.data.inputs[0].value}
           setIsCorrect={() => {}}
         />
       );
@@ -502,7 +502,7 @@ const renderUIComponent = (
       return (
         <SketchPad
           onSubmit={(imageData) =>
-            handleSketchPadSubmit(nodeData.node_id, imageData)
+            handleSketchPadSubmit(nodeData?.node_id, imageData)
           }
         />
       );

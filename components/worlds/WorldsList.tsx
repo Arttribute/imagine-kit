@@ -3,7 +3,7 @@ import WorldCard from "@/components/worlds/WorldCard";
 
 export default function WorldList({ apps }: { apps: any }) {
   return (
-    <div className="grid grid-cols-12 gap-3">
+    <div className="container grid grid-cols-12 gap-3">
       {apps &&
         apps.map((app: any) => (
           <div className="col-span-6 lg:col-span-3 " key={app._id}>

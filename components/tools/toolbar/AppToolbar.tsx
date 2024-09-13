@@ -160,7 +160,7 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
   ];
 
   return (
-    <div className="p-4 bg-white rounded-xl shadow-xl border border-purple-200 m-4 w-64">
+    <div className="p-4 bg-white rounded-xl shadow-lg shadow-indigo-200  border border-purple-200 m-4 w-64">
       <div className="flex  justify-center">
         <p className="p-1 whitespace-pre-wrap bg-gradient-to-r from-orange-500 via-pink-500 to-indigo-500 bg-clip-text text-center text-xl font-bold leading-none tracking-tighter text-transparent">
           Imagine kit
