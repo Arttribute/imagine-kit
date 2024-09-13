@@ -10,7 +10,6 @@ import TextInputPreview from "@/components/imaginekit/previews/TextInputPreview"
 import TextOutputPreview from "@/components/imaginekit/previews/TextOutputPreview";
 import ChatInterfacePreview from "@/components/imaginekit/previews/ChatInterfacePreview";
 import FlipCardPreview from "@/components/imaginekit/previews/FlipCardPreview";
-import _ from "lodash"; // Import lodash for debounce
 
 interface ComponentPosition {
   x: number;
@@ -72,27 +71,24 @@ const UIEditor: React.FC<UIEditorProps> = ({
     [setPositions]
   );
 
-  // Debounced save function to save positions after 1 second of inactivity
-  const debouncedSavePositions = useCallback(
-    _.debounce(() => {
+  const handleStop = useCallback(() => {
+    if (unsavedChanges) {
+      savePositions(positions); // Save positions to the parent component
+      setUnsavedChanges(false); // Reset unsaved changes flag after saving
+    }
+  }, [positions, savePositions, unsavedChanges]);
+
+  // Auto-save mechanism to save positions at regular intervals (30 seconds)
+  useEffect(() => {
+    const saveInterval = setInterval(() => {
       if (unsavedChanges) {
-        savePositions(positions); // Save positions to the parent component
+        savePositions(positions);
         setUnsavedChanges(false); // Reset unsaved changes flag after saving
       }
-    }, 1000), // 1-second delay
-    [positions, savePositions, unsavedChanges]
-  );
+    }, 30000); // 30 seconds
 
-  const handleStop = useCallback(() => {
-    debouncedSavePositions(); // Trigger the debounced save on stop
-  }, [debouncedSavePositions]);
-
-  // Clean up debounce on unmount
-  useEffect(() => {
-    return () => {
-      debouncedSavePositions.cancel();
-    };
-  }, [debouncedSavePositions]);
+    return () => clearInterval(saveInterval); // Clear interval on unmount
+  }, [positions, savePositions, unsavedChanges]);
 
   // Mapping component types to their preview components
   const componentPreviews: { [key: string]: React.FC } = {
