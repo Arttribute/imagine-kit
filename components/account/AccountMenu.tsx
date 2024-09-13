@@ -1,9 +1,7 @@
 "use client";
-
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
-import { CircleUser } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,10 +10,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { redirect } from "next/navigation";
+
+interface CustomUser {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  username?: string | null;
+}
+
+interface CustomSession {
+  user?: CustomUser;
+}
 
 function AccountMenu() {
-  const { data: session }: any = useSession();
+  const { data: session, status } = useSession() as {
+    data: CustomSession;
+    status: string;
+  };
+  const [userAccount, setUserAccount] = useState<CustomUser | undefined>(
+    session?.user
+  );
 
   const handleProfileClick = () => {
     if (typeof window !== "undefined") {
@@ -23,20 +37,31 @@ function AccountMenu() {
     }
   };
 
+  useEffect(() => {
+    // Only redirect if the session is not loading and there is no session data
+    if (status === "loading") return; // Do nothing while loading
+    if (!session) {
+      setUserAccount(undefined);
+    } else {
+      setUserAccount(session?.user);
+    }
+  }, [session, status]);
+
   return (
     <>
-      <div className="bg-gray-50 ">
+      <div className={`${!userAccount ? "hidden" : ""}`}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="rounded-full">
-              <CircleUser className="h-6 w-6" />
-            </Button>
+            <Image
+              src={session?.user?.image || ""}
+              alt={session?.user?.username || "user image"}
+              width={32}
+              height={32}
+              className="rounded-full"
+            />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>
-              {session?.user?.name?.split(" ")[0]}{" "}
-              {session?.user?.name?.split(" ")[1]}
-            </DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuLabel>{session?.user?.username}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {/* Profile Button */}
             <DropdownMenuItem onClick={handleProfileClick}>

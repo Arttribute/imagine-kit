@@ -34,6 +34,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import AccountMenu from "@/components/account/AccountMenu";
+
 interface ComponentPosition {
   x: number;
   y: number;
@@ -482,6 +484,8 @@ export default function Editor({
                 <AlertTriangleIcon className="w-3 h-3 ml-1" />
               )}
             </button>
+            <div className="flex-grow" />
+            <AccountMenu />
           </div>
           <TabsContent value="nodes">
             <div style={{ display: "flex", height: "93vh" }}>

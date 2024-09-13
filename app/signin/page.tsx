@@ -34,7 +34,7 @@ function SignupPage() {
   return (
     <div className="h-screen flex flex-col items-center justify-center">
       <div className="border border-gray-500 shadow-2xl shadow-indigo-300 rounded-2xl bg-white z-10 p-2 w-96 lg:w-[460px]">
-        <div className="p-6 border  border-gray-300 rounded-xl">
+        <div className="p-6 border  border-purple-300 rounded-xl">
           <div className="flex  justify-center">
             <p className="p-1 whitespace-pre-wrap bg-gradient-to-r from-orange-500 via-pink-500 to-indigo-500 bg-clip-text text-xl font-bold text-center  leading-none tracking-tighter text-transparent">
               Imagine kit
@@ -43,8 +43,8 @@ function SignupPage() {
           </div>
 
           <div className="p-6 flex flex-col items-center justify-center">
-            <h1 className="text-2xl font-semibold">Start using it!</h1>
-            <p className="text-base text-center mb-2">
+            <h1 className="text-2xl font-semibold ">Start using it!</h1>
+            <p className="text-base text-center mb-2 ">
               Sign up - or login in to your existing account
               <br />
             </p>
