@@ -19,15 +19,13 @@ function SignupPage() {
 
   //function to login with google and store details in loacal storage
   const handleGoogleLogin = async () => {
-    const response: any = await signIn("google", {
+    const response = await signIn("google", {
       callbackUrl: `${window.location.origin}/worlds`,
+      redirect: false, // Prevent automatic redirection for error handling
     });
-    console.log("Response", response);
 
-    if (response && response.ok) {
-      console.log("User", response.user);
-      localStorage.setItem("user", JSON.stringify(response.user));
-      router.replace("/worlds");
+    if (response?.error) {
+      console.error("Google sign-in error:", response.error);
     }
   };
 
