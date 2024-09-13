@@ -31,17 +31,18 @@ function TextInput({ fields, onSubmit }: TextInputProps) {
 
   return (
     <div className="col-span-12 lg:col-span-10 w-96">
-      {inputFields.map((field, index) => (
-        <div key={index} className="flex flex-col w-full m-2">
-          <Label>{field.label}</Label>
-          <Input
-            placeholder={field.label}
-            className="mt-1"
-            value={field.value}
-            onChange={(e) => handleInputChange(index, e.target.value)}
-          />
-        </div>
-      ))}
+      {inputFields &&
+        inputFields.map((field, index) => (
+          <div key={index} className="flex flex-col w-full m-2">
+            <Label>{field.label}</Label>
+            <Input
+              placeholder={field.label}
+              className="mt-1"
+              value={field.value}
+              onChange={(e) => handleInputChange(index, e.target.value)}
+            />
+          </div>
+        ))}
       <Button className="w-full m-2" onClick={handleSubmit}>
         Submit
       </Button>

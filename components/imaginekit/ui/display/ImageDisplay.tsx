@@ -4,11 +4,13 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 
 function isValidUrl(url: string) {
-  return (
-    url.startsWith("/") ||
-    url.startsWith("http://") ||
-    url.startsWith("https://")
-  );
+  if (url) {
+    return (
+      url.startsWith("/") ||
+      url.startsWith("http://") ||
+      url.startsWith("https://")
+    );
+  }
 }
 
 export default function ImagesDisplay({ images }: { images: string[] }) {
