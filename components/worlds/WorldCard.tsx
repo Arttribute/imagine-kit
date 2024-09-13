@@ -10,7 +10,7 @@ import { HeartIcon, PlayIcon, PointerIcon } from "lucide-react";
 export default function WorldCard({ app }: { app: any }) {
   return (
     <div className="cursor-pointer border border-indigo-400  shadow-md rounded-3xl">
-      <Link href={`/${app.owner.name}/worlds/${app._id}`}>
+      <Link href={`/${app.owner.username}/worlds/${app._id}`}>
         <div className="p-2 pb-0">
           <Image
             src={
@@ -38,7 +38,7 @@ export default function WorldCard({ app }: { app: any }) {
             {" "}
             by{" "}
             <span className="text-gray-700 font-semibold">
-              {app.owner?.name}
+              {app.owner?.username}
             </span>
           </Label>
         </div>
