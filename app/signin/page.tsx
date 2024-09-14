@@ -21,10 +21,14 @@ function SignupPage() {
   const handleGoogleLogin = async () => {
     const response = await signIn("google", {
       callbackUrl: `${window.location.origin}/worlds`,
+      redirect: false, // Prevent auto-redirect to handle errors properly
     });
 
     if (response?.error) {
       console.error("Google sign-in error:", response.error);
+      // Handle the error (e.g., display a message to the user)
+    } else if (response?.url) {
+      window.location.href = response.url; // Manually redirect after successful sign-in
     }
   };
 
