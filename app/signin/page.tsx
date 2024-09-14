@@ -20,7 +20,7 @@ function SignupPage() {
   //function to login with google and store details in loacal storage
   const handleGoogleLogin = async () => {
     const response = await signIn("google", {
-      callbackUrl: `/worlds`,
+      callbackUrl: `${window.location.origin}/worlds`,
       redirect: false, // Prevent automatic redirection for error handling
     });
 

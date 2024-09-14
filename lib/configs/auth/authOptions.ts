@@ -109,4 +109,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
+  pages: {
+    signIn: "/signin", // Customize the sign-in page URL
+  },
 };
