@@ -21,7 +21,6 @@ function SignupPage() {
   const handleGoogleLogin = async () => {
     const response = await signIn("google", {
       callbackUrl: `${window.location.origin}/worlds`,
-      redirect: false, // Prevent automatic redirection for error handling
     });
 
     if (response?.error) {
