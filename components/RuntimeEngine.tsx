@@ -257,11 +257,13 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     // Execute start nodes first
     for (const node of nodes.filter((node) => node.data.inputs.length === 0)) {
       await executeNode(node);
+      console.log("Executed start node:", node);
     }
 
     // Execute nodes with inputs next
     for (const node of nodes.filter((node) => node.data.inputs.length > 0)) {
       await executeNode(node);
+      console.log("Executed node with inputs:", node);
     }
 
     connectNodesWithEdges();
@@ -443,7 +445,7 @@ const renderUIComponent = (
       return (
         <WordSelector
           correctWords={nodeData?.data.inputs[0].value}
-          incorrectWords={nodeData?.data.inputs[1].value.toString()}
+          incorrectWords={nodeData?.data.inputs[1].value}
         />
       );
     case "wordArranger":

@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -5,31 +6,42 @@ export default function WordSelector({
   correctWords,
   incorrectWords,
 }: {
-  correctWords: string[];
-  incorrectWords: string[];
+  correctWords: string | string[];
+  incorrectWords: string | string[];
 }) {
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
   const [words, setWords] = useState<string[]>([]);
   const [wordOptions, setWordOptions] = useState<string[]>([]);
-  const [emptySlots, setEmptySlots] = useState(correctWords.length);
+  const [emptySlots, setEmptySlots] = useState(0);
   const [isCorrect, setIsCorrect] = useState(false);
   const [wrongAttempts, setWrongAttempts] = useState(0);
 
+  // Ensure correctWords and incorrectWords are arrays
+  const correctWordsArray = Array.isArray(correctWords)
+    ? correctWords
+    : correctWords.split(" ");
+  const incorrectWordsArray = Array.isArray(incorrectWords)
+    ? incorrectWords
+    : incorrectWords.split(" ");
+
   useEffect(() => {
     setWordOptions(
-      [...correctWords, ...incorrectWords].sort(() => Math.random() - 0.5)
+      [...correctWordsArray, ...incorrectWordsArray].sort(
+        () => Math.random() - 0.5
+      )
     );
-    setWords([...correctWords, ...incorrectWords]);
-  }, []);
+    setWords([...correctWordsArray, ...incorrectWordsArray]);
+    setEmptySlots(correctWordsArray.length);
+  }, [correctWords, incorrectWords]); // Dependency array listens to changes
 
   useEffect(() => {
-    if (selectedWords.length === correctWords.length) {
+    if (selectedWords.length === correctWordsArray.length) {
       checkCorrectness();
     }
-  }, [selectedWords.length, correctWords.length]);
+  }, [selectedWords.length, correctWordsArray.length]);
 
   const handleOptionClick = (word: string) => {
-    if (selectedWords.length < correctWords.length) {
+    if (selectedWords.length < correctWordsArray.length) {
       setSelectedWords([...selectedWords, word]);
       setWordOptions(wordOptions.filter((w) => w !== word));
       setEmptySlots(emptySlots - 1);
@@ -46,7 +58,11 @@ export default function WordSelector({
   };
 
   const checkCorrectness = () => {
-    if (selectedWords.join(" ") === correctWords.join(" ")) {
+    const correctJoined = Array.isArray(correctWords)
+      ? correctWords.join(" ")
+      : correctWords;
+
+    if (selectedWords.join(" ") === correctJoined) {
       setIsCorrect(true);
     } else {
       setIsCorrect(false);
@@ -62,7 +78,7 @@ export default function WordSelector({
             variant="ghost"
             key={index}
             className={`m-1 rounded-md border bg-yellow-50 border px-0.5 py-0.5 ${
-              selectedWords.length === correctWords.length
+              selectedWords.length === correctWordsArray.length
                 ? isCorrect
                   ? "border-green-500"
                   : "border-red-500 animate-shake"
