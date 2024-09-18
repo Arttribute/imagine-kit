@@ -65,6 +65,9 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   const [uiComponents, setUIComponents] = useState<UIComponentData[]>([]);
   const [nodeOutputs, setNodeOutputs] = useState<{ [key: string]: any }>({});
   const [executedNodes, setExecutedNodes] = useState<Set<string>>(new Set());
+  const [pendingExecution, setPendingExecution] = useState<
+    Map<string, Promise<void>>
+  >(new Map());
 
   // Load data from the database
   useEffect(() => {
@@ -91,54 +94,61 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   // Function to execute a single node based on its type
   const executeNode = useCallback(
     async (node: NodeData) => {
-      if (executedNodes.has(node.node_id)) return; // Skip if node has already been executed
-      switch (node.type) {
-        case "llm":
-          await executeLLMNode(node); // Execute LLM Node
-          break;
-        case "imageGen":
-          await executeImageGeneratorNode(node); // Execute Image Generator Node
-          break;
-        // Add more cases for each node type
-        default:
-          console.warn(`Unknown node type: ${node.type}`);
-          break;
-      }
+      // Check if the node is already being executed or has been executed
+      if (executedNodes.has(node.node_id) || pendingExecution.has(node.node_id))
+        return;
 
-      setExecutedNodes((prev) => new Set(prev).add(node.node_id)); // Mark node as executed
+      const nodeExecutionPromise = (async () => {
+        switch (node.type) {
+          case "llm":
+            await executeLLMNode(node); // Execute LLM Node
+            break;
+          case "imageGen":
+            await executeImageGeneratorNode(node); // Execute Image Generator Node
+            break;
+          // Add more cases for each node type
+          default:
+            console.warn(`Unknown node type: ${node.type}`);
+            break;
+        }
+
+        // Mark node as executed after the promise resolves
+        setExecutedNodes((prev) => new Set(prev).add(node.node_id));
+        setPendingExecution((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(node.node_id);
+          return newMap;
+        });
+      })();
+
+      // Add the node execution promise to pendingExecution
+      setPendingExecution((prev) =>
+        new Map(prev).set(node.node_id, nodeExecutionPromise)
+      );
     },
-    [executedNodes]
+    [executedNodes, pendingExecution, edges, nodes]
   );
 
   // Function to execute an LLM Node
   const executeLLMNode = async (node: NodeData) => {
     const promptInput = node.data.inputs[0]?.value || "start";
     const promptLabel = node.data.inputs[0]?.label;
-    if (!promptInput) return;
-    //if the prompt input is the same as the prompt label ut means that the user has not made an input then return
-    if (promptInput === promptLabel) return;
+    if (!promptInput || promptInput === promptLabel) return;
 
     const { instruction, inputs, outputs } = node.data;
 
-    // Get input values from the node's inputs
     const inputValues = inputs.map((input) => input.value).join(" ");
-
-    // Prepare the outputs format
     const outputFormat = outputs.map((output) => output.label).join(", ");
 
     try {
-      // Call the LLM API
       const generatedOutput = await callGPTApi(
         instruction ?? "",
         inputValues,
         outputFormat
       );
 
-      // Assume the API returns output in JSON format that matches the requested output format
       const outputData = JSON.parse(generatedOutput);
-      console.log("LLM Node output:", outputData);
 
-      //Update the node's output value with the corresponding output eg if output =={sentence: "Hello World"} then the node data with the sentence label will be updated with the value "Hello World" ie node.data.outputs[label].value = output.sentence
       setNodes((prev) =>
         prev.map((n) =>
           n.node_id === node.node_id
@@ -155,7 +165,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
             : n
         )
       );
-      // Find all edges connected to this node's output and propagate data and update the connected node input with the output value
+
       const connectedEdges = edges.filter(
         (edge) => edge.source === node.node_id
       );
@@ -164,33 +174,19 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
           (node) => node.node_id === edge.target
         );
 
-        console.log("Connected Edges:", connectedEdges);
-        console.log("LLM Target Node Index:", targetNodeIndex);
         if (targetNodeIndex !== -1) {
           const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
             (input) => input.id === edge.targetHandle
           );
-          console.log("LLM Target Input Index:", targetInputIndex);
 
           if (targetInputIndex !== -1) {
-            //get node output label
             const label =
               nodes[targetNodeIndex].data.inputs[targetInputIndex].label;
-            console.log("LLM Target Input Label:", label);
             nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
               outputData[label];
-            console.log("LLM Target Input Value:", outputData[label]);
-            console.log(
-              " Edge:",
-              edge,
-              "Edge target handle",
-              edge.targetHandle
-            );
 
-            // Trigger a re-render to propagate the data change
             setNodes([...nodes]);
 
-            // Execute the target node after updating its input
             executeNode(nodes[targetNodeIndex]);
           }
         }
@@ -201,18 +197,13 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   };
 
   const executeImageGeneratorNode = async (node: NodeData) => {
-    const promptInput = node.data.inputs[0].value;
-    const promptLabel = node.data.inputs[0].label;
-    if (!promptInput) return;
-    //if the prompt input is the same as the prompt label ut means that the user has not made an input then return
-    if (promptInput === promptLabel) return;
+    const promptInput = node.data.inputs[0]?.value;
+    const promptLabel = node.data.inputs[0]?.label;
+    if (!promptInput || promptInput === promptLabel) return;
 
     try {
-      // Call DALL-E API to generate image
-      console.log("Generating image with prompt", promptInput);
       const generatedImageUrl = await callDalleApi(promptInput);
-      console.log("Image Generator Node output:", generatedImageUrl);
-      // Update the node's outputs with the generated image URL
+
       setNodes((prev) =>
         prev.map((n) =>
           n.node_id === node.node_id
@@ -231,7 +222,6 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         )
       );
 
-      // Propagate the output to connected nodes
       const connectedEdges = edges.filter(
         (edge) => edge.source === node.node_id
       );
@@ -240,22 +230,17 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
           (node) => node.node_id === edge.target
         );
 
-        console.log("Connected Edges:", connectedEdges);
-        console.log("ImageGen Target Node Index:", targetNodeIndex);
         if (targetNodeIndex !== -1) {
           const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
             (input) => input.id === edge.targetHandle
           );
-          console.log("ImageGenTarget Input Index:", targetInputIndex);
 
           if (targetInputIndex !== -1) {
             nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
               generatedImageUrl;
 
-            // Trigger a re-render to propagate the data change
             setNodes([...nodes]);
 
-            // Execute the target node after updating its input
             executeNode(nodes[targetNodeIndex]);
           }
         }
@@ -268,7 +253,6 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   };
 
-  // Execute all nodes and manage the data flow
   const runApp = useCallback(async () => {
     // Execute start nodes first
     for (const node of nodes.filter((node) => node.data.inputs.length === 0)) {
@@ -279,21 +263,17 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     for (const node of nodes.filter((node) => node.data.inputs.length > 0)) {
       await executeNode(node);
     }
-    console.log("Executed nodes:", executedNodes);
-    console.log("Nodes:", nodes);
-    console.log("All nodes executed!");
 
-    // After all nodes are executed, connect outputs to inputs via edges
     connectNodesWithEdges();
   }, [nodes, executeNode]);
 
-  // Separate useEffect for running the app
   useEffect(() => {
-    runApp();
-  }, [runApp]);
+    if (nodes.length > 0) {
+      runApp();
+    }
+  }, [nodes, runApp]);
 
   const connectNodesWithEdges = () => {
-    // Logic to connect nodes' outputs to the inputs of other nodes
     edges.forEach((edge) => {
       const sourceOutput = nodeOutputs[edge.source]?.[edge.sourceHandle];
       if (sourceOutput) {
@@ -310,7 +290,6 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
             nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
               sourceOutput;
 
-            // Trigger a re-render to propagate the data change
             setNodes([...nodes]);
           }
         }
@@ -318,12 +297,8 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     });
   };
 
-  // Function to handle data submission from TextInput
   const handleTextInputSubmit = useCallback(
     (nodeId: string, fields: Array<{ label: string; value: string }>) => {
-      // Update the node's outputs with the submitted field values
-      console.log("TextInput submitted for node", nodeId);
-      // Update the node's outputs with the submitted field values ie node.data.outputs.value === fields.value
       setNodes((prev) =>
         prev.map((node) =>
           node.node_id === nodeId
@@ -341,10 +316,8 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
             : node
         )
       );
-      //reset executed nodes
       setExecutedNodes(new Set());
 
-      // Find all edges connected to this node's output and propagate data
       const connectedEdges = edges.filter((edge) => edge.source === nodeId);
       connectedEdges.forEach((edge) => {
         const targetNodeIndex = nodes.findIndex(
@@ -360,12 +333,6 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
             nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
               fields[0].value;
 
-            // Trigger a re-render to propagate the data change
-            //setNodes([...nodes]);
-            console.log("Propagating data from", nodeId, "to", edge.target);
-            console.log("New value:", fields[0].value);
-            console.log("New node data:", nodes);
-            // Execute the target node after updating its input
             executeNode(nodes[targetNodeIndex]);
           }
         }
@@ -374,19 +341,16 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     [edges, nodes, executeNode]
   );
 
-  // Function to handle data submission from SketchPad
   const handleSketchPadSubmit = useCallback(
     (nodeId: string, imageData: string) => {
-      // Update the node's output with the submitted image data
       setNodeOutputs((prev) => ({
         ...prev,
         [nodeId]: {
           ...prev[nodeId],
-          "output-0": imageData, // Store the image data in output-0
+          "output-0": imageData,
         },
       }));
 
-      // Find all edges connected to this node's output and propagate data
       const connectedEdges = edges.filter((edge) => edge.source === nodeId);
       connectedEdges.forEach((edge) => {
         const targetNodeIndex = nodes.findIndex(
@@ -402,10 +366,8 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
             nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
               imageData;
 
-            // Trigger a re-render to propagate the data change
             setNodes([...nodes]);
 
-            // Execute the target node after updating its input
             executeNode(nodes[targetNodeIndex]);
           }
         }
@@ -414,7 +376,6 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     [edges, nodes, executeNode]
   );
 
-  // Render UI components dynamically
   return (
     <div>
       {uiComponents.map((component) => {
@@ -430,13 +391,12 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
               height: position.height,
             }}
           >
-            {/* Render component based on type */}
             {renderUIComponent(
               component,
               nodeOutputs[component.component_id],
               nodes.find((node) => node.node_id === component.component_id),
-              handleTextInputSubmit, // Pass the callback to handle TextInput submit
-              handleSketchPadSubmit // Pass the callback to handle SketchPad submit
+              handleTextInputSubmit,
+              handleSketchPadSubmit
             )}
           </div>
         );
@@ -445,7 +405,6 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   );
 };
 
-// Helper function to render UI components
 const renderUIComponent = (
   component: UIComponentData,
   nodeOutput: any,
@@ -454,15 +413,11 @@ const renderUIComponent = (
     nodeId: string,
     fields: Array<{ label: string; value: string }>
   ) => void,
-  handleSketchPadSubmit: (nodeId: string, imageData: string) => void // Include SketchPad callback
+  handleSketchPadSubmit: (nodeId: string, imageData: string) => void
 ): React.ReactNode => {
   switch (component.type) {
     case "imageDisplay":
-      return (
-        <div>
-          <ImageDisplay images={[nodeData?.data.inputs[0].value]} />
-        </div>
-      );
+      return <ImageDisplay images={[nodeData?.data.inputs[0].value]} />;
     case "flipCard":
       return (
         <FlipCard
@@ -506,7 +461,6 @@ const renderUIComponent = (
           }
         />
       );
-    // Add more UI component cases here
     default:
       return <div>Unsupported component type: {component.type}</div>;
   }
