@@ -17,7 +17,7 @@ export default function Home() {
           </p>
           <Sparkles className="h-6 w-6 text-indigo-500" />
         </div>
-        <p className="text-xl ">
+        <p className="text-xl text-center">
           The toolkit for building interactive AI-driven experiences
         </p>
 
