@@ -6,6 +6,7 @@ import FlickeringGrid from "@/components/magicui/flickering-grid";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { Sparkles } from "lucide-react";
+import AccountMenu from "@/components/account/AccountMenu";
 
 export default function CreateWorld() {
   const { data: session, status } = useSession();
@@ -25,7 +26,16 @@ export default function CreateWorld() {
 
   return (
     <div>
-      <div className="h-screen flex flex-col items-center justify-center">
+      <div className="fixed top-0 left-0 right-0 ">
+        <div className="flex">
+          <div className="ml-auto ">
+            <div className="m-2">
+              <AccountMenu />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="h-screen flex flex-col items-center justify-center ">
         <CreateAppForm />
         <FlickeringGrid
           className="z-0 absolute inset-0 size-full [mask-image:radial-gradient(600px_circle_at_center,white,transparent)]"

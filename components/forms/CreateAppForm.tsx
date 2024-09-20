@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { Sparkles } from "lucide-react";
 import GodPromptDialog from "./GodPromptDialog";
 import axios from "axios";
+import Link from "next/link";
 
 const CreateAppForm = () => {
   const [name, setName] = useState("");
@@ -109,12 +110,14 @@ const CreateAppForm = () => {
   return (
     <div className="border border-gray-500 shadow-2xl shadow-indigo-200 rounded-2xl bg-white z-10 p-2 w-96 lg:w-[460px]">
       <div className="p-6 border  border-gray-300 rounded-xl">
-        <div className="flex  justify-center">
-          <p className="p-1 whitespace-pre-wrap bg-gradient-to-r from-orange-500 via-pink-500 to-indigo-500 bg-clip-text text-center text-xl font-bold leading-none tracking-tighter text-transparent">
-            Imagine kit
-          </p>
-          <Sparkles className="h-4 w-4 mt-0.5 text-indigo-500" />
-        </div>
+        <Link href="/">
+          <div className="flex  justify-center">
+            <p className="p-1 whitespace-pre-wrap bg-gradient-to-r from-orange-500 via-pink-500 to-indigo-500 bg-clip-text text-center text-xl font-bold leading-none tracking-tighter text-transparent">
+              Imagine kit
+            </p>
+            <Sparkles className="h-4 w-4 mt-0.5 text-indigo-500" />
+          </div>
+        </Link>
         <div className="p-6 flex flex-col items-center justify-center">
           <h1 className="text-2xl font-semibold">Create new world</h1>
           <p className="text-gray-500">

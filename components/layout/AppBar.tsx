@@ -2,6 +2,7 @@
 import { Menubar, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
 import { Sparkles } from "lucide-react";
 import AccountMenu from "@/components/account/AccountMenu";
+import Link from "next/link";
 
 export default function AppBar() {
   return (
@@ -10,12 +11,14 @@ export default function AppBar() {
         <MenubarMenu>
           <div className=" lg:hidden"></div>
           <MenubarTrigger>
-            <div className="flex">
-              <p className="p-1 whitespace-pre-wrap bg-gradient-to-r from-orange-500 via-pink-500 to-indigo-500 bg-clip-text text-center text-xl font-bold leading-none tracking-tighter text-transparent">
-                Imagine kit
-              </p>
-              <Sparkles className="h-4 w-4 mt-0.5 text-indigo-500" />
-            </div>
+            <Link href="/">
+              <div className="flex">
+                <p className="p-1 whitespace-pre-wrap bg-gradient-to-r from-orange-500 via-pink-500 to-indigo-500 bg-clip-text text-center text-xl font-bold leading-none tracking-tighter text-transparent">
+                  Imagine kit
+                </p>
+                <Sparkles className="h-4 w-4 mt-0.5 text-indigo-500" />
+              </div>
+            </Link>
           </MenubarTrigger>
         </MenubarMenu>
         <div className="grow" />

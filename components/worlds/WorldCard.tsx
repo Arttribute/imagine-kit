@@ -9,7 +9,7 @@ import { HeartIcon, PlayIcon, PointerIcon } from "lucide-react";
 
 export default function WorldCard({ app }: { app: any }) {
   return (
-    <div className="cursor-pointer border border-indigo-400  shadow-md rounded-3xl">
+    <div className="cursor-pointer border border-indigo-400 bg-white shadow-md rounded-3xl">
       <Link href={`/${app.owner.username}/worlds/${app._id}`}>
         <div className="p-2 pb-0">
           <Image
