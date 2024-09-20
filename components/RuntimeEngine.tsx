@@ -11,10 +11,17 @@ import TextOutput from "@/components/imaginekit/ui/textoutput/TextOutput";
 import WordSelector from "@/components/imaginekit/ui/wordtiles/select/WordSelector";
 import WordArranger from "@/components/imaginekit/ui/wordtiles/arrange/WordArranger";
 import SketchPad from "@/components/imaginekit/ui/sketchpad/SketchPad";
+import ChatInterface from "@/components/imaginekit/ui/chat/ChatInteface";
 
 // Utility function for calling LLM API
 import { callGPTApi } from "@/utils/apicalls/gpt";
 import { callDalleApi } from "@/utils/apicalls/dalle";
+
+interface Interaction {
+  speaker: "user" | "bot";
+  message: string;
+  bot_id?: string;
+}
 
 // Types for node, edge, and UI component data
 interface NodeData {
@@ -64,6 +71,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   const [edges, setEdges] = useState<EdgeData[]>([]);
   const [uiComponents, setUIComponents] = useState<UIComponentData[]>([]);
   const [nodeOutputs, setNodeOutputs] = useState<{ [key: string]: any }>({});
+  const [nodeExecutionStack, setNodeExecutionStack] = useState<string[]>([]);
   const [executedNodes, setExecutedNodes] = useState<Set<string>>(new Set());
   const [pendingExecution, setPendingExecution] = useState<
     Map<string, Promise<void>>
@@ -92,42 +100,25 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   }, [appId]);
 
   // Function to execute a single node based on its type
-  const executeNode = useCallback(
-    async (node: NodeData) => {
-      // Check if the node is already being executed or has been executed
-      if (executedNodes.has(node.node_id) || pendingExecution.has(node.node_id))
-        return;
-
-      const nodeExecutionPromise = (async () => {
-        switch (node.type) {
-          case "llm":
-            await executeLLMNode(node); // Execute LLM Node
-            break;
-          case "imageGen":
-            await executeImageGeneratorNode(node); // Execute Image Generator Node
-            break;
-          // Add more cases for each node type
-          default:
-            console.warn(`Unknown node type: ${node.type}`);
-            break;
-        }
-
-        // Mark node as executed after the promise resolves
-        setExecutedNodes((prev) => new Set(prev).add(node.node_id));
-        setPendingExecution((prev) => {
-          const newMap = new Map(prev);
-          newMap.delete(node.node_id);
-          return newMap;
-        });
-      })();
-
-      // Add the node execution promise to pendingExecution
-      setPendingExecution((prev) =>
-        new Map(prev).set(node.node_id, nodeExecutionPromise)
-      );
-    },
-    [executedNodes, pendingExecution, edges, nodes]
-  );
+  const executeNode = async (node: NodeData) => {
+    //remove node from stack
+    removeNodeFromStack(node.node_id);
+    console.log("Executing node..:", node.node_id);
+    switch (node.type) {
+      case "llm":
+        await executeLLMNode(node); // Execute LLM Node
+        break;
+      case "imageGen":
+        await executeImageGeneratorNode(node); // Execute Image Generator Node
+        break;
+      case "textInput":
+        await executeTextInputNode(node); // Now handle textInput node execution
+        break;
+      default:
+        console.warn(`Unknown node type: ${node.type}`);
+        break;
+    }
+  };
 
   // Function to execute an LLM Node
   const executeLLMNode = async (node: NodeData) => {
@@ -158,7 +149,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
                   ...n.data,
                   outputs: n.data.outputs.map((output) => ({
                     ...output,
-                    value: outputData[output.label],
+                    value: outputData[output.label], //match gpt output to output label
                   })),
                 },
               }
@@ -186,8 +177,9 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
               outputData[label];
 
             setNodes([...nodes]);
-
-            executeNode(nodes[targetNodeIndex]);
+            //add node to execution stack
+            addNodeToStack(nodes[targetNodeIndex]);
+            //executeNode(nodes[targetNodeIndex]);
           }
         }
       });
@@ -240,8 +232,9 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
               generatedImageUrl;
 
             setNodes([...nodes]);
-
-            executeNode(nodes[targetNodeIndex]);
+            //add node to execution stack
+            addNodeToStack(nodes[targetNodeIndex]);
+            //executeNode(nodes[targetNodeIndex]);
           }
         }
       });
@@ -253,95 +246,106 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   };
 
-  const runApp = useCallback(async () => {
-    // Execute start nodes first
-    for (const node of nodes.filter((node) => node.data.inputs.length === 0)) {
-      await executeNode(node);
-      console.log("Executed start node:", node);
-    }
+  const executeTextInputNode = async (node: NodeData) => {
+    console.log("Executing text input node..:", node.node_id);
+    // Propagate to connected nodes
+    console.log("Propagating data from", node.node_id, "to connected nodes");
+    const connectedEdges = edges.filter((edge) => edge.source === node.node_id);
+    connectedEdges.forEach((edge) => {
+      const targetNodeIndex = nodes.findIndex(
+        (node) => node.node_id === edge.target
+      );
 
-    // Execute nodes with inputs next
-    for (const node of nodes.filter((node) => node.data.inputs.length > 0)) {
-      await executeNode(node);
-      console.log("Executed node with inputs:", node);
-    }
-
-    connectNodesWithEdges();
-  }, [nodes, executeNode]);
-
-  useEffect(() => {
-    if (nodes.length > 0) {
-      runApp();
-    }
-  }, [nodes, runApp]);
-
-  const connectNodesWithEdges = () => {
-    edges.forEach((edge) => {
-      const sourceOutput = nodeOutputs[edge.source]?.[edge.sourceHandle];
-      if (sourceOutput) {
-        const targetNodeIndex = nodes.findIndex(
-          (node) => node.node_id === edge.target
+      if (targetNodeIndex !== -1) {
+        const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
+          (input) => input.id === edge.targetHandle
         );
 
-        if (targetNodeIndex !== -1) {
-          const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
-            (input) => input.id === edge.targetHandle
-          );
+        if (targetInputIndex !== -1) {
+          nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
+            node.data.outputs[0].value;
 
-          if (targetInputIndex !== -1) {
-            nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
-              sourceOutput;
+          // Trigger a re-render to propagate the data change
+          //setNodes([...nodes]);
+          console.log("Propagating data from", node.node_id, "to", edge.target);
+          console.log("New value:", node.data.outputs[0].value);
+          console.log("New node data:", nodes);
+          // Execute the target node after updating its input
 
-            setNodes([...nodes]);
-          }
+          //add node to execution stack
+          addNodeToStack(nodes[targetNodeIndex]);
+          //executeNode(nodes[targetNodeIndex]);
         }
       }
     });
   };
 
-  const handleTextInputSubmit = useCallback(
-    (nodeId: string, fields: Array<{ label: string; value: string }>) => {
-      setNodes((prev) =>
-        prev.map((node) =>
-          node.node_id === nodeId
-            ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  outputs: fields.map((field) => ({
-                    id: field.label,
-                    label: field.label,
-                    value: field.value,
-                  })),
-                },
-              }
-            : node
-        )
-      );
-      setExecutedNodes(new Set());
+  const runExecutionStack = useCallback(async () => {
+    //simply execute the nodes in the stack
+    for (const nodeId of nodeExecutionStack) {
+      const node = nodes.find((n) => n.node_id === nodeId);
+      if (node) {
+        await executeNode(node);
+      }
+    }
+  }, [nodeExecutionStack, nodes, executeNode]);
 
-      const connectedEdges = edges.filter((edge) => edge.source === nodeId);
-      connectedEdges.forEach((edge) => {
-        const targetNodeIndex = nodes.findIndex(
-          (node) => node.node_id === edge.target
-        );
+  const addNodeToStack = (node: NodeData) => {
+    setNodeExecutionStack((prev) => [...prev, node.node_id]);
+  };
 
-        if (targetNodeIndex !== -1) {
-          const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
-            (input) => input.id === edge.targetHandle
-          );
+  const removeNodeFromStack = (nodeId: string) => {
+    setNodeExecutionStack((prev) => prev.filter((id) => id !== nodeId));
+  };
 
-          if (targetInputIndex !== -1) {
-            nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
-              fields[0].value;
+  const runApp = useCallback(async () => {
+    //simply execute the nodes in the stack
+    await runExecutionStack();
+  }, [nodes, executeNode]);
 
-            executeNode(nodes[targetNodeIndex]);
-          }
-        }
-      });
-    },
-    [edges, nodes, executeNode]
-  );
+  useEffect(() => {
+    console.log("Node execution stack:", nodeExecutionStack);
+    if (nodeExecutionStack.length > 0) {
+      runApp();
+    }
+  }, [runApp, nodeExecutionStack]);
+
+  useEffect(() => {
+    setNodeExecutionStack(nodes.map((node) => node.node_id));
+  }, []);
+
+  const handleTextInputSubmit = async (
+    nodeId: string,
+    fields: Array<{ label: string; value: string }>
+  ) => {
+    // Find the node that matches the nodeId and update its data
+    setNodes((prevNodes) =>
+      prevNodes.map((node) =>
+        node.node_id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                outputs: fields.map((field) => ({
+                  id: field.label,
+                  label: field.label,
+                  value: field.value,
+                })),
+              },
+            }
+          : node
+      )
+    );
+
+    // After the data is updated, execute the node
+    const node = nodes.find((n) => n.node_id === nodeId);
+    if (node) {
+      //add node to execution stack
+      addNodeToStack(node);
+      //await executeNode(node);
+      console.log("text input node added to stack:", node);
+    }
+  };
 
   const handleSketchPadSubmit = useCallback(
     (nodeId: string, imageData: string) => {
@@ -461,6 +465,16 @@ const renderUIComponent = (
           onSubmit={(imageData) =>
             handleSketchPadSubmit(nodeData?.node_id, imageData)
           }
+        />
+      );
+    case "chatInterface":
+      return (
+        <ChatInterface
+          interaction={nodeData?.data.inputs.map((input: any) => ({
+            id: input.id,
+            label: input.label,
+            value: input.value,
+          }))}
         />
       );
     default:

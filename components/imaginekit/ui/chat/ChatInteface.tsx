@@ -1,49 +1,98 @@
-import React from "react";
+"use client";
+import React, { useState, useEffect, useRef } from "react";
+import { MessageSquareIcon } from "lucide-react";
 
-function ChatInteface() {
-  const filteredInteractionData = [
-    {
-      input_type: "text",
-      user_message: "Hello",
-      system_message: '{"response": "Hi, how can I help you?"}',
-    },
-    {
-      input_type: "text",
-      user_message: "I want to know about your services",
-      system_message: '{"response": "Sure, we offer a wide range of services"}',
-    },
-    {
-      input_type: "text",
-      user_message: "Can you tell me more about them?",
-      system_message:
-        '{"response": "Of course! Here are some of the services we offer"}',
-    },
-  ];
-
-  return (
-    <div className="bg-gray-200 rounded-xl">
-      {filteredInteractionData &&
-        filteredInteractionData.map((interaction: any, index: number) => (
-          <div key={index} className="mb-4">
-            <div className="flex justify-end">
-              <div className="bg-gray-200 p-3 rounded-2xl shadow-sm max-w-full">
-                <p className="text-sm text-gray-800">
-                  {interaction.user_message}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex justify-start mt-4">
-              <div className="border bg-white rounded-2xl p-4 px-5 shadow-sm max-w-full">
-                <p className="text-sm text-gray-700">
-                  {JSON.parse(interaction.system_message).response}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-    </div>
-  );
+// Interface for interaction data
+interface ChatInterfaceProps {
+  interaction: Array<{
+    id: string;
+    label: string;
+    value: string;
+  }>;
 }
 
-export default ChatInteface;
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ interaction }) => {
+  const [interactionData, setInteractionData] = useState<
+    Array<{ id: string; role: string; message: string }>
+  >([]);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Predefined set of colors to assign to roles
+  const colors = [
+    "bg-sky-100",
+    "bg-white",
+    "bg-purple-100",
+    "bg-fuchsia-100",
+    "bg-lime-100",
+    "bg-amber-100",
+    "bg-rose-100",
+    "bg-indigo-100",
+  ];
+
+  useEffect(() => {
+    if (interaction && interaction.length > 0) {
+      // Filter out interactions that already exist in the interactionData state
+      const newInteractions = interaction.filter((i) => {
+        return !interactionData.some(
+          (data) => data.id === i.id && data.message === i.value
+        );
+      });
+
+      // Map new interactions to the interactionData structure
+      const mappedInteractions = newInteractions.map((i) => ({
+        id: i.id,
+        role: i.label, // Use label as the role
+        message: i.value, // Use value as the message
+      }));
+
+      // Append new interactions to the existing interactionData state
+      setInteractionData((prevData) => [...prevData, ...mappedInteractions]);
+    }
+  }, [interaction]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [interaction]);
+
+  return (
+    <div className="flex flex-col h-[60vh] w-96 m-2  border shadow-xl rounded-xl">
+      <div className="bg-gray-50 border border-indigo-200 rounded-xl p-2 m-2 h-full overflow-y-auto">
+        <div className="flex items-center text-indigo-500 mb-3">
+          <MessageSquareIcon className="h-4 w-4 mr-1" />
+          <p className="text-xs font-semibold">chat</p>
+        </div>
+
+        {interactionData &&
+          interactionData.map((interaction, index) => {
+            // Skip rendering if message is an empty string or message equals role
+            if (
+              !interaction.message ||
+              interaction.message === interaction.role
+            ) {
+              return null;
+            }
+
+            return (
+              <div key={index} className="mb-4 ">
+                <div
+                  className={`p-2 border border-gray-300 shadow-sm rounded-xl ${
+                    colors[parseInt(interaction.id[6], 10) % 6]
+                  }`}
+                >
+                  {interaction.message}
+                </div>
+              </div>
+            );
+          })}
+        <div className="mb-8" />
+        {interactionData.length > 0 && <div ref={messagesEndRef} />}
+      </div>
+    </div>
+  );
+};
+
+export default ChatInterface;
