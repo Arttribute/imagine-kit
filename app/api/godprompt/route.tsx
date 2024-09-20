@@ -117,7 +117,7 @@ export async function POST(request: Request) {
     The following are the node types that are available:
         llm,
         imageGen,
-        imagesDisplay,
+        imageDisplay,
         imageTiles,
         sketchPad,
         compare,
