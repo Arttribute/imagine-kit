@@ -129,11 +129,8 @@ export const NODE_TYPE_MAPPING = {
       outputs: [],
     },
     ChatInterface: {
-      inputs: [
-        { id: "input-0", label: "User input", value: "" },
-        { id: "input-1", label: "Bot response", value: "" },
-      ],
-      outputs: [],
+      inputs: [{ id: "input-0", label: "Participant 1", value: "" }],
+      outputs: [{ id: "output-0", label: "Interaction data", value: "" }],
     },
     Memory: {
       inputs: [],
