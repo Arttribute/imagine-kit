@@ -161,7 +161,7 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
           icon: <PowerIcon className="w-5 h-5" />,
           label: "Button",
           type: "TriggerButton",
-          color: "violet",
+          color: "indigo",
         },
       ],
     },
