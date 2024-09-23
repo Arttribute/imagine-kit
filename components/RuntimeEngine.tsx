@@ -434,38 +434,49 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   );
 
   return (
-    <div>
-      {uiComponents.map((component) => {
-        const position = component.position;
-        return (
-          <div
-            key={component.component_id}
-            style={{
-              position: "absolute",
-              left: position.x,
-              top: position.y,
-              width: position.width,
-              height: position.height,
-            }}
-          >
-            {renderUIComponent(
-              component,
-              nodeOutputs[component.component_id],
-              nodes.find((node) => node.node_id === component.component_id),
-              handleTextInputSubmit,
-              handleSketchPadSubmit,
-              handleTriggerButtonClick
-            )}
-          </div>
-        );
-      })}
+    <div
+      style={{
+        display: "flex",
+      }}
+    >
+      <div
+        className=""
+        style={{
+          position: "relative", // Makes children position relative to this parent
+          width: "600px", // Set width based on your design
+          height: "400px", // Set height based on your design
+        }}
+      >
+        {uiComponents.map((component) => {
+          const position = component.position;
+          return (
+            <div
+              key={component.component_id}
+              style={{
+                position: "absolute",
+                left: position.x,
+                top: position.y,
+                width: position.width,
+                height: position.height,
+              }}
+            >
+              {renderUIComponent(
+                component,
+                nodes.find((node) => node.node_id === component.component_id),
+                handleTextInputSubmit,
+                handleSketchPadSubmit,
+                handleTriggerButtonClick
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
 
 const renderUIComponent = (
   component: UIComponentData,
-  nodeOutput: any,
   nodeData: any,
   handleTextInputSubmit: (
     nodeId: string,

@@ -26,7 +26,15 @@ export default function World({ params }: { params: { id: string } }) {
       {!loading && app && !startInteraction && (
         <EnterWorld app={app} setStartInteraction={setStartInteraction} />
       )}
-      {startInteraction && <RuntimeEngine appId={appId} />}
+      {startInteraction && (
+        <div className="flex justify-center items-center h-screen">
+          <div style={{ display: "flex", height: "86vh", width: "80vw" }}>
+            <div className="">
+              <RuntimeEngine appId={appId} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
