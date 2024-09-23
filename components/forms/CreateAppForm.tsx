@@ -61,9 +61,9 @@ const CreateAppForm = () => {
 
         await axios.post("/api/nodes", { nodes: nodeData });
         await axios.post("/api/edges", { edges: edgeData });
-        // await axios.post("/api/uicomponents", {
-        //   uiComponents: uiComponentsToSave,
-        // });
+        await axios.post("/api/uicomponents", {
+          uiComponents: uiComponentsToSave,
+        });
         router.push(`/${session?.user?.name || "bashy"}/worlds/${appId}/edit`);
         setLoading(false);
       } else {
