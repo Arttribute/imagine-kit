@@ -14,6 +14,7 @@ import WordArrangerNode from "./WordArrangerNode";
 import FlipCardNode from "./FlipCardNode";
 import ChatInterfaceNode from "./ChatInterfaceNode";
 import MemoryNode from "./MemoryNode";
+import TriggerButtonNode from "./TriggerButtonNode";
 
 // Object to map node types to their respective components
 export const nodeTypes = {
@@ -31,6 +32,7 @@ export const nodeTypes = {
   flipCard: FlipCardNode,
   chatInterface: ChatInterfaceNode,
   memory: MemoryNode,
+  triggerButton: TriggerButtonNode,
 };
 
 // Object to map node type names and default data configurations
@@ -50,6 +52,7 @@ export const NODE_TYPE_MAPPING = {
     ChatInterface: "chatInterface",
     Memory: "memory",
     CustomNode: "custom",
+    TriggerButton: "triggerButton",
   } as const, // Use 'as const' to make this object read-only and enable type-safe indexing
   ui: [
     "imageDisplay",
@@ -61,6 +64,7 @@ export const NODE_TYPE_MAPPING = {
     "wordArranger",
     "flipCard",
     "chatInterface",
+    "triggerButton",
   ],
   defaultData: {
     LLMNode: {
@@ -96,6 +100,10 @@ export const NODE_TYPE_MAPPING = {
         { id: "input-1", label: "Input 2", value: "" },
       ],
       outputs: [{ id: "output-0", label: "Comparison result", value: "" }],
+    },
+    TriggerButton: {
+      inputs: [],
+      outputs: [{ id: "output-0", label: "Button name", value: "" }],
     },
     TextInput: {
       inputs: [],

@@ -12,6 +12,7 @@ import WordSelector from "@/components/imaginekit/ui/wordtiles/select/WordSelect
 import WordArranger from "@/components/imaginekit/ui/wordtiles/arrange/WordArranger";
 import SketchPad from "@/components/imaginekit/ui/sketchpad/SketchPad";
 import ChatInterface from "@/components/imaginekit/ui/chat/ChatInteface";
+import TriggerButton from "@/components/imaginekit/ui/triggerbutton/TriggerButton";
 
 // Utility function for calling LLM API
 import { callGPTApi } from "@/utils/apicalls/gpt";
@@ -98,7 +99,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   const executeNode = async (node: NodeData) => {
     //remove node from stack
     removeNodeFromStack(node.node_id);
-    console.log("Executing node..:", node.node_id);
+    console.log("Executing node..:", node);
     switch (node.type) {
       case "llm":
         await executeLLMNode(node); // Execute LLM Node
@@ -108,6 +109,9 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         break;
       case "textInput":
         await executeTextInputNode(node); // Now handle textInput node execution
+        break;
+      case "triggerButton":
+        await executeTriggerButtonNode(node); // Execute Trigger Button Node
         break;
       default:
         console.warn(`Unknown node type: ${node.type}`);
@@ -144,6 +148,32 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
       runApp();
     }
   }, [runApp, nodeExecutionStack]);
+
+  // Function to execute a Trigger Button Node
+  const executeTriggerButtonNode = async (node: NodeData) => {
+    console.log("Executing Trigger Button Node..:", node.node_id);
+    // Propagate to connected nodes
+    console.log("Propagating data from", node.node_id, "to connected nodes");
+    const connectedEdges = edges.filter((edge) => edge.source === node.node_id);
+    connectedEdges.forEach((edge) => {
+      const targetNodeIndex = nodes.findIndex(
+        (node) => node.node_id === edge.target
+      );
+
+      if (targetNodeIndex !== -1) {
+        const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
+          (input) => input.id === edge.targetHandle
+        );
+
+        if (targetInputIndex !== -1) {
+          nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
+            node.data.outputs[0].value;
+          setNodes([...nodes]);
+          addNodeToStack(nodes[targetNodeIndex]);
+        }
+      }
+    });
+  };
 
   // Function to execute an LLM Node
   const executeLLMNode = async (node: NodeData) => {
@@ -307,6 +337,34 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     });
   };
 
+  const handleTriggerButtonClick = (nodeId: string, buttonValue: string) => {
+    console.log("Trigger button clicked:", buttonValue);
+    setNodes((prevNodes) =>
+      prevNodes.map((node) =>
+        node.node_id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                outputs: [
+                  {
+                    ...node.data.outputs[0],
+                    value: buttonValue,
+                  },
+                ],
+              },
+            }
+          : node
+      )
+    );
+
+    const node = nodes.find((n) => n.node_id === nodeId);
+    if (node) {
+      addNodeToStack(node);
+      console.log("trigger button node added to stack:", node);
+    }
+  };
+
   const handleTextInputSubmit = async (
     nodeId: string,
     fields: Array<{ label: string; value: string }>
@@ -395,7 +453,8 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
               nodeOutputs[component.component_id],
               nodes.find((node) => node.node_id === component.component_id),
               handleTextInputSubmit,
-              handleSketchPadSubmit
+              handleSketchPadSubmit,
+              handleTriggerButtonClick
             )}
           </div>
         );
@@ -412,9 +471,19 @@ const renderUIComponent = (
     nodeId: string,
     fields: Array<{ label: string; value: string }>
   ) => void,
-  handleSketchPadSubmit: (nodeId: string, imageData: string) => void
+  handleSketchPadSubmit: (nodeId: string, imageData: string) => void,
+  handleTriggerButtonClick: (nodeId: string, buttonValue: string) => void
 ): React.ReactNode => {
   switch (component.type) {
+    case "triggerButton":
+      return (
+        <TriggerButton
+          buttonName={nodeData?.data?.outputs[0]?.label}
+          onClickButton={(buttonValue) =>
+            handleTriggerButtonClick(nodeData?.node_id, buttonValue)
+          }
+        />
+      );
     case "imageDisplay":
       return <ImageDisplay images={[nodeData?.data?.inputs[0]?.value]} />;
     case "flipCard":
