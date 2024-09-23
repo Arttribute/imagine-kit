@@ -17,12 +17,6 @@ import ChatInterface from "@/components/imaginekit/ui/chat/ChatInteface";
 import { callGPTApi } from "@/utils/apicalls/gpt";
 import { callDalleApi } from "@/utils/apicalls/dalle";
 
-interface Interaction {
-  speaker: "user" | "bot";
-  message: string;
-  bot_id?: string;
-}
-
 // Types for node, edge, and UI component data
 interface NodeData {
   node_id: string;
@@ -72,10 +66,10 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   const [uiComponents, setUIComponents] = useState<UIComponentData[]>([]);
   const [nodeOutputs, setNodeOutputs] = useState<{ [key: string]: any }>({});
   const [nodeExecutionStack, setNodeExecutionStack] = useState<string[]>([]);
-  const [executedNodes, setExecutedNodes] = useState<Set<string>>(new Set());
-  const [pendingExecution, setPendingExecution] = useState<
-    Map<string, Promise<void>>
-  >(new Map());
+  // const [executedNodes, setExecutedNodes] = useState<Set<string>>(new Set());
+  // const [pendingExecution, setPendingExecution] = useState<
+  //   Map<string, Promise<void>>
+  // >(new Map());
 
   // Load data from the database
   useEffect(() => {
@@ -91,6 +85,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         setNodes(nodesResponse.data);
         setEdges(edgesResponse.data);
         setUIComponents(uiComponentsResponse.data);
+        //setNodeExecutionStack(nodesResponse.data);
       } catch (error) {
         console.error("Failed to fetch data for runtime engine:", error);
       }
@@ -120,6 +115,36 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   };
 
+  const runExecutionStack = useCallback(async () => {
+    //simply execute the nodes in the stack
+    for (const nodeId of nodeExecutionStack) {
+      const node = nodes.find((n) => n.node_id === nodeId);
+      if (node) {
+        await executeNode(node);
+      }
+    }
+  }, [nodeExecutionStack, nodes, executeNode]);
+
+  const addNodeToStack = (node: NodeData) => {
+    setNodeExecutionStack((prev) => [...prev, node.node_id]);
+  };
+
+  const removeNodeFromStack = (nodeId: string) => {
+    setNodeExecutionStack((prev) => prev.filter((id) => id !== nodeId));
+  };
+
+  const runApp = useCallback(async () => {
+    //simply execute the nodes in the stack
+    await runExecutionStack();
+  }, [nodes, executeNode]);
+
+  useEffect(() => {
+    console.log("Node execution stack:", nodeExecutionStack);
+    if (nodeExecutionStack.length > 0) {
+      runApp();
+    }
+  }, [runApp, nodeExecutionStack]);
+
   // Function to execute an LLM Node
   const executeLLMNode = async (node: NodeData) => {
     const promptInput = node.data.inputs[0]?.value || "start";
@@ -140,6 +165,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 
       const outputData = JSON.parse(generatedOutput);
 
+      // Update the node's output data
       setNodes((prev) =>
         prev.map((n) =>
           n.node_id === node.node_id
@@ -157,6 +183,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         )
       );
 
+      //propagate data to connected nodes
       const connectedEdges = edges.filter(
         (edge) => edge.source === node.node_id
       );
@@ -280,40 +307,6 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     });
   };
 
-  const runExecutionStack = useCallback(async () => {
-    //simply execute the nodes in the stack
-    for (const nodeId of nodeExecutionStack) {
-      const node = nodes.find((n) => n.node_id === nodeId);
-      if (node) {
-        await executeNode(node);
-      }
-    }
-  }, [nodeExecutionStack, nodes, executeNode]);
-
-  const addNodeToStack = (node: NodeData) => {
-    setNodeExecutionStack((prev) => [...prev, node.node_id]);
-  };
-
-  const removeNodeFromStack = (nodeId: string) => {
-    setNodeExecutionStack((prev) => prev.filter((id) => id !== nodeId));
-  };
-
-  const runApp = useCallback(async () => {
-    //simply execute the nodes in the stack
-    await runExecutionStack();
-  }, [nodes, executeNode]);
-
-  useEffect(() => {
-    console.log("Node execution stack:", nodeExecutionStack);
-    if (nodeExecutionStack.length > 0) {
-      runApp();
-    }
-  }, [runApp, nodeExecutionStack]);
-
-  useEffect(() => {
-    setNodeExecutionStack(nodes.map((node) => node.node_id));
-  }, []);
-
   const handleTextInputSubmit = async (
     nodeId: string,
     fields: Array<{ label: string; value: string }>
@@ -423,16 +416,20 @@ const renderUIComponent = (
 ): React.ReactNode => {
   switch (component.type) {
     case "imageDisplay":
-      return <ImageDisplay images={[nodeData?.data.inputs[0].value]} />;
+      return <ImageDisplay images={[nodeData?.data?.inputs[0]?.value]} />;
     case "flipCard":
       return (
         <FlipCard
-          frontContentText={nodeOutput?.["output-0"]}
-          backContentText={nodeOutput?.["output-1"]}
+          frontTitle={nodeData?.data?.inputs[0]?.value}
+          backTitle={nodeData?.data?.inputs[1]?.value}
+          frontContentText={nodeData?.data?.inputs[2]?.value}
+          backContentText={nodeData?.data?.inputs[3]?.value}
+          frontImageUrl={nodeData?.data?.inputs[4]?.value}
+          backImageUrl={nodeData?.data?.inputs[5]?.value}
         />
       );
     case "imageTiles":
-      return <ImageTiles src={nodeData?.data.inputs[0].value} numCols={3} />;
+      return <ImageTiles src={nodeData?.data?.inputs[0]?.value} numCols={3} />;
     case "textInput":
       return (
         <TextInput
@@ -440,22 +437,24 @@ const renderUIComponent = (
             label: output.label,
             value: "",
           }))}
-          onSubmit={(fields) => handleTextInputSubmit(nodeData.node_id, fields)}
+          onSubmit={(fields) =>
+            handleTextInputSubmit(nodeData?.node_id, fields)
+          }
         />
       );
     case "textOutput":
-      return <TextOutput text={nodeData?.data.inputs[0].value} />;
+      return <TextOutput text={nodeData?.data?.inputs[0]?.value} />;
     case "wordSelector":
       return (
         <WordSelector
-          correctWords={nodeData?.data.inputs[0].value}
-          incorrectWords={nodeData?.data.inputs[1].value}
+          correctWords={nodeData?.data?.inputs[0]?.value}
+          incorrectWords={nodeData?.data?.inputs[1]?.value}
         />
       );
     case "wordArranger":
       return (
         <WordArranger
-          correctWords={nodeData?.data.inputs[0].value}
+          correctWords={nodeData?.data?.inputs[0]?.value}
           setIsCorrect={() => {}}
         />
       );
@@ -470,7 +469,7 @@ const renderUIComponent = (
     case "chatInterface":
       return (
         <ChatInterface
-          interaction={nodeData?.data.inputs.map((input: any) => ({
+          interaction={nodeData?.data?.inputs?.map((input: any) => ({
             id: input.id,
             label: input.label,
             value: input.value,

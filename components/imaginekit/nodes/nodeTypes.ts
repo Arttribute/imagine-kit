@@ -121,10 +121,12 @@ export const NODE_TYPE_MAPPING = {
     },
     FlipCard: {
       inputs: [
-        { id: "input-0", label: "Front text", value: "" },
-        { id: "input-1", label: "Back text", value: "" },
-        { id: "input-2", label: "Front image", value: "" },
-        { id: "input-3", label: "Back image", value: "" },
+        { id: "input-0", label: "Front title", value: "" },
+        { id: "input-1", label: "Back title", value: "" },
+        { id: "input-2", label: "Front text", value: "" },
+        { id: "input-3", label: "Back text", value: "" },
+        { id: "input-4", label: "Front image", value: "" },
+        { id: "input-5", label: "Back image", value: "" },
       ],
       outputs: [],
     },
