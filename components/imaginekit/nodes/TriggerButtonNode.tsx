@@ -27,7 +27,7 @@ const TriggerButtonNode: React.FC<TriggerButtonNodeProps> = ({ data, id }) => {
       icon={
         <div className="flex items-center">
           <PowerIcon className="w-4 h-4 text-gray-400 mr-1" />
-          <p className="text-xs text-gray-500">Trigger Button"</p>
+          <p className="text-xs text-gray-500">Trigger Button</p>
         </div>
       }
       onDataChange={onDataChange}
