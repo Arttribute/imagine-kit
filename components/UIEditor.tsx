@@ -44,8 +44,8 @@ const UIEditor: React.FC<UIEditorProps> = ({
 
   // Calculate initial position based on the number of components to stack them vertically
   const calculateInitialPosition = (index: number): ComponentPosition => ({
-    x: 50,
-    y: 50 + index * 150, // Adjust the '150' value to change spacing between components
+    x: 10,
+    y: 10 + index * 30,
     width: 200,
     height: 100,
   });
