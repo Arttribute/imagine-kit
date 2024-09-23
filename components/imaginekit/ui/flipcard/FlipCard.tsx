@@ -1,35 +1,107 @@
 "use client";
 import React, { useState } from "react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import DotPattern from "@/components/magicui/dot-pattern";
+
+// Helper function to stop event propagation
+const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
 interface FlipCardProps {
-  backTitle?: string;
   frontTitle?: string;
+  backTitle?: string;
   frontContentText?: string;
   backContentText?: string;
   frontImageUrl?: string;
   backImageUrl?: string;
 }
 
+const CardSide: React.FC<{
+  title?: string;
+  contentText?: string;
+  imageUrl?: string;
+  showDialog?: boolean;
+  isBack?: boolean;
+}> = ({ title, contentText, imageUrl, showDialog = false, isBack = false }) => (
+  <div
+    className="absolute w-full h-full"
+    style={{ backfaceVisibility: "hidden" }}
+  >
+    <div className="flex flex-col justify-center items-center border border-gray-400 bg-white rounded-2xl shadow-xl p-1 relative w-full h-full overflow-hidden rounded-xl">
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt={title}
+          className="w-full h-full object-cover aspect-[6/9] rounded-xl"
+        />
+      )}
+      {/* Centered title and content when no image */}
+      {!imageUrl && (
+        <div className="flex flex-col items-center justify-center h-full text-center px-4">
+          {title && <h3 className=" text-black font-semibold mb-2">{title}</h3>}
+          {contentText && (
+            <p className="text-xs text-gray-700">{contentText}</p>
+          )}
+        </div>
+      )}
+      {/* Title with overlay when there is an image */}
+      {title && imageUrl && (
+        <div className="absolute top-0 right-0 w-full h-15 bg-gray-700 bg-opacity-50 flex justify-center items-center">
+          <h3 className="text-sm text-white font-semibold">{title}</h3>
+        </div>
+      )}
+      {/* Dialog trigger for front content text */}
+      {contentText && showDialog && imageUrl && (
+        <div className="absolute bottom-2 w-full flex justify-center items-center">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="mb-1" onClick={stopPropagation}>
+                Read more
+              </Button>
+            </DialogTrigger>
+            <DialogContent onClick={stopPropagation} className="max-w-2xl">
+              <div className="grid grid-cols-12">
+                <div className="col-span-6">
+                  {imageUrl && (
+                    <img
+                      src={imageUrl}
+                      className="aspect-[1] rounded-xl"
+                      alt={title}
+                    />
+                  )}
+                </div>
+                <div className="col-span-6">
+                  <div className="px-6">
+                    <h2 className="text-2xl font-semibold mb-4">{title}</h2>
+                    <p className="text-sm mb-4">{contentText}</p>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
 const FlipCard: React.FC<FlipCardProps> = ({
-  backTitle,
   frontTitle,
+  backTitle,
   frontContentText,
   backContentText,
   frontImageUrl,
   backImageUrl,
 }) => {
-  const [isFlipped, setIsFlipped] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(true);
 
-  const flipCard = () => {
-    setIsFlipped(!isFlipped);
-  };
+  const flipCard = () => setIsFlipped(!isFlipped);
 
   return (
     <div
-      className="relative w-52 h-72"
-      style={{
-        perspective: "1000px",
-      }}
+      className="relative w-52 h-72 cursor-pointer"
+      style={{ perspective: "1000px" }}
       onClick={flipCard}
     >
       <div
@@ -40,56 +112,12 @@ const FlipCard: React.FC<FlipCardProps> = ({
         }}
       >
         {/* Front Side */}
-        <div
-          className="absolute w-full h-full backface-hidden"
-          style={{
-            backfaceVisibility: "hidden",
-          }}
-        >
-          <div className="flex flex-col justify-center items-center bg-white rounded-2xl shadow-xl p-1">
-            {frontImageUrl && (
-              <div className="relative w-full h-full overflow-hidden rounded-xl">
-                <img
-                  src={frontImageUrl}
-                  alt={frontTitle}
-                  className="w-full h-full object-cover aspect-[6/9] rounded-xl"
-                />
-                {frontTitle && (
-                  <div className="absolute top-0 right-0 w-full h-15 bg-gray-700 bg-opacity-50 flex justify-center items-center">
-                    <h3 className="text-sm text-white font-semibold">
-                      {frontTitle}
-                    </h3>
-                  </div>
-                )}
-                {frontContentText && (
-                  <div className="absolute bottom-2 w-full flex justify-center items-center">
-                    <div className="bg-black bg-opacity-50 text-white py-2 px-4 rounded-sm hover:bg-opacity-70">
-                      {frontContentText}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            {!frontImageUrl && (
-              <div className="relative w-full h-72 overflow-hidden rounded-xl border ">
-                {frontTitle && (
-                  <div className="absolute top-0 right-0 w-full h-15 bg-gray-700 bg-opacity-50 flex justify-center items-center">
-                    <h3 className="text-sm text-white font-semibold">
-                      {frontTitle}
-                    </h3>
-                  </div>
-                )}
-                {frontContentText && (
-                  <div className="flex flex-col items-center justify-center items-center h-full">
-                    <div className="text-gray-600 py-2 px-4 rounded-sm hover:bg-opacity-70 text-center">
-                      {frontContentText}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+        <CardSide
+          title={frontTitle}
+          contentText={frontContentText}
+          imageUrl={frontImageUrl}
+          showDialog={!!frontContentText}
+        />
 
         {/* Back Side */}
         <div
@@ -99,49 +127,19 @@ const FlipCard: React.FC<FlipCardProps> = ({
             transform: "rotateY(180deg)",
           }}
         >
-          <div className="flex flex-col items-center justify-center h-full">
-            {backImageUrl && (
-              <div className="relative w-full h-full overflow-hidden rounded-xl">
-                <img
-                  src={backImageUrl}
-                  alt={backTitle}
-                  className="w-full h-full object-cover aspect-[6/9] rounded-xl"
-                />
-                {backTitle && (
-                  <div className="absolute top-0 right-0 w-full h-15 bg-gray-700 bg-opacity-50 flex justify-center items-center">
-                    <h3 className="text-sm text-white font-semibold">
-                      {backTitle}
-                    </h3>
-                  </div>
-                )}
-                {backContentText && (
-                  <div className="absolute bottom-2 w-full flex justify-center items-center">
-                    <div className="bg-black bg-opacity-50 text-white py-2 px-4 rounded-sm hover:bg-opacity-70">
-                      {backContentText}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            {!backImageUrl && (
-              <div className="relative w-full h-72 overflow-hidden rounded-xl border ">
-                {backTitle && (
-                  <div className="absolute top-0 right-0 w-full h-15 bg-gray-700 bg-opacity-50 flex justify-center items-center">
-                    <h3 className="text-sm text-white font-semibold">
-                      {backTitle}
-                    </h3>
-                  </div>
-                )}
-                {backContentText && (
-                  <div className="flex flex-col items-center justify-center items-center h-full">
-                    <div className="text-gray-600 py-2 px-4 rounded-sm hover:bg-opacity-70 text-center">
-                      {backContentText}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <CardSide
+            title={backTitle}
+            contentText={backContentText}
+            imageUrl={backImageUrl}
+            isBack={true}
+          />
+          {!backImageUrl && (
+            <DotPattern
+              className={cn(
+                "[mask-image:radial-gradient(300px_circle_at_center,white,transparent)]"
+              )}
+            />
+          )}
         </div>
       </div>
     </div>

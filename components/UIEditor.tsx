@@ -10,6 +10,7 @@ import TextInputPreview from "@/components/imaginekit/previews/TextInputPreview"
 import TextOutputPreview from "@/components/imaginekit/previews/TextOutputPreview";
 import ChatInterfacePreview from "@/components/imaginekit/previews/ChatInterfacePreview";
 import FlipCardPreview from "@/components/imaginekit/previews/FlipCardPreview";
+import TriggerButton from "@/components/imaginekit/previews/TriggerButtonPreview";
 
 interface ComponentPosition {
   x: number;
@@ -101,6 +102,7 @@ const UIEditor: React.FC<UIEditorProps> = ({
     wordArranger: WordArrangerPreview,
     chatInterface: ChatInterfacePreview,
     flipCard: FlipCardPreview,
+    triggerButton: TriggerButton,
   };
 
   return (

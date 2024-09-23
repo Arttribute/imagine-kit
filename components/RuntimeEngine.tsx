@@ -12,16 +12,11 @@ import WordSelector from "@/components/imaginekit/ui/wordtiles/select/WordSelect
 import WordArranger from "@/components/imaginekit/ui/wordtiles/arrange/WordArranger";
 import SketchPad from "@/components/imaginekit/ui/sketchpad/SketchPad";
 import ChatInterface from "@/components/imaginekit/ui/chat/ChatInteface";
+import TriggerButton from "@/components/imaginekit/ui/triggerbutton/TriggerButton";
 
 // Utility function for calling LLM API
 import { callGPTApi } from "@/utils/apicalls/gpt";
 import { callDalleApi } from "@/utils/apicalls/dalle";
-
-interface Interaction {
-  speaker: "user" | "bot";
-  message: string;
-  bot_id?: string;
-}
 
 // Types for node, edge, and UI component data
 interface NodeData {
@@ -72,10 +67,10 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   const [uiComponents, setUIComponents] = useState<UIComponentData[]>([]);
   const [nodeOutputs, setNodeOutputs] = useState<{ [key: string]: any }>({});
   const [nodeExecutionStack, setNodeExecutionStack] = useState<string[]>([]);
-  const [executedNodes, setExecutedNodes] = useState<Set<string>>(new Set());
-  const [pendingExecution, setPendingExecution] = useState<
-    Map<string, Promise<void>>
-  >(new Map());
+  // const [executedNodes, setExecutedNodes] = useState<Set<string>>(new Set());
+  // const [pendingExecution, setPendingExecution] = useState<
+  //   Map<string, Promise<void>>
+  // >(new Map());
 
   // Load data from the database
   useEffect(() => {
@@ -91,6 +86,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         setNodes(nodesResponse.data);
         setEdges(edgesResponse.data);
         setUIComponents(uiComponentsResponse.data);
+        //setNodeExecutionStack(nodesResponse.data);
       } catch (error) {
         console.error("Failed to fetch data for runtime engine:", error);
       }
@@ -103,7 +99,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   const executeNode = async (node: NodeData) => {
     //remove node from stack
     removeNodeFromStack(node.node_id);
-    console.log("Executing node..:", node.node_id);
+    console.log("Executing node..:", node);
     switch (node.type) {
       case "llm":
         await executeLLMNode(node); // Execute LLM Node
@@ -114,10 +110,69 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
       case "textInput":
         await executeTextInputNode(node); // Now handle textInput node execution
         break;
+      case "triggerButton":
+        await executeTriggerButtonNode(node); // Execute Trigger Button Node
+        break;
       default:
         console.warn(`Unknown node type: ${node.type}`);
         break;
     }
+  };
+
+  const runExecutionStack = useCallback(async () => {
+    //simply execute the nodes in the stack
+    for (const nodeId of nodeExecutionStack) {
+      const node = nodes.find((n) => n.node_id === nodeId);
+      if (node) {
+        await executeNode(node);
+      }
+    }
+  }, [nodeExecutionStack, nodes, executeNode]);
+
+  const addNodeToStack = (node: NodeData) => {
+    setNodeExecutionStack((prev) => [...prev, node.node_id]);
+  };
+
+  const removeNodeFromStack = (nodeId: string) => {
+    setNodeExecutionStack((prev) => prev.filter((id) => id !== nodeId));
+  };
+
+  const runApp = useCallback(async () => {
+    //simply execute the nodes in the stack
+    await runExecutionStack();
+  }, [nodes, executeNode]);
+
+  useEffect(() => {
+    console.log("Node execution stack:", nodeExecutionStack);
+    if (nodeExecutionStack.length > 0) {
+      runApp();
+    }
+  }, [runApp, nodeExecutionStack]);
+
+  // Function to execute a Trigger Button Node
+  const executeTriggerButtonNode = async (node: NodeData) => {
+    console.log("Executing Trigger Button Node..:", node.node_id);
+    // Propagate to connected nodes
+    console.log("Propagating data from", node.node_id, "to connected nodes");
+    const connectedEdges = edges.filter((edge) => edge.source === node.node_id);
+    connectedEdges.forEach((edge) => {
+      const targetNodeIndex = nodes.findIndex(
+        (node) => node.node_id === edge.target
+      );
+
+      if (targetNodeIndex !== -1) {
+        const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
+          (input) => input.id === edge.targetHandle
+        );
+
+        if (targetInputIndex !== -1) {
+          nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
+            node.data.outputs[0].value;
+          setNodes([...nodes]);
+          addNodeToStack(nodes[targetNodeIndex]);
+        }
+      }
+    });
   };
 
   // Function to execute an LLM Node
@@ -140,6 +195,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 
       const outputData = JSON.parse(generatedOutput);
 
+      // Update the node's output data
       setNodes((prev) =>
         prev.map((n) =>
           n.node_id === node.node_id
@@ -157,6 +213,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         )
       );
 
+      //propagate data to connected nodes
       const connectedEdges = edges.filter(
         (edge) => edge.source === node.node_id
       );
@@ -280,39 +337,33 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     });
   };
 
-  const runExecutionStack = useCallback(async () => {
-    //simply execute the nodes in the stack
-    for (const nodeId of nodeExecutionStack) {
-      const node = nodes.find((n) => n.node_id === nodeId);
-      if (node) {
-        await executeNode(node);
-      }
+  const handleTriggerButtonClick = (nodeId: string, buttonValue: string) => {
+    console.log("Trigger button clicked:", buttonValue);
+    setNodes((prevNodes) =>
+      prevNodes.map((node) =>
+        node.node_id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                outputs: [
+                  {
+                    ...node.data.outputs[0],
+                    value: buttonValue,
+                  },
+                ],
+              },
+            }
+          : node
+      )
+    );
+
+    const node = nodes.find((n) => n.node_id === nodeId);
+    if (node) {
+      addNodeToStack(node);
+      console.log("trigger button node added to stack:", node);
     }
-  }, [nodeExecutionStack, nodes, executeNode]);
-
-  const addNodeToStack = (node: NodeData) => {
-    setNodeExecutionStack((prev) => [...prev, node.node_id]);
   };
-
-  const removeNodeFromStack = (nodeId: string) => {
-    setNodeExecutionStack((prev) => prev.filter((id) => id !== nodeId));
-  };
-
-  const runApp = useCallback(async () => {
-    //simply execute the nodes in the stack
-    await runExecutionStack();
-  }, [nodes, executeNode]);
-
-  useEffect(() => {
-    console.log("Node execution stack:", nodeExecutionStack);
-    if (nodeExecutionStack.length > 0) {
-      runApp();
-    }
-  }, [runApp, nodeExecutionStack]);
-
-  useEffect(() => {
-    setNodeExecutionStack(nodes.map((node) => node.node_id));
-  }, []);
 
   const handleTextInputSubmit = async (
     nodeId: string,
@@ -402,7 +453,8 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
               nodeOutputs[component.component_id],
               nodes.find((node) => node.node_id === component.component_id),
               handleTextInputSubmit,
-              handleSketchPadSubmit
+              handleSketchPadSubmit,
+              handleTriggerButtonClick
             )}
           </div>
         );
@@ -419,20 +471,34 @@ const renderUIComponent = (
     nodeId: string,
     fields: Array<{ label: string; value: string }>
   ) => void,
-  handleSketchPadSubmit: (nodeId: string, imageData: string) => void
+  handleSketchPadSubmit: (nodeId: string, imageData: string) => void,
+  handleTriggerButtonClick: (nodeId: string, buttonValue: string) => void
 ): React.ReactNode => {
   switch (component.type) {
+    case "triggerButton":
+      return (
+        <TriggerButton
+          buttonName={nodeData?.data?.outputs[0]?.label}
+          onClickButton={(buttonValue) =>
+            handleTriggerButtonClick(nodeData?.node_id, buttonValue)
+          }
+        />
+      );
     case "imageDisplay":
-      return <ImageDisplay images={[nodeData?.data.inputs[0].value]} />;
+      return <ImageDisplay images={[nodeData?.data?.inputs[0]?.value]} />;
     case "flipCard":
       return (
         <FlipCard
-          frontContentText={nodeOutput?.["output-0"]}
-          backContentText={nodeOutput?.["output-1"]}
+          frontTitle={nodeData?.data?.inputs[0]?.value}
+          backTitle={nodeData?.data?.inputs[1]?.value}
+          frontContentText={nodeData?.data?.inputs[2]?.value}
+          backContentText={nodeData?.data?.inputs[3]?.value}
+          frontImageUrl={nodeData?.data?.inputs[4]?.value}
+          backImageUrl={nodeData?.data?.inputs[5]?.value}
         />
       );
     case "imageTiles":
-      return <ImageTiles src={nodeData?.data.inputs[0].value} numCols={3} />;
+      return <ImageTiles src={nodeData?.data?.inputs[0]?.value} numCols={3} />;
     case "textInput":
       return (
         <TextInput
@@ -440,22 +506,24 @@ const renderUIComponent = (
             label: output.label,
             value: "",
           }))}
-          onSubmit={(fields) => handleTextInputSubmit(nodeData.node_id, fields)}
+          onSubmit={(fields) =>
+            handleTextInputSubmit(nodeData?.node_id, fields)
+          }
         />
       );
     case "textOutput":
-      return <TextOutput text={nodeData?.data.inputs[0].value} />;
+      return <TextOutput text={nodeData?.data?.inputs[0]?.value} />;
     case "wordSelector":
       return (
         <WordSelector
-          correctWords={nodeData?.data.inputs[0].value}
-          incorrectWords={nodeData?.data.inputs[1].value}
+          correctWords={nodeData?.data?.inputs[0]?.value}
+          incorrectWords={nodeData?.data?.inputs[1]?.value}
         />
       );
     case "wordArranger":
       return (
         <WordArranger
-          correctWords={nodeData?.data.inputs[0].value}
+          correctWords={nodeData?.data?.inputs[0]?.value}
           setIsCorrect={() => {}}
         />
       );
@@ -470,7 +538,7 @@ const renderUIComponent = (
     case "chatInterface":
       return (
         <ChatInterface
-          interaction={nodeData?.data.inputs.map((input: any) => ({
+          interaction={nodeData?.data?.inputs?.map((input: any) => ({
             id: input.id,
             label: input.label,
             value: input.value,

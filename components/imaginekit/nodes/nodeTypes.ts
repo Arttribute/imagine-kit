@@ -14,6 +14,7 @@ import WordArrangerNode from "./WordArrangerNode";
 import FlipCardNode from "./FlipCardNode";
 import ChatInterfaceNode from "./ChatInterfaceNode";
 import MemoryNode from "./MemoryNode";
+import TriggerButtonNode from "./TriggerButtonNode";
 
 // Object to map node types to their respective components
 export const nodeTypes = {
@@ -31,6 +32,7 @@ export const nodeTypes = {
   flipCard: FlipCardNode,
   chatInterface: ChatInterfaceNode,
   memory: MemoryNode,
+  triggerButton: TriggerButtonNode,
 };
 
 // Object to map node type names and default data configurations
@@ -50,6 +52,7 @@ export const NODE_TYPE_MAPPING = {
     ChatInterface: "chatInterface",
     Memory: "memory",
     CustomNode: "custom",
+    TriggerButton: "triggerButton",
   } as const, // Use 'as const' to make this object read-only and enable type-safe indexing
   ui: [
     "imageDisplay",
@@ -61,6 +64,7 @@ export const NODE_TYPE_MAPPING = {
     "wordArranger",
     "flipCard",
     "chatInterface",
+    "triggerButton",
   ],
   defaultData: {
     LLMNode: {
@@ -97,6 +101,10 @@ export const NODE_TYPE_MAPPING = {
       ],
       outputs: [{ id: "output-0", label: "Comparison result", value: "" }],
     },
+    TriggerButton: {
+      inputs: [],
+      outputs: [{ id: "output-0", label: "Button name", value: "" }],
+    },
     TextInput: {
       inputs: [],
       outputs: [{ id: "output-0", label: "User content", value: "" }],
@@ -121,10 +129,12 @@ export const NODE_TYPE_MAPPING = {
     },
     FlipCard: {
       inputs: [
-        { id: "input-0", label: "Front text", value: "" },
-        { id: "input-1", label: "Back text", value: "" },
-        { id: "input-2", label: "Front image", value: "" },
-        { id: "input-3", label: "Back image", value: "" },
+        { id: "input-0", label: "Front title", value: "" },
+        { id: "input-1", label: "Back title", value: "" },
+        { id: "input-2", label: "Front text", value: "" },
+        { id: "input-3", label: "Back text", value: "" },
+        { id: "input-4", label: "Front image", value: "" },
+        { id: "input-5", label: "Back image", value: "" },
       ],
       outputs: [],
     },

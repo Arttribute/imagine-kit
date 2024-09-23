@@ -17,6 +17,7 @@ import {
   ShuffleIcon,
   StickyNote,
   MessageSquare,
+  PowerIcon,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -155,6 +156,12 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
           label: "Flip card",
           type: "FlipCard",
           color: "rose",
+        },
+        {
+          icon: <PowerIcon className="w-5 h-5" />,
+          label: "Button",
+          type: "TriggerButton",
+          color: "violet",
         },
       ],
     },
