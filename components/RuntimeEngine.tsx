@@ -113,6 +113,9 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
       case "triggerButton":
         await executeTriggerButtonNode(node); // Execute Trigger Button Node
         break;
+      case "sketchPad":
+        await executeSketchPadNode(node); // Execute Sketch Pad Node
+        break;
       default:
         console.warn(`Unknown node type: ${node.type}`);
         break;
@@ -151,9 +154,6 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 
   // Function to execute a Trigger Button Node
   const executeTriggerButtonNode = async (node: NodeData) => {
-    console.log("Executing Trigger Button Node..:", node.node_id);
-    // Propagate to connected nodes
-    console.log("Propagating data from", node.node_id, "to connected nodes");
     const connectedEdges = edges.filter((edge) => edge.source === node.node_id);
     connectedEdges.forEach((edge) => {
       const targetNodeIndex = nodes.findIndex(
@@ -169,10 +169,34 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
           nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
             node.data.outputs[0].value;
           setNodes([...nodes]);
+          //log value passed to target node
+          console.log(
+            "Value passed to target node:",
+            node.data.outputs[0].value
+          );
           addNodeToStack(nodes[targetNodeIndex]);
         }
       }
     });
+    //reset the button value
+    setNodes((prev) =>
+      prev.map((n) =>
+        n.node_id === node.node_id
+          ? {
+              ...n,
+              data: {
+                ...n.data,
+                outputs: [
+                  {
+                    ...n.data.outputs[0],
+                    value: "",
+                  },
+                ],
+              },
+            }
+          : n
+      )
+    );
   };
 
   // Function to execute an LLM Node
@@ -193,7 +217,13 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         outputFormat
       );
 
-      const outputData = JSON.parse(generatedOutput);
+      // Remove backticks and sanitize GPT output before parsing - this due to a an issue that is specific to GPT-4o-mini
+      const cleanedOutput = generatedOutput
+        .replace(/```json/g, "") // Remove "```json" if present
+        .replace(/```/g, "") // Remove trailing "```"
+        .trim(); // Trim any extra spaces or newlines
+
+      const outputData = JSON.parse(cleanedOutput);
 
       // Update the node's output data
       setNodes((prev) =>
@@ -232,9 +262,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
               nodes[targetNodeIndex].data.inputs[targetInputIndex].label;
             nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
               outputData[label];
-
             setNodes([...nodes]);
-            //add node to execution stack
             addNodeToStack(nodes[targetNodeIndex]);
             //executeNode(nodes[targetNodeIndex]);
           }
@@ -289,9 +317,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
               generatedImageUrl;
 
             setNodes([...nodes]);
-            //add node to execution stack
             addNodeToStack(nodes[targetNodeIndex]);
-            //executeNode(nodes[targetNodeIndex]);
           }
         }
       });
@@ -303,10 +329,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   };
 
-  const executeTextInputNode = async (node: NodeData) => {
-    console.log("Executing text input node..:", node.node_id);
-    // Propagate to connected nodes
-    console.log("Propagating data from", node.node_id, "to connected nodes");
+  const executeSketchPadNode = async (node: NodeData) => {
     const connectedEdges = edges.filter((edge) => edge.source === node.node_id);
     connectedEdges.forEach((edge) => {
       const targetNodeIndex = nodes.findIndex(
@@ -321,17 +344,28 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         if (targetInputIndex !== -1) {
           nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
             node.data.outputs[0].value;
-
-          // Trigger a re-render to propagate the data change
-          //setNodes([...nodes]);
-          console.log("Propagating data from", node.node_id, "to", edge.target);
-          console.log("New value:", node.data.outputs[0].value);
-          console.log("New node data:", nodes);
-          // Execute the target node after updating its input
-
-          //add node to execution stack
           addNodeToStack(nodes[targetNodeIndex]);
-          //executeNode(nodes[targetNodeIndex]);
+        }
+      }
+    });
+  };
+
+  const executeTextInputNode = async (node: NodeData) => {
+    const connectedEdges = edges.filter((edge) => edge.source === node.node_id);
+    connectedEdges.forEach((edge) => {
+      const targetNodeIndex = nodes.findIndex(
+        (node) => node.node_id === edge.target
+      );
+
+      if (targetNodeIndex !== -1) {
+        const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
+          (input) => input.id === edge.targetHandle
+        );
+
+        if (targetInputIndex !== -1) {
+          nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
+            node.data.outputs[0].value;
+          addNodeToStack(nodes[targetNodeIndex]);
         }
       }
     });
@@ -339,6 +373,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 
   const handleTriggerButtonClick = (nodeId: string, buttonValue: string) => {
     console.log("Trigger button clicked:", buttonValue);
+    //log current output value of the node with the given nodeId
     setNodes((prevNodes) =>
       prevNodes.map((node) =>
         node.node_id === nodeId
@@ -398,40 +433,32 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   };
 
-  const handleSketchPadSubmit = useCallback(
-    (nodeId: string, imageData: string) => {
-      setNodeOutputs((prev) => ({
-        ...prev,
-        [nodeId]: {
-          ...prev[nodeId],
-          "output-0": imageData,
-        },
-      }));
+  const handleSketchPadSubmit = (nodeId: string, imageData: string) => {
+    setNodes((prevNodes) =>
+      prevNodes.map((node) =>
+        node.node_id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                outputs: [
+                  {
+                    ...node.data.outputs[0],
+                    value: imageData,
+                  },
+                ],
+              },
+            }
+          : node
+      )
+    );
 
-      const connectedEdges = edges.filter((edge) => edge.source === nodeId);
-      connectedEdges.forEach((edge) => {
-        const targetNodeIndex = nodes.findIndex(
-          (node) => node.node_id === edge.target
-        );
-
-        if (targetNodeIndex !== -1) {
-          const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
-            (input) => input.id === edge.targetHandle
-          );
-
-          if (targetInputIndex !== -1) {
-            nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
-              imageData;
-
-            setNodes([...nodes]);
-
-            executeNode(nodes[targetNodeIndex]);
-          }
-        }
-      });
-    },
-    [edges, nodes, executeNode]
-  );
+    const node = nodes.find((n) => n.node_id === nodeId);
+    if (node) {
+      addNodeToStack(node);
+      console.log("Sketch pad added to stack:", node);
+    }
+  };
 
   return (
     <div
@@ -541,7 +568,7 @@ const renderUIComponent = (
     case "sketchPad":
       return (
         <SketchPad
-          onSubmit={(imageData) =>
+          setImageData={(imageData) =>
             handleSketchPadSubmit(nodeData?.node_id, imageData)
           }
         />

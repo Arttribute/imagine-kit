@@ -76,7 +76,7 @@ export const NODE_TYPE_MAPPING = {
     ImageGen: {
       inputs: [
         { id: "input-0", label: "Prompt", value: "" },
-        { id: "input-1", label: "Reference Image", value: "" },
+        // { id: "input-1", label: "Reference Image", value: "" },
       ],
       outputs: [{ id: "output-0", label: "Generated Image", value: "" }],
       imageGenName: "Image Generator",
@@ -91,7 +91,6 @@ export const NODE_TYPE_MAPPING = {
       outputs: [{ id: "output-0", label: "Arranged Images", value: "" }],
     },
     SketchPad: {
-      inputs: [],
       outputs: [{ id: "output-0", label: "Sketch result", value: "" }],
     },
     Compare: {

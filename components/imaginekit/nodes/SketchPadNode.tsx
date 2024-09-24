@@ -6,6 +6,7 @@ import { Pencil, Eraser, Undo, Redo } from "lucide-react";
 interface SketchPadNodeProps {
   data: {
     sketchName: string;
+    inputs: { id: string; label: string; value: string }[];
     outputs: { id: string; label: string; value: string }[];
     onDataChange: (id: string, data: any) => void;
     onRemoveNode: (id: string) => void;
@@ -14,7 +15,7 @@ interface SketchPadNodeProps {
 }
 
 const SketchPadNode: React.FC<SketchPadNodeProps> = ({ data, id }) => {
-  const { sketchName, outputs, onDataChange, onRemoveNode } = data;
+  const { sketchName, inputs, outputs, onDataChange, onRemoveNode } = data;
 
   return (
     <BaseNode
@@ -22,7 +23,8 @@ const SketchPadNode: React.FC<SketchPadNodeProps> = ({ data, id }) => {
       name={sketchName}
       defaultName="Sketch Pad"
       nameKey="sketchName"
-      type="output"
+      type="both"
+      inputs={inputs}
       outputs={outputs}
       icon={<PencilLine className="w-5 h-5 text-gray-400" />}
       onDataChange={onDataChange}
