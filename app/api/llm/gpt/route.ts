@@ -9,7 +9,7 @@ const openai = new OpenAI({
 export async function POST(request: Request) {
   try {
     const requestBody = await request.json();
-    const { instruction, inputs, outputs } = requestBody;
+    const { instruction, inputs, outputs, image } = requestBody;
 
     const prompt = `
       You are an assistant designed to output JSON.
@@ -21,16 +21,33 @@ export async function POST(request: Request) {
       ${outputs}
     `;
 
+    // const userContent = [
+    //   {
+    //     type: "text",
+    //     text: inputs,
+    //   },
+    //   ...(image ? [{ type: "image_url", image_url: { url: image } }] : []), // Add image object if it exists
+    // ];
+
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo-0125",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
           content: prompt,
         },
-        { role: "user", content: inputs },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: inputs,
+            },
+            { type: "image_url", image_url: { url: image } },
+          ],
+        },
       ],
-      temperature: 1,
+      temperature: 0.2,
       max_tokens: 1600,
       top_p: 1.0,
       frequency_penalty: 0.0,

@@ -32,7 +32,7 @@ const ToolBar: React.FC<ToolBarProps> = ({
           marginBottom: "10px",
         }}
       >
-        <div className="flex rounded-2xl p-1 m-2 bg-gray-100 border-2">
+        <div className="flex rounded-2xl m-2  border border-gray-300 p-1 shadow-lg px-3">
           <div className="flex items-center p-1">
             <input
               type="color"
@@ -47,30 +47,22 @@ const ToolBar: React.FC<ToolBarProps> = ({
             variant="ghost"
             className={`rounded-xl px-3 ${
               activeTool === "draw"
-                ? "bg-gray-500 hover:bg-gray-500"
+                ? "bg-gray-200 hover:bg-gray-200"
                 : "hover:bg-gray-200"
             }`}
           >
-            <Pencil
-              className={`h-4 w-4 ${
-                activeTool === "draw" ? "text-white" : "text-black"
-              }`}
-            />
+            <Pencil className="h-4 w-4 text-black" />
           </Button>
           <Button
             onClick={handleErase}
             variant="ghost"
             className={`rounded-xl px-3 ${
               activeTool === "erase"
-                ? "bg-gray-500 hover:bg-gray-500"
+                ? "bg-gray-200 hover:bg-gray-200"
                 : "hover:bg-gray-200"
             }`}
           >
-            <Eraser
-              className={`h-4 w-4 ${
-                activeTool === "erase" ? "text-white" : "text-black"
-              }`}
-            />
+            <Eraser className="h-4 w-4 text-black" />
           </Button>
           <Button
             onClick={handleUndo}

@@ -17,8 +17,8 @@ function TextOutput({
   loading?: boolean;
 }) {
   return (
-    <div className=" col-span-12 lg:col-span-10  w-full ">
-      <div className="text-sm text-center text-white bg-indigo-500 rounded-xl p-4">
+    <div className="w-96 ">
+      <div className="text-sm text-center text-white bg-indigo-500 rounded-xl p-4 w-full">
         {text}
         {loading && <p>Loading...</p>}
       </div>

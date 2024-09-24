@@ -1,15 +1,18 @@
 import React, { useState, useRef, useEffect, ForwardedRef } from "react";
 import ToolBar from "./ToolBar";
+import { CircleCheckBigIcon } from "lucide-react";
 
 interface DrawingCanvasProps {
   width?: number;
   height?: number;
   eraserSize?: number;
+  isCanvasDirty: boolean;
+  onSubmit: () => void;
 }
 
 const DrawingCanvas = React.forwardRef<HTMLCanvasElement, DrawingCanvasProps>(
   (
-    { width = 500, height = 400, eraserSize = 10 },
+    { width = 500, height = 400, eraserSize = 10, isCanvasDirty, onSubmit },
     ref: ForwardedRef<HTMLCanvasElement>
   ) => {
     const [isDrawing, setIsDrawing] = useState(false);
@@ -201,7 +204,7 @@ const DrawingCanvas = React.forwardRef<HTMLCanvasElement, DrawingCanvasProps>(
 
     return (
       <div className="relative w-full h-full">
-        <div className="-mb-3">
+        <div className="flex items-center justify-center -mb-3">
           <ToolBar
             handleDraw={handleDraw}
             handleErase={handleErase}
@@ -211,6 +214,22 @@ const DrawingCanvas = React.forwardRef<HTMLCanvasElement, DrawingCanvasProps>(
             selectedColor={selectedColor}
             setSelectedColor={setSelectedColor} // Pass color setter to ToolBar
           />
+          <div className="flex items-center p-1">
+            <button
+              className={`flex items-center justify-center text-xs m-1 px-7 py-3 border rounded-xl bg-white ${
+                isCanvasDirty
+                  ? "border-blue-500 text-blue-500 hover:border-blue-700"
+                  : "border-gray-400 text-gray-500 cursor-not-allowed"
+              }  font-bold rounded`}
+              onClick={onSubmit}
+              disabled={!isCanvasDirty} // Disable the button if no changes
+            >
+              Done
+              {!isCanvasDirty && (
+                <CircleCheckBigIcon className="w-3 h-3 ml-1" />
+              )}
+            </button>
+          </div>
         </div>
         <canvas
           ref={(node) => {
