@@ -8,7 +8,8 @@ function isValidUrl(url: string) {
     return (
       url.startsWith("/") ||
       url.startsWith("http://") ||
-      url.startsWith("https://")
+      url.startsWith("https://") ||
+      url.startsWith("data:image")
     );
   }
 }
