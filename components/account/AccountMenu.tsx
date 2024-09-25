@@ -33,7 +33,7 @@ function AccountMenu() {
 
   const handleProfileClick = () => {
     if (typeof window !== "undefined") {
-      window.location.href = "/bashy";
+      window.location.href = `/${session?.user?.username}`;
     }
   };
 
@@ -62,7 +62,9 @@ function AccountMenu() {
               />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuLabel>{session?.user?.username}</DropdownMenuLabel>
+              <DropdownMenuLabel onClick={handleProfileClick}>
+                {session?.user?.username}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               {/* Profile Button */}
               <DropdownMenuItem onClick={handleProfileClick}>

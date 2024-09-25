@@ -37,9 +37,11 @@ export default function WorldCard({ app }: { app: any }) {
           <Label className="text-sm text-gray-500">
             {" "}
             by{" "}
-            <span className="text-gray-700 font-semibold">
-              {app.owner?.username}
-            </span>
+            <Link href={`/${app.owner.username}`}>
+              <span className="text-gray-700 font-semibold">
+                {app.owner?.username}
+              </span>
+            </Link>
           </Label>
         </div>
         <div className="flex items-center">
