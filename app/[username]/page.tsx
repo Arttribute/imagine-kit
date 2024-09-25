@@ -88,7 +88,7 @@ export default function Profile({ params }: { params: { username: string } }) {
                 {isAccountOwner ? (
                   <p>Change your password here.</p>
                 ) : (
-                  <p>You don't have permission to view this section.</p>
+                  <p>You do not have permission to view this section.</p>
                 )}
               </TabsContent>
             </Tabs>
