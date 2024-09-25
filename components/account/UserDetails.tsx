@@ -1,9 +1,9 @@
 "use client";
-
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { UsersIcon } from "lucide-react";
-import { useSession } from "next-auth/react"; // Assuming you're using next-auth
+import { useSession } from "next-auth/react";
+import EditAccountDialog from "./EditAccountDialog";
 
 interface CustomUser {
   username?: string | null;
@@ -33,15 +33,12 @@ const UserDetails = ({ user }: { user: any }) => {
         className="aspect-[1] rounded-full m-1"
       />
       <div className="flex flex-col mt-2">
-        <h1 className="text-2xl font-semibold">{user.fullname}</h1>
-        <p className="text-gray-500">{user.username || "@username"}</p>
+        <h1 className="text-gray-900 text-xl font-semibold">
+          {user.username || "@username"}
+        </h1>
 
         {/* Conditionally render the "Edit Profile" button only if the logged-in user is the account owner */}
-        {isAccountOwner && (
-          <Button variant="outline" className="mt-2 mb-2 w-full">
-            Edit Profile
-          </Button>
-        )}
+        {isAccountOwner && <EditAccountDialog user={user} />}
 
         <div className="flex items-center gap-2 underline mb-2">
           <UsersIcon className="h-4 w-4" />
