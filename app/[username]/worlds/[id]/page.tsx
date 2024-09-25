@@ -33,7 +33,7 @@ export default function World({ params }: { params: { id: string } }) {
     <div>
       {!loading && app && !startInteraction && (
         <div className="flex justify-center items-center h-screen">
-          <div className="absolute top-0 left-0 ">
+          <div className="fixed top-0 left-0 ">
             <div className="flex items-center m-3">
               <Link href="/worlds">
                 <Button variant="outline" className="items-center mr-2">
@@ -44,7 +44,7 @@ export default function World({ params }: { params: { id: string } }) {
               </Link>
             </div>
           </div>
-          <div className="absolute top-0 right-0 ">
+          <div className="fixed top-0 right-0 ">
             <div className="flex items-center m-3">
               <HoverCard>
                 <HoverCardTrigger asChild>
@@ -71,7 +71,7 @@ export default function World({ params }: { params: { id: string } }) {
       )}
       {startInteraction && (
         <div className="flex justify-center items-center h-screen">
-          <div className="absolute top-0 left-0 ">
+          <div className="fixed top-0 left-0 ">
             <div className="flex items-center m-3">
               <Link href="/worlds">
                 <Button variant="outline" className="items-center mr-2">
@@ -87,7 +87,7 @@ export default function World({ params }: { params: { id: string } }) {
               </div>
             </div>
           </div>
-          <div className="absolute top-0 right-0 ">
+          <div className="fixed top-0 right-0 ">
             <div className="flex items-center m-3">
               <HoverCard>
                 <HoverCardTrigger asChild>
