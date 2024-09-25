@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import RuntimeEngine from "@/components/RuntimeEngine";
 import EnterWorld from "@/components/worlds/EnterWorld";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { Earth, PencilIcon } from "lucide-react";
@@ -13,20 +14,37 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 
+interface CustomUser {
+  username?: string | null;
+}
+
+interface CustomSession {
+  user?: CustomUser;
+}
+
+interface App {
+  name: string;
+  owner: {
+    username: string;
+  };
+  _id: string;
+}
+
 export default function World({ params }: { params: { id: string } }) {
   const [startInteraction, setStartInteraction] = useState(false);
-  interface App {
-    name: string;
-    owner: {
-      username: string;
-    };
-    _id: string;
-  }
-
   const [appData, setAppData] = useState<{ app: App | null; loading: boolean }>(
-    { app: null, loading: true }
+    {
+      app: null,
+      loading: true,
+    }
   );
+
+  const { data: session, status } = useSession() as {
+    data: CustomSession;
+    status: string;
+  };
   const { id: appId } = params;
+  const { app } = appData;
 
   useEffect(() => {
     const fetchApp = async () => {
@@ -42,10 +60,9 @@ export default function World({ params }: { params: { id: string } }) {
   }, [appId]);
 
   if (appData.loading) return <div>Loading...</div>;
-
-  const { app } = appData;
-
   if (!app) return <div>App not found</div>;
+
+  const isWorldOwner = session?.user?.username === app?.owner.username;
 
   const TopButtons = () => (
     <>
@@ -62,21 +79,6 @@ export default function World({ params }: { params: { id: string } }) {
     </>
   );
 
-  const EditButton = () => (
-    <HoverCard>
-      <HoverCardTrigger asChild>
-        <Link href={`/${app.owner.username}/worlds/${app._id}/edit`}>
-          <Button variant="outline" className="items-center rounded-full">
-            <PencilIcon className="h-5 w-5 text-indigo-500" />
-          </Button>
-        </Link>
-      </HoverCardTrigger>
-      <HoverCardContent className="flex w-28 items-center justify-center p-3 rounded-xl">
-        <p className="text-xs text-gray-700">Edit World</p>
-      </HoverCardContent>
-    </HoverCard>
-  );
-
   return (
     <div className="flex justify-center items-center h-screen">
       <div className="fixed top-0 left-0 m-3 flex items-center">
@@ -84,7 +86,20 @@ export default function World({ params }: { params: { id: string } }) {
       </div>
 
       <div className="fixed top-0 right-0 m-3">
-        <EditButton />
+        {isWorldOwner && (
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Link href={`/${app.owner.username}/worlds/${app._id}/edit`}>
+                <Button variant="outline" className="items-center rounded-full">
+                  <PencilIcon className="h-5 w-5 text-indigo-500" />
+                </Button>
+              </Link>
+            </HoverCardTrigger>
+            <HoverCardContent className="flex w-28 items-center justify-center p-3 rounded-xl">
+              <p className="text-xs text-gray-700">Edit World</p>
+            </HoverCardContent>
+          </HoverCard>
+        )}
       </div>
 
       {!startInteraction ? (
