@@ -1,9 +1,25 @@
 "use client";
+
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { User2Icon, UsersIcon } from "lucide-react";
+import { UsersIcon } from "lucide-react";
+import { useSession } from "next-auth/react"; // Assuming you're using next-auth
+
+interface CustomUser {
+  username?: string | null;
+}
+
+interface CustomSession {
+  user?: CustomUser;
+}
 
 const UserDetails = ({ user }: { user: any }) => {
+  const { data: session, status } = useSession() as {
+    data: CustomSession;
+    status: string;
+  };
+  const isAccountOwner = session?.user?.username === user.username; // Check if the logged-in user owns the account
+
   return (
     <div className="flex flex-col">
       <Image
@@ -13,24 +29,29 @@ const UserDetails = ({ user }: { user: any }) => {
         }
         width={300}
         height={300}
-        alt={"game"}
-        className="aspect-[1] rounded-full  m-1 "
+        alt={"profile"}
+        className="aspect-[1] rounded-full m-1"
       />
       <div className="flex flex-col mt-2">
         <h1 className="text-2xl font-semibold">{user.fullname}</h1>
         <p className="text-gray-500">{user.username || "@username"}</p>
 
-        <Button variant="outline" className="mt-2 mb-2 w-full">
-          Edit Profile
-        </Button>
+        {/* Conditionally render the "Edit Profile" button only if the logged-in user is the account owner */}
+        {isAccountOwner && (
+          <Button variant="outline" className="mt-2 mb-2 w-full">
+            Edit Profile
+          </Button>
+        )}
+
         <div className="flex items-center gap-2 underline mb-2">
           <UsersIcon className="h-4 w-4" />
-          <p className="">{user.followercount} followers</p>
-          <p className=" ml-1 underline">{user?.followingcount} following</p>
+          <p>{user.followercount} followers</p>
+          <p className="ml-1 underline">{user.followingcount} following</p>
         </div>
+
         <p className="text-gray-500 w-full mb-2">
           {user.bio ||
-            "Long bio with alot of words that is going to be more than 2 lines of text"}
+            "Long bio with a lot of words that is going to be more than 2 lines of text"}
         </p>
       </div>
     </div>
