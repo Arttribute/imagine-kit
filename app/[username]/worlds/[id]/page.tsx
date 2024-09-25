@@ -6,7 +6,12 @@ import EnterWorld from "@/components/worlds/EnterWorld";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 
-import { Earth } from "lucide-react";
+import { Earth, PencilIcon } from "lucide-react";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 export default function World({ params }: { params: { id: string } }) {
   const [startInteraction, setStartInteraction] = useState(false);
@@ -29,7 +34,7 @@ export default function World({ params }: { params: { id: string } }) {
       {!loading && app && !startInteraction && (
         <div className="flex justify-center items-center h-screen">
           <div className="absolute top-0 left-0 ">
-            <div className="flex items-center m-2">
+            <div className="flex items-center m-3">
               <Link href="/worlds">
                 <Button variant="outline" className="items-center mr-2">
                   <div className="flex ">
@@ -39,13 +44,35 @@ export default function World({ params }: { params: { id: string } }) {
               </Link>
             </div>
           </div>
+          <div className="absolute top-0 right-0 ">
+            <div className="flex items-center m-3">
+              <HoverCard>
+                <HoverCardTrigger asChild>
+                  <Link href={`/${app.owner.username}/worlds/${app._id}/edit`}>
+                    <Button
+                      variant="outline"
+                      className="items-center rounded-full"
+                    >
+                      <div className="flex ">
+                        <PencilIcon className="h-5 w-5 text-indigo-500 " />
+                      </div>
+                    </Button>
+                  </Link>
+                </HoverCardTrigger>
+                <HoverCardContent className="flex w-28 items-center justify-center p-3 rounded-xl">
+                  <p className="text-xs text-gray-700">Edit World</p>
+                </HoverCardContent>
+              </HoverCard>
+            </div>
+          </div>
+
           <EnterWorld app={app} setStartInteraction={setStartInteraction} />
         </div>
       )}
       {startInteraction && (
         <div className="flex justify-center items-center h-screen">
           <div className="absolute top-0 left-0 ">
-            <div className="flex items-center m-2">
+            <div className="flex items-center m-3">
               <Link href="/worlds">
                 <Button variant="outline" className="items-center mr-2">
                   <div className="flex ">
@@ -58,6 +85,27 @@ export default function World({ params }: { params: { id: string } }) {
                   {app.name}
                 </p>
               </div>
+            </div>
+          </div>
+          <div className="absolute top-0 right-0 ">
+            <div className="flex items-center m-3">
+              <HoverCard>
+                <HoverCardTrigger asChild>
+                  <Link href={`/${app.owner.username}/worlds/${app._id}/edit`}>
+                    <Button
+                      variant="outline"
+                      className="items-center rounded-full"
+                    >
+                      <div className="flex ">
+                        <PencilIcon className="h-5 w-5 text-indigo-500 " />
+                      </div>
+                    </Button>
+                  </Link>
+                </HoverCardTrigger>
+                <HoverCardContent className="flex w-28 items-center justify-center p-3 rounded-xl">
+                  <p className="text-xs text-gray-700">Edit World</p>
+                </HoverCardContent>
+              </HoverCard>
             </div>
           </div>
 
