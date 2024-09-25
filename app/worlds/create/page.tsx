@@ -1,12 +1,13 @@
 "use client";
-
 import { useEffect } from "react";
 import CreateAppForm from "@/components/forms/CreateAppForm";
 import FlickeringGrid from "@/components/magicui/flickering-grid";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
-import { Sparkles } from "lucide-react";
 import AccountMenu from "@/components/account/AccountMenu";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Earth } from "lucide-react";
 
 export default function CreateWorld() {
   const { data: session, status } = useSession();
@@ -26,10 +27,21 @@ export default function CreateWorld() {
 
   return (
     <div>
+      <div className="fixed top-0 left-0 ">
+        <div className="flex items-center m-3">
+          <Link href="/worlds">
+            <Button variant="outline" className="items-center mr-2">
+              <div className="flex ">
+                <Earth className="h-5 w-5 text-indigo-500 " />
+              </div>
+            </Button>
+          </Link>
+        </div>
+      </div>
       <div className="fixed top-0 left-0 right-0 ">
         <div className="flex">
           <div className="ml-auto ">
-            <div className="m-2">
+            <div className="m-3">
               <AccountMenu />
             </div>
           </div>
