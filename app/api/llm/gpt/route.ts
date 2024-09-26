@@ -21,13 +21,20 @@ export async function POST(request: Request) {
       ${outputs}
     `;
 
-    // const userContent = [
-    //   {
-    //     type: "text",
-    //     text: inputs,
-    //   },
-    //   ...(image ? [{ type: "image_url", image_url: { url: image } }] : []), // Add image object if it exists
-    // ];
+    type UserContent =
+      | { type: "text"; text: string }
+      | { type: "image_url"; image_url: { url: string } };
+
+    const userContent: UserContent[] = [
+      {
+        type: "text",
+        text: inputs,
+      },
+    ];
+
+    if (image) {
+      userContent.push({ type: "image_url", image_url: { url: image } });
+    }
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -38,13 +45,7 @@ export async function POST(request: Request) {
         },
         {
           role: "user",
-          content: [
-            {
-              type: "text",
-              text: inputs,
-            },
-            { type: "image_url", image_url: { url: image } },
-          ],
+          content: userContent,
         },
       ],
       temperature: 0.2,
