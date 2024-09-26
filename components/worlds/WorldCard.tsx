@@ -44,7 +44,7 @@ export default function WorldCard({ app }: { app: any }) {
             </Link>
           </Label>
         </div>
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <div className="flex items-center ml-1 mr-3">
             <HeartIcon className="w-4 h-4 mr-1 text-gray-500" />
             <Label className="text-sm text-gray-500">
@@ -57,7 +57,7 @@ export default function WorldCard({ app }: { app: any }) {
               {app.likes_count || 0}
             </Label>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
