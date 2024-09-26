@@ -3,10 +3,13 @@
 import React, { useEffect, useState } from "react";
 import UserDetails from "@/components/account/UserDetails";
 import WorldCard from "@/components/worlds/WorldCard";
+import AppBar from "@/components/layout/AppBar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@radix-ui/react-scroll-area";
 import Link from "next/link";
-import { useSession } from "next-auth/react"; // Assuming next-auth for session handling
+import { useSession } from "next-auth/react";
+import { BadgePlus, Earth } from "lucide-react";
 
 interface CustomUser {
   username?: string | null;
@@ -19,6 +22,8 @@ interface CustomSession {
 export default function Profile({ params }: { params: { username: string } }) {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [publishedWorlds, setPublishedWorlds] = useState<any[]>([]);
+  const [userWorlds, setUserWorlds] = useState<any[]>([]);
   const { data: session, status } = useSession() as {
     data: CustomSession;
     status: string;
@@ -36,7 +41,9 @@ export default function Profile({ params }: { params: { username: string } }) {
         `/api/users/user?username=${params.username}`
       );
       const data = await response.json();
-      setUser(data);
+      setUser(data.user);
+      setUserWorlds(data.userApps);
+      setPublishedWorlds(data.userApps.filter((app: any) => app.is_published));
       setLoading(false);
     } catch (error) {
       console.error("Failed to fetch user data", error);
@@ -46,50 +53,94 @@ export default function Profile({ params }: { params: { username: string } }) {
 
   return (
     <div>
-      {loading && <p>Loading...</p>}
+      <AppBar />
+      {loading && (
+        <div className="mt-16">
+          <p>Loading...</p>
+        </div>
+      )}
       {!loading && (
-        <div className="container grid grid-cols-12 gap-4 px-12 mt-12">
+        <div className="container grid grid-cols-12 gap-4 px-12 mt-16">
           <div className="col-span-3">
             {user && <UserDetails user={user} />}
           </div>
           <div className="col-span-9 border rounded-xl p-2">
-            <Tabs defaultValue="account" className="h-full space-y-6">
+            <Tabs
+              defaultValue={
+                isAccountOwner ? "created-worlds" : "published-worlds"
+              }
+              className="h-full space-3-6"
+            >
               <div className="flex">
                 <div className="space-between flex items-center">
-                  <TabsList>
-                    <TabsTrigger value="account">Published</TabsTrigger>
+                  <Link href="/worlds">
+                    <Button
+                      variant="outline"
+                      className="items-center rounded-lg mr-2"
+                    >
+                      <Earth className="h-5 w-5 text-indigo-500" />
+                    </Button>
+                  </Link>
+                  <TabsList className="border border-gray-400">
                     {isAccountOwner && (
-                      <TabsTrigger value="password">Created Worlds</TabsTrigger>
+                      <TabsTrigger value="created-worlds">
+                        Created Worlds
+                      </TabsTrigger>
                     )}
-                    <TabsTrigger value="interactions">Interactions</TabsTrigger>
+                    <TabsTrigger value="published-worlds">
+                      Published Worlds
+                    </TabsTrigger>
                   </TabsList>
                 </div>
                 <div className="ml-auto">
                   {/* Only show the Create World button if the user is the account owner */}
                   {isAccountOwner && (
                     <Link href="/worlds/create" passHref>
-                      <Button className="bg-indigo-500 hover:bg-indigo-600">
+                      <Button className="bg-indigo-600 hover:bg-indigo-500">
+                        <BadgePlus className="w-5 h-5 mr-1" />
                         Create new world
                       </Button>
                     </Link>
                   )}
                 </div>
               </div>
-              <TabsContent value="account">
-                {/* Allow making changes to the account only if the user is the owner */}
-                {isAccountOwner ? (
-                  <p>Make changes to your account here.</p>
-                ) : (
-                  <p>Published worlds are visible here.</p>
-                )}
-              </TabsContent>
-              <TabsContent value="password">
-                {/* Restrict access to password changes to the account owner */}
-                {isAccountOwner ? (
-                  <p>Change your password here.</p>
-                ) : (
-                  <p>You do not have permission to view this section.</p>
-                )}
+              {isAccountOwner && (
+                <TabsContent value="created-worlds">
+                  <ScrollArea className="h-[80vh] overflow-scroll p-2">
+                    <div className="grid grid-cols-12 gap-4 p-2">
+                      {userWorlds &&
+                        userWorlds.length > 0 &&
+                        userWorlds.map((world) => (
+                          <div
+                            className="col-span-12 lg:col-span-4 "
+                            key={world._id}
+                          >
+                            <WorldCard key={world._id} app={world} />
+                          </div>
+                        ))}
+                      {userWorlds.length === 0 && <p>No worlds created yet.</p>}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+              )}
+              <TabsContent value="published-worlds">
+                <ScrollArea className="h-[80vh] overflow-scroll p-2">
+                  <div className="grid grid-cols-12 gap-4 p-2">
+                    {publishedWorlds &&
+                      publishedWorlds.length > 0 &&
+                      publishedWorlds.map((world) => (
+                        <div
+                          className="col-span-12 lg:col-span-4 "
+                          key={world._id}
+                        >
+                          <WorldCard key={world._id} app={world} />
+                        </div>
+                      ))}
+                    {publishedWorlds.length === 0 && (
+                      <p>No worlds published yet.</p>
+                    )}
+                  </div>
+                </ScrollArea>
               </TabsContent>
             </Tabs>
           </div>

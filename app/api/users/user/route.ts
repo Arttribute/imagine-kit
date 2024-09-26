@@ -1,5 +1,6 @@
 import dbConnect from "@/lib/dbConnect";
 import User from "@/models/User";
+import App from "@/models/App";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -10,7 +11,12 @@ export async function GET(request: Request) {
     const user = await User.findOne({ username }).sort({
       createdAt: -1,
     });
-    return new NextResponse(JSON.stringify(user), {
+    const userApps = await App.find({ owner: user._id })
+      .sort({
+        createdAt: -1,
+      })
+      .populate("owner");
+    return new NextResponse(JSON.stringify({ user, userApps }), {
       status: 200,
     });
   } catch (error: any) {
