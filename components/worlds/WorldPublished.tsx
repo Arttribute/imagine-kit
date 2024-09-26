@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -19,20 +19,52 @@ import type { ConfettiRef } from "@/components/magicui/confetti";
 
 import { CopyIcon } from "lucide-react";
 
+function Toast({
+  message,
+  show,
+  onClose,
+}: {
+  message: string;
+  show: boolean;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (show) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 3000); // The toast will disappear after 3 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [show, onClose]);
+
+  return (
+    <div
+      className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-lg bg-indigo-500 text-sm text-white transition-all duration-300 ${
+        show ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      {message}
+    </div>
+  );
+}
+
 export default function WorldPublished({
   open,
   appData,
+  setOpen,
 }: {
   open: boolean;
   appData: any;
+  setOpen: any;
 }) {
   const confettiRef = useRef<ConfettiRef>(null);
+  const [showToast, setShowToast] = useState(false);
   return (
-    <Drawer open={open} onClose={() => {}}>
+    <Drawer open={open} onClose={() => setOpen(false)}>
       <DrawerContent>
         <div className=" h-screen flex flex-col items-center justify-center p-8">
           <div className=" mb-2 flex flex-col items-center justify-center">
-            <h1 className="text-2xl font-semibold">Published</h1>
+            <h1 className="text-2xl font-semibold">Published!</h1>
             <p className="text-sm  text-gray-500 ">
               Congratulations, your world is now live!
             </p>
@@ -53,14 +85,15 @@ export default function WorldPublished({
                 <div className="flex items-center justify-center border border-indigo-300 shadow-purple-200 rounded-full">
                   <input
                     type="text"
-                    value={`https://imaginekit.io/${appData?.owner}/worlds/${appData._id}`}
+                    value={`https://imaginekit.io/${appData?.owner}/worlds/${appData.appId}`}
                     className="text-xs w-full px-4 py-1 bg-transparent"
                   />
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(
-                        `https://imaginekit.io/${appData?.owner}/worlds/${appData._id}`
+                        `https://imaginekit.io/${appData?.owner}/worlds/${appData.appId}`
                       );
+                      setShowToast(true); // Show the toast notification
                     }}
                     className="p-2 bg-indigo-500 text-white rounded-full m-1"
                   >
@@ -68,7 +101,7 @@ export default function WorldPublished({
                   </button>
                 </div>
 
-                <Link href={`/${appData?.owner}/worlds/${appData._id}`}>
+                <Link href={`/${appData?.owner}/worlds/${appData.appId}`}>
                   <Button className="ml-4 bg-indigo-500 hover:bg-indigo-600 rounded-xl">
                     View
                   </Button>
@@ -76,23 +109,37 @@ export default function WorldPublished({
               </div>
             </div>
 
-            <div className="flex justify-center p-4 w-full">
-              <Link href={`/${appData?.owner}/worlds/${appData._id}/edit`}>
-                <Button variant="outline" className="w-full rounded-xl">
+            <div className="flex items-center justify-center p-4 ">
+              <DrawerClose asChild>
+                <Button
+                  variant="outline"
+                  className=" rounded-xl"
+                  onClick={() => {
+                    setOpen(false);
+                  }}
+                >
                   Edit World
                 </Button>
-              </Link>
+              </DrawerClose>
             </div>
           </div>
           <Confetti
             ref={confettiRef}
-            className="z-10 absolute left-0 top-0 z-0 size-full"
+            className="absolute left-0 top-0 z-0 size-full"
             onMouseEnter={() => {
-              confettiRef.current?.fire({});
+              confettiRef.current?.fire({
+                particleCount: 250,
+                spread: 80,
+              });
             }}
           />
           <RetroGrid />
         </div>
+        <Toast
+          message="URL copied to clipboard!"
+          show={showToast}
+          onClose={() => setShowToast(false)}
+        />
       </DrawerContent>
     </Drawer>
   );

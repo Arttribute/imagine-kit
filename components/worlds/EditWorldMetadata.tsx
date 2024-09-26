@@ -39,6 +39,7 @@ interface appData {
 }
 
 export default function EditWorldMetadata({ appData }: { appData: appData }) {
+  const [appId, setAppId] = useState(appData?._id);
   const [owner, setOwner] = useState(appData?.owner.username);
   const [isPublished, setIsPublished] = useState(appData?.is_published);
   const [openPublishedDrawer, setOpenPublishedDrawer] = useState(false);
@@ -54,6 +55,7 @@ export default function EditWorldMetadata({ appData }: { appData: appData }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setAppId(appData?._id);
     setOwner(appData?.owner.username);
     setIsPublished(appData?.is_published);
     setIsPrivate(appData?.is_private);
@@ -254,7 +256,9 @@ export default function EditWorldMetadata({ appData }: { appData: appData }) {
       </Dialog>
       <WorldPublished
         open={openPublishedDrawer}
+        setOpen={setOpenPublishedDrawer}
         appData={{
+          appId,
           name,
           owner,
           description,
