@@ -22,7 +22,9 @@ import {
   Pen,
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import WorldPublished from "./WorldPublished";
 import axios from "axios";
+import { set } from "lodash";
 
 interface appData {
   _id: string;
@@ -37,7 +39,11 @@ interface appData {
 }
 
 export default function EditWorldMetadata({ appData }: { appData: appData }) {
+  const [appId, setAppId] = useState(appData?._id);
+  const [owner, setOwner] = useState(appData?.owner.username);
   const [isPublished, setIsPublished] = useState(appData?.is_published);
+  const [openPublishedDrawer, setOpenPublishedDrawer] = useState(false);
+  const [open, setOpen] = useState(false);
   const [isPrivate, setIsPrivate] = useState(appData?.is_private);
   const [name, setName] = useState(appData?.name);
   const [worldImageUrl, setWorldImageUrl] = useState(
@@ -49,13 +55,12 @@ export default function EditWorldMetadata({ appData }: { appData: appData }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setAppId(appData?._id);
+    setOwner(appData?.owner.username);
     setIsPublished(appData?.is_published);
     setIsPrivate(appData?.is_private);
     setName(appData?.name);
-    setWorldImageUrl(
-      appData?.banner_url ||
-        "https://res.cloudinary.com/arttribute/image/upload/v1723823036/m25z496he3yykfk3elsz.jpg"
-    );
+    setWorldImageUrl(appData?.banner_url);
     setDescription(appData?.description);
   }, [appData]);
 
@@ -99,6 +104,8 @@ export default function EditWorldMetadata({ appData }: { appData: appData }) {
 
       //toast.success("World published successfully!"); // Display a success message
       setIsPublished(true);
+      setOpen(false);
+      setOpenPublishedDrawer(true);
     } catch (error: any) {
       console.error("Failed to publish world", error);
       setError(error.message);
@@ -137,7 +144,7 @@ export default function EditWorldMetadata({ appData }: { appData: appData }) {
 
   return (
     <div>
-      <Dialog>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <button className="flex items-center justify-center border border-indigo-200 shadow-lg  shadow-purple-200 rounded-full p-1">
             <EarthIcon className="w-6 h-6 text-indigo-500 m-1" />
@@ -247,6 +254,19 @@ export default function EditWorldMetadata({ appData }: { appData: appData }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <WorldPublished
+        open={openPublishedDrawer}
+        setOpen={setOpenPublishedDrawer}
+        appData={{
+          appId,
+          name,
+          owner,
+          description,
+          worldImageUrl,
+          isPrivate,
+          isPublished,
+        }}
+      />
     </div>
   );
 }

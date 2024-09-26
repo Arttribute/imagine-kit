@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { Earth, PencilIcon } from "lucide-react";
+import WorldScaffolding from "@/components/worlds/WorldScaffolding";
 import {
   HoverCard,
   HoverCardContent,
@@ -28,6 +29,8 @@ interface App {
     username: string;
   };
   _id: string;
+  is_published: boolean;
+  is_private: boolean;
 }
 
 export default function World({ params }: { params: { id: string } }) {
@@ -103,12 +106,15 @@ export default function World({ params }: { params: { id: string } }) {
       </div>
 
       {!startInteraction ? (
-        <EnterWorld app={app} setStartInteraction={setStartInteraction} />
+        app.is_published || isWorldOwner ? (
+          <EnterWorld app={app} setStartInteraction={setStartInteraction} />
+        ) : null
       ) : (
         <div style={{ display: "flex", height: "86vh", width: "80vw" }}>
           <RuntimeEngine appId={appId} />
         </div>
       )}
+      {!isWorldOwner && !app.is_published && <WorldScaffolding />}
     </div>
   );
 }
