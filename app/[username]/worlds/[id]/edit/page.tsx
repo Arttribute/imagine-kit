@@ -38,8 +38,8 @@ export default function EditWorld({
     if (status === "loading") return;
 
     if (!session?.user?.username) {
-      // Redirect to homepage if no logged-in user is found
-      router.push("/");
+      // Redirect to world page if the user is not logged in
+      router.push(`/${username}/worlds/${appId}`);
     } else {
       // Check if the logged-in user is the owner of the world
       const isWorldOwner = session.user.username === username;
@@ -48,7 +48,7 @@ export default function EditWorld({
 
       if (!isWorldOwner) {
         // Redirect or show an access denied page if the user is not the owner
-        router.push("/"); // You can replace this with an access denied page
+        router.push(`/${username}/worlds/${appId}`);
       }
     }
   }, [session, status, username, router]);
