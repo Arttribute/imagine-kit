@@ -14,7 +14,7 @@ export default function Worlds() {
   }, []);
 
   const getApps = async () => {
-    const response = await fetch("/api/apps");
+    const response = await fetch("/api/apps/published");
     const data = await response.json();
     setApps(data);
     setLoading(false);
