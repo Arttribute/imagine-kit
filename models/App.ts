@@ -19,6 +19,22 @@ const AppSchema = new mongoose.Schema(
     banner_url: {
       type: String,
     },
+    is_private: {
+      type: Boolean,
+      default: false, // Public by default, charge for private worlds
+    },
+    is_published: {
+      type: Boolean,
+      default: false,
+    },
+    likes_count: {
+      type: Number,
+      default: 0,
+    },
+    interactions_count: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

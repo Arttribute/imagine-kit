@@ -1,5 +1,4 @@
 import * as React from "react";
-
 import Link from "next/link";
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,7 +19,7 @@ export default function WorldCard({ app }: { app: any }) {
             width={400}
             height={400}
             alt={"app"}
-            className="aspect-[5/4] w-full h-auto object-cover rounded-t-2xl rounded-b-xl"
+            className="aspect-[5/4] w-full h-auto object-cover rounded-t-2xl rounded-b-xl border border-gray-400"
           />
           <div className="flex flex-col mt-4 ml-2">
             <Label className="font-semibold text-lg">{app.name}</Label>

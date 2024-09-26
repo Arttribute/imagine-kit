@@ -20,6 +20,7 @@ import {
 } from "@/store/store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AppToolbar from "@/components/tools/toolbar/AppToolbar";
+import EditWorldMetadata from "@/components/worlds/EditWorldMetadata";
 import UIEditor from "@/components/UIEditor";
 import "reactflow/dist/style.css";
 import nodeTypes, {
@@ -35,6 +36,7 @@ import {
 import Link from "next/link";
 
 import AccountMenu from "@/components/account/AccountMenu";
+import { set } from "lodash";
 
 interface ComponentPosition {
   x: number;
@@ -61,7 +63,7 @@ export default function Editor({
   const dispatch = useAppDispatch();
   const nodesFromStore = useAppSelector((state) => state.flow.nodes);
   const edgesFromStore = useAppSelector((state) => state.flow.edges);
-
+  const [appData, setAppData] = useState<any>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(
     nodesFromStore.map((node) => ({
       ...node,
@@ -94,12 +96,19 @@ export default function Editor({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [nodesResponse, edgesResponse, uiComponentsResponse] =
-          await Promise.all([
-            axios.get(`/api/nodes?appId=${appId}`),
-            axios.get(`/api/edges?appId=${appId}`),
-            axios.get(`/api/uicomponents?appId=${appId}`),
-          ]);
+        const [
+          appResponse,
+          nodesResponse,
+          edgesResponse,
+          uiComponentsResponse,
+        ] = await Promise.all([
+          axios.get(`/api/apps/app?appId=${appId}`),
+          axios.get(`/api/nodes?appId=${appId}`),
+          axios.get(`/api/edges?appId=${appId}`),
+          axios.get(`/api/uicomponents?appId=${appId}`),
+        ]);
+
+        const appData = appResponse.data;
 
         const fetchedNodes = await nodesResponse.data.map((node: any) => ({
           ...node,
@@ -112,10 +121,12 @@ export default function Editor({
         }));
         const uiComponentsData = uiComponentsResponse.data;
 
+        console.log("Fetched App Data:", appData); // Debugging log
         console.log("Fetched Nodes:", fetchedNodes); // Debugging log
         console.log("Fetched Edges:", fetchedEdges); // Debugging log
         console.log("Fetched UI Components Positions: ", uiComponentsData); // Debugging log
 
+        setAppData(appData);
         setNodes(fetchedNodes);
         setEdges(fetchedEdges);
         setUIComponents(uiComponentsData);
@@ -444,6 +455,9 @@ export default function Editor({
 
         <Tabs defaultValue="nodes" className="w-full">
           <div className="flex">
+            <div className="m-2">
+              <EditWorldMetadata appData={appData} />
+            </div>
             <TabsList className="grid w-full grid-cols-2 w-[400px] m-2">
               <TabsTrigger value="nodes">Logic flow</TabsTrigger>
               <TabsTrigger value="preview">UI preview</TabsTrigger>
@@ -484,8 +498,11 @@ export default function Editor({
                 <AlertTriangleIcon className="w-3 h-3 ml-1" />
               )}
             </button>
+
             <div className="flex-grow" />
-            <AccountMenu />
+            <div className="m-2">
+              <AccountMenu />
+            </div>
           </div>
           <TabsContent value="nodes">
             <div style={{ display: "flex", height: "93vh" }}>
