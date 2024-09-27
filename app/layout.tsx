@@ -5,14 +5,8 @@ import React from "react";
 import SessionProvider from "@/providers/SessionProvider";
 import { getServerSession } from "next-auth";
 import "reactflow/dist/style.css";
+import { Analytics } from "@vercel/analytics/react";
 
-const inter = Inter({ subsets: ["latin"] });
-const chakra_petch = Chakra_Petch({
-  weight: ["300", "400", "500", "700"],
-  subsets: ["latin"],
-  display: "swap",
-  fallback: ["Helvetica", "Arial", "sans-serif"],
-});
 const space_grotesk = Space_Grotesk({
   weight: ["300", "400", "500", "700"],
   subsets: ["latin"],
@@ -29,7 +23,10 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={space_grotesk.className}>
-        <SessionProvider session={session}>{children}</SessionProvider>
+        <SessionProvider session={session}>
+          {children}
+          <Analytics />
+        </SessionProvider>
       </body>
     </html>
   );
