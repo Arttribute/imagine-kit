@@ -13,11 +13,11 @@ import WordArranger from "@/components/imaginekit/ui/wordtiles/arrange/WordArran
 import SketchPad from "@/components/imaginekit/ui/sketchpad/SketchPad";
 import ChatInterface from "@/components/imaginekit/ui/chat/ChatInteface";
 import TriggerButton from "@/components/imaginekit/ui/triggerbutton/TriggerButton";
+import LoadingWorld from "@/components/worlds/LoadingWorld";
 
 // Utility function for calling LLM API
 import { callGPTApi } from "@/utils/apicalls/gpt";
 import { callDalleApi } from "@/utils/apicalls/dalle";
-import { set } from "lodash";
 
 // Types for node, edge, and UI component data
 interface NodeData {
@@ -69,6 +69,8 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   const [nodeOutputs, setNodeOutputs] = useState<{ [key: string]: any }>({});
   const [nodeExecutionStack, setNodeExecutionStack] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [loadingWorldComponents, setLoadingWorldComponents] =
+    useState<boolean>(false);
   // const [executedNodes, setExecutedNodes] = useState<Set<string>>(new Set());
   // const [pendingExecution, setPendingExecution] = useState<
   //   Map<string, Promise<void>>
@@ -78,6 +80,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoadingWorldComponents(true);
         const [nodesResponse, edgesResponse, uiComponentsResponse] =
           await Promise.all([
             axios.get(`/api/nodes?appId=${appId}`),
@@ -88,6 +91,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         setNodes(nodesResponse.data);
         setEdges(edgesResponse.data);
         setUIComponents(uiComponentsResponse.data);
+        setLoadingWorldComponents(false);
         //setNodeExecutionStack(nodesResponse.data);
       } catch (error) {
         console.error("Failed to fetch data for runtime engine:", error);
@@ -502,6 +506,11 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
             </div>
           );
         })}
+        {loadingWorldComponents && (
+          <div style={{ display: "absolute", width: "80vw" }}>
+            <LoadingWorld />
+          </div>
+        )}
       </div>
     </div>
   );
