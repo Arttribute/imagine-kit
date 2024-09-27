@@ -19,7 +19,6 @@ const CreateAppForm = () => {
   const [uiComponents, setUiComponents] = useState([]);
   const [error, setError] = useState("");
   const { data: session }: any = useSession();
-
   const router = useRouter();
 
   const handleSubmit = async () => {
@@ -27,6 +26,15 @@ const CreateAppForm = () => {
     setLoading(true);
 
     try {
+      // Check if name is provided if not using AI generation
+      if (!name && !createPrompt) {
+        setError(
+          "Please provide a name for your world or generate one with AI."
+        );
+        setLoading(false);
+        return;
+      }
+
       const appData = {
         owner: session.user.id,
         name,
@@ -75,7 +83,6 @@ const CreateAppForm = () => {
         setLoading(false);
       }
     } catch (error) {
-      //setError((error as any).response.data.message);
       console.error(error);
     }
   };
@@ -109,9 +116,9 @@ const CreateAppForm = () => {
 
   return (
     <div className="border border-gray-500 shadow-2xl shadow-indigo-200 rounded-2xl bg-white z-10 p-2 w-96 lg:w-[460px]">
-      <div className="p-6 border  border-gray-300 rounded-xl">
+      <div className="p-6 border border-gray-300 rounded-xl">
         <Link href="/">
-          <div className="flex  justify-center">
+          <div className="flex justify-center">
             <p className="p-1 whitespace-pre-wrap bg-gradient-to-r from-orange-500 via-pink-500 to-indigo-500 bg-clip-text text-center text-xl font-bold leading-none tracking-tighter text-transparent">
               Imagine kit
             </p>
@@ -130,7 +137,10 @@ const CreateAppForm = () => {
           onChange={(e) => setName(e.target.value)}
           placeholder="Name your world"
           className="mb-2"
+          autoFocus
         />
+
+        {error && <p className="text-red-500 text-sm">{error}</p>}
 
         <div className="text-xs text-gray-500 my-1">
           Speak your app to life with the help of gen AI
@@ -144,13 +154,14 @@ const CreateAppForm = () => {
         {!loading && (
           <Button
             onClick={handleSubmit}
-            className="w-full mt-2  bg-indigo-500 hover:bg-indigo-600"
+            className="w-full mt-2 bg-indigo-500 hover:bg-indigo-600"
+            disabled={!name && !createPrompt}
           >
             Create World
           </Button>
         )}
         {loading && (
-          <Button disabled className="w-full mt-2  bg-indigo-500">
+          <Button disabled className="w-full mt-2 bg-indigo-500">
             Loading...
           </Button>
         )}
