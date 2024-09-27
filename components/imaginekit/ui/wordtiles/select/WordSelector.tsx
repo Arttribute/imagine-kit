@@ -22,18 +22,19 @@ export default function WordSelector({
 
   // Ensure correctWords and incorrectWords exist and are arrays
 
-  if (!correctWords || !incorrectWords) {
-    return null;
-  }
-
-  const correctWordsArray = Array.isArray(correctWords)
+  const correctWordsArray = !correctWords
+    ? null
+    : Array.isArray(correctWords)
     ? correctWords
     : correctWords.split(" ");
-  const incorrectWordsArray = Array.isArray(incorrectWords)
+  const incorrectWordsArray = !incorrectWords
+    ? null
+    : Array.isArray(incorrectWords)
     ? incorrectWords
     : incorrectWords.split(" ");
 
   useEffect(() => {
+    if (!correctWordsArray || !incorrectWordsArray) return;
     setWordOptions(
       [...correctWordsArray, ...incorrectWordsArray].sort(
         () => Math.random() - 0.5
@@ -44,10 +45,11 @@ export default function WordSelector({
   }, [correctWords, incorrectWords]); // Dependency array listens to changes
 
   useEffect(() => {
+    if (!correctWordsArray) return;
     if (selectedWords.length === correctWordsArray.length) {
       checkCorrectness();
     }
-  }, [selectedWords.length, correctWordsArray.length]);
+  }, [selectedWords.length, correctWordsArray?.length]);
 
   useEffect(() => {
     setSelectedWords([]);
@@ -55,6 +57,7 @@ export default function WordSelector({
   }, [correctWords, incorrectWords]);
 
   const handleOptionClick = (word: string) => {
+    if (!correctWordsArray) return;
     if (selectedWords.length < correctWordsArray.length) {
       setSelectedWords([...selectedWords, word]);
       setWordOptions(wordOptions.filter((w) => w !== word));
@@ -95,24 +98,25 @@ export default function WordSelector({
       {!loading && (
         <div className="flex flex-col items-center justify-center mt-2">
           <div className="flex  items-center justify-center w-96">
-            {selectedWords.map((word, index) => (
-              <Button
-                variant="ghost"
-                key={index}
-                className={`m-1 rounded-md border bg-yellow-50 border px-0.5 py-0.5 ${
-                  selectedWords.length === correctWordsArray.length
-                    ? isCorrect
-                      ? "border-green-500"
-                      : "border-red-500 animate-shake"
-                    : "border-slate-500"
-                }`}
-                onClick={() => handleSelectedWordClick(word)}
-              >
-                <div className="px-4 bg-white border py-1.5 rounded-sm">
-                  <p className="font-medium">{word}</p>
-                </div>
-              </Button>
-            ))}
+            {correctWordsArray &&
+              selectedWords.map((word, index) => (
+                <Button
+                  variant="ghost"
+                  key={index}
+                  className={`m-1 rounded-md border bg-yellow-50 border px-0.5 py-0.5 ${
+                    selectedWords.length === correctWordsArray.length
+                      ? isCorrect
+                        ? "border-green-500"
+                        : "border-red-500 animate-shake"
+                      : "border-slate-500"
+                  }`}
+                  onClick={() => handleSelectedWordClick(word)}
+                >
+                  <div className="px-4 bg-white border py-1.5 rounded-sm">
+                    <p className="font-medium">{word}</p>
+                  </div>
+                </Button>
+              ))}
             {Array.from({ length: emptySlots }).map((_, index) => (
               <div
                 key={index}
