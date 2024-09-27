@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
+import { Loader2, ImageIcon } from "lucide-react";
 
 function isValidUrl(url: string) {
   if (url) {
@@ -14,11 +14,18 @@ function isValidUrl(url: string) {
   }
 }
 
-export default function ImagesDisplay({ images }: { images: string[] }) {
+export default function ImagesDisplay({
+  images,
+  loading,
+}: {
+  images: string[];
+  loading: boolean;
+}) {
   return (
     <div className="border p-0.5 m-2 rounded-xl w-96">
       <div className="grid grid-cols-2">
-        {images.length > 0 &&
+        {!loading &&
+          images.length > 0 &&
           isValidUrl(images[0]) &&
           images &&
           images.map((image, index) => (
@@ -50,21 +57,33 @@ export default function ImagesDisplay({ images }: { images: string[] }) {
               </Dialog>
             </div>
           ))}
-        {images.length === 0 && (
+        {!isValidUrl(images[0]) ||
+          (images.length === 0 && (
+            <div className="col-span-2 p-2 h-96 p-1">
+              <div className="bg-gray-100 h-full rounded-xl p-1">
+                <div className="flex flex-col items-center justify-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-gray-700 mt-40" />
+                </div>
+              </div>
+            </div>
+          ))}
+        {loading && (
           <div className="col-span-2 p-2 h-96 p-1">
-            <div className="bg-gray-100 rounded-xl">
-              <div className="flex flex-col items-center justify-center p-40">
-                <Loader2 className="w-8 h-8 animate-spin text-gray-700 " />
+            <div className="bg-gray-100 h-full rounded-xl p-1">
+              <div className="flex flex-col items-center justify-center ">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-700 mt-40" />
               </div>
             </div>
           </div>
         )}
-        {!isValidUrl(images[0]) && (
+
+        {!loading && !isValidUrl(images[0]) && (
           <div className="col-span-2 p-2 h-96 p-1">
             <div className="bg-gray-100 h-full rounded-xl">
               <div className="flex flex-col items-center justify-center p-4 ">
-                <p className="text-sm text-gray-700 text-center mt-36">
-                  Waiting for image to be generated
+                <ImageIcon className="w-8 h-8 mt-36 text-gray-500" />
+                <p className="text-xs text-gray-700 text-center">
+                  Images will be displayed here
                 </p>
               </div>
             </div>
