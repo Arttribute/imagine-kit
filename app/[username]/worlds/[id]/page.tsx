@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { Earth, PencilIcon } from "lucide-react";
 import WorldScaffolding from "@/components/worlds/WorldScaffolding";
+import LoadingWorld from "@/components/worlds/LoadingWorld";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { set } from "lodash";
 
 interface CustomUser {
   username?: string | null;
@@ -41,6 +43,7 @@ export default function World({ params }: { params: { id: string } }) {
       loading: true,
     }
   );
+  const [loadingWorld, setLoadingWorld] = useState(false);
 
   const { data: session, status } = useSession() as {
     data: CustomSession;
@@ -51,6 +54,7 @@ export default function World({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     const fetchApp = async () => {
+      setLoadingWorld(true);
       try {
         const { data } = await axios.get(`/api/apps/app?appId=${appId}`);
         setAppData({ app: data, loading: false });
@@ -58,11 +62,12 @@ export default function World({ params }: { params: { id: string } }) {
         console.error("Failed to load app data", error);
         setAppData({ app: null, loading: false });
       }
+      setLoadingWorld(false);
     };
     fetchApp();
   }, [appId]);
 
-  if (appData.loading) return <div>Loading...</div>;
+  if (appData.loading) return <LoadingWorld />;
   if (!app) return <div>App not found</div>;
 
   const isWorldOwner = session?.user?.username === app?.owner.username;
@@ -115,6 +120,7 @@ export default function World({ params }: { params: { id: string } }) {
         </div>
       )}
       {!isWorldOwner && !app.is_published && <WorldScaffolding />}
+      {loadingWorld && <LoadingWorld />}
     </div>
   );
 }
