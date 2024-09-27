@@ -17,6 +17,7 @@ import TriggerButton from "@/components/imaginekit/ui/triggerbutton/TriggerButto
 // Utility function for calling LLM API
 import { callGPTApi } from "@/utils/apicalls/gpt";
 import { callDalleApi } from "@/utils/apicalls/dalle";
+import { set } from "lodash";
 
 // Types for node, edge, and UI component data
 interface NodeData {
@@ -67,6 +68,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   const [uiComponents, setUIComponents] = useState<UIComponentData[]>([]);
   const [nodeOutputs, setNodeOutputs] = useState<{ [key: string]: any }>({});
   const [nodeExecutionStack, setNodeExecutionStack] = useState<string[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   // const [executedNodes, setExecutedNodes] = useState<Set<string>>(new Set());
   // const [pendingExecution, setPendingExecution] = useState<
   //   Map<string, Promise<void>>
@@ -98,6 +100,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   // Function to execute a single node based on its type
   const executeNode = async (node: NodeData) => {
     //remove node from stack
+    setLoading(true);
     removeNodeFromStack(node.node_id);
     console.log("Executing node..:", node);
     switch (node.type) {
@@ -120,6 +123,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         console.warn(`Unknown node type: ${node.type}`);
         break;
     }
+    setLoading(false);
   };
 
   const runExecutionStack = useCallback(async () => {
@@ -490,6 +494,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
               {renderUIComponent(
                 component,
                 nodes.find((node) => node.node_id === component.component_id),
+                loading,
                 handleTextInputSubmit,
                 handleSketchPadSubmit,
                 handleTriggerButtonClick
@@ -505,6 +510,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 const renderUIComponent = (
   component: UIComponentData,
   nodeData: any,
+  loading: boolean,
   handleTextInputSubmit: (
     nodeId: string,
     fields: Array<{ label: string; value: string }>
@@ -520,10 +526,16 @@ const renderUIComponent = (
           onClickButton={(buttonValue) =>
             handleTriggerButtonClick(nodeData?.node_id, buttonValue)
           }
+          loading={loading}
         />
       );
     case "imageDisplay":
-      return <ImageDisplay images={[nodeData?.data?.inputs[0]?.value]} />;
+      return (
+        <ImageDisplay
+          images={[nodeData?.data?.inputs[0]?.value]}
+          loading={loading}
+        />
+      );
     case "flipCard":
       return (
         <FlipCard
@@ -533,10 +545,17 @@ const renderUIComponent = (
           backContentText={nodeData?.data?.inputs[3]?.value}
           frontImageUrl={nodeData?.data?.inputs[4]?.value}
           backImageUrl={nodeData?.data?.inputs[5]?.value}
+          loading={loading}
         />
       );
     case "imageTiles":
-      return <ImageTiles src={nodeData?.data?.inputs[0]?.value} numCols={3} />;
+      return (
+        <ImageTiles
+          src={nodeData?.data?.inputs[0]?.value}
+          numCols={3}
+          loading={loading}
+        />
+      );
     case "textInput":
       return (
         <TextInput
@@ -547,15 +566,19 @@ const renderUIComponent = (
           onSubmit={(fields) =>
             handleTextInputSubmit(nodeData?.node_id, fields)
           }
+          loading={loading}
         />
       );
     case "textOutput":
-      return <TextOutput text={nodeData?.data?.inputs[0]?.value} />;
+      return (
+        <TextOutput text={nodeData?.data?.inputs[0]?.value} loading={loading} />
+      );
     case "wordSelector":
       return (
         <WordSelector
           correctWords={nodeData?.data?.inputs[0]?.value}
           incorrectWords={nodeData?.data?.inputs[1]?.value}
+          loading={loading}
         />
       );
     case "wordArranger":
@@ -581,6 +604,7 @@ const renderUIComponent = (
             label: input.label,
             value: input.value,
           }))}
+          loading={loading}
         />
       );
     default:

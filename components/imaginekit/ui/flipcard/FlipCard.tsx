@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import DotPattern from "@/components/magicui/dot-pattern";
+import { Loader2 } from "lucide-react";
 
 // Helper function to stop event propagation
 const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
@@ -15,6 +16,7 @@ interface FlipCardProps {
   backContentText?: string;
   frontImageUrl?: string;
   backImageUrl?: string;
+  loading?: boolean;
 }
 
 const CardSide: React.FC<{
@@ -23,13 +25,21 @@ const CardSide: React.FC<{
   imageUrl?: string;
   showDialog?: boolean;
   isBack?: boolean;
-}> = ({ title, contentText, imageUrl, showDialog = false, isBack = false }) => (
+  loading?: boolean;
+}> = ({
+  title,
+  contentText,
+  imageUrl,
+  showDialog = false,
+  isBack = false,
+  loading,
+}) => (
   <div
     className="absolute w-full h-full"
     style={{ backfaceVisibility: "hidden" }}
   >
-    <div className="flex flex-col justify-center items-center border border-gray-400 bg-white rounded-2xl shadow-xl p-1 relative w-full h-full overflow-hidden rounded-xl">
-      {imageUrl && (
+    <div className="flex flex-col justify-center items-center bg-white rounded-2xl shadow-xl p-1 relative w-full h-full overflow-hidden rounded-xl">
+      {!loading && imageUrl && (
         <img
           src={imageUrl}
           alt={title}
@@ -37,7 +47,7 @@ const CardSide: React.FC<{
         />
       )}
       {/* Centered title and content when no image */}
-      {!imageUrl && (
+      {!loading && !imageUrl && (
         <div className="flex flex-col items-center justify-center h-full text-center px-4">
           {title && <h3 className=" text-black font-semibold mb-2">{title}</h3>}
           {contentText && (
@@ -46,13 +56,16 @@ const CardSide: React.FC<{
         </div>
       )}
       {/* Title with overlay when there is an image */}
-      {title && imageUrl && (
+      {!loading && title && imageUrl && (
         <div className="absolute top-0 right-0 w-full h-15 bg-gray-700 bg-opacity-50 flex justify-center items-center">
           <h3 className="text-sm text-white font-semibold">{title}</h3>
         </div>
       )}
+
+      {/* Back content */}
+
       {/* Dialog trigger for front content text */}
-      {contentText && showDialog && imageUrl && (
+      {!loading && contentText && showDialog && imageUrl && (
         <div className="absolute bottom-2 w-full flex justify-center items-center">
           <Dialog>
             <DialogTrigger asChild>
@@ -93,10 +106,15 @@ const FlipCard: React.FC<FlipCardProps> = ({
   backContentText,
   frontImageUrl,
   backImageUrl,
+  loading,
 }) => {
   const [isFlipped, setIsFlipped] = useState(true);
 
-  const flipCard = () => setIsFlipped(!isFlipped);
+  const flipCard = () => {
+    if (!loading) {
+      setIsFlipped(!isFlipped);
+    }
+  };
 
   return (
     <div
@@ -121,18 +139,25 @@ const FlipCard: React.FC<FlipCardProps> = ({
 
         {/* Back Side */}
         <div
-          className="absolute w-full h-full flex items-center justify-center bg-gray-800 rounded-xl text-white"
+          className="absolute w-full h-full flex items-center justify-center border border-gray-400 bg-white rounded-xl text-white"
           style={{
             backfaceVisibility: "hidden",
             transform: "rotateY(180deg)",
           }}
         >
-          <CardSide
-            title={backTitle}
-            contentText={backContentText}
-            imageUrl={backImageUrl}
-            isBack={true}
-          />
+          {!loading && (
+            <CardSide
+              title={backTitle}
+              contentText={backContentText}
+              imageUrl={backImageUrl}
+              isBack={true}
+            />
+          )}
+          {loading && (
+            <div className="absolute w-full h-full flex items-center justify-center">
+              <Loader2 className="w-8 h-8 animate-spin text-gray-300" />
+            </div>
+          )}
           {!backImageUrl && (
             <DotPattern
               className={cn(

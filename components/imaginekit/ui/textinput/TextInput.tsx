@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
 
 interface TextInputProps {
   fields: Array<{
@@ -10,9 +11,10 @@ interface TextInputProps {
     value: string;
   }>;
   onSubmit: (fields: Array<{ label: string; value: string }>) => void; // Callback function
+  loading?: boolean;
 }
 
-function TextInput({ fields, onSubmit }: TextInputProps) {
+function TextInput({ fields, onSubmit, loading }: TextInputProps) {
   const [inputFields, setInputFields] = useState(fields);
 
   const handleSubmit = () => {
@@ -43,9 +45,18 @@ function TextInput({ fields, onSubmit }: TextInputProps) {
             />
           </div>
         ))}
-      <Button className="w-full m-2" onClick={handleSubmit}>
-        Submit
-      </Button>
+      <div className="flex flex-col w-full m-2">
+        {loading ? (
+          <Button className="w-full" onClick={handleSubmit} disabled>
+            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            Submit
+          </Button>
+        ) : (
+          <Button className="w-full" onClick={handleSubmit}>
+            Submit
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

@@ -6,7 +6,7 @@ interface WordSelectorPreviewProps {}
 
 const WordSelectorPreview: React.FC<WordSelectorPreviewProps> = ({}) => {
   return (
-    <div className="w-80">
+    <div className="w-96">
       <div className="grid grid-cols-2">
         <div className="col-span-1 bg-amber-50 flex rounded-lg border-2 m-1 p-2">
           <p className="text-gray-400 text-sm">selection </p>

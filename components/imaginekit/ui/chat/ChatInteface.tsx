@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { MessageSquareIcon } from "lucide-react";
+import LoadingChat from "./LoadingChat";
 
 // Interface for interaction data
 interface ChatInterfaceProps {
@@ -9,9 +10,13 @@ interface ChatInterfaceProps {
     label: string;
     value: string;
   }>;
+  loading?: boolean;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ interaction }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({
+  interaction,
+  loading,
+}) => {
   const [interactionData, setInteractionData] = useState<
     Array<{ id: string; role: string; message: string }>
   >([]);
@@ -88,6 +93,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ interaction }) => {
               </div>
             );
           })}
+
+        {loading && (
+          <div className="flex justify-left">
+            <div className="p-3  max-w-full">
+              <LoadingChat />
+            </div>
+          </div>
+        )}
         <div className="mb-8" />
         {interactionData.length > 0 && <div ref={messagesEndRef} />}
       </div>
