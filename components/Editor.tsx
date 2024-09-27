@@ -34,6 +34,7 @@ import {
   AlertTriangleIcon,
 } from "lucide-react";
 import Link from "next/link";
+import LoadingWorld from "./worlds/LoadingWorld";
 
 import AccountMenu from "@/components/account/AccountMenu";
 import { set } from "lodash";
@@ -64,6 +65,7 @@ export default function Editor({
   const nodesFromStore = useAppSelector((state) => state.flow.nodes);
   const edgesFromStore = useAppSelector((state) => state.flow.edges);
   const [appData, setAppData] = useState<any>(null);
+  const [loadingWorldComponents, setLoadingWorldComponents] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState(
     nodesFromStore.map((node) => ({
       ...node,
@@ -95,6 +97,7 @@ export default function Editor({
   // Fetch nodes, edges, and UI components from the database on component mount
   useEffect(() => {
     const fetchData = async () => {
+      setLoadingWorldComponents(true);
       try {
         const [
           appResponse,
@@ -144,6 +147,7 @@ export default function Editor({
             {}
           )
         );
+        setLoadingWorldComponents(false);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
@@ -504,6 +508,7 @@ export default function Editor({
               <AccountMenu />
             </div>
           </div>
+          {loadingWorldComponents && <LoadingWorld />}
           <TabsContent value="nodes">
             <div style={{ display: "flex", height: "93vh" }}>
               <div
