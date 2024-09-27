@@ -20,7 +20,12 @@ export default function WordSelector({
   const [isCorrect, setIsCorrect] = useState(false);
   const [wrongAttempts, setWrongAttempts] = useState(0);
 
-  // Ensure correctWords and incorrectWords are arrays
+  // Ensure correctWords and incorrectWords exist and are arrays
+
+  if (!correctWords || !incorrectWords) {
+    return null;
+  }
+
   const correctWordsArray = Array.isArray(correctWords)
     ? correctWords
     : correctWords.split(" ");
