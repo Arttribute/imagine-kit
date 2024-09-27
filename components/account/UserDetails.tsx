@@ -33,7 +33,11 @@ const UserDetails = ({ user }: { user: any }) => {
         className="aspect-[1] rounded-full m-1"
       />
       <div className="flex flex-col mt-2">
-        <h1 className="text-gray-900 text-xl font-semibold">
+        <h1 className="text-gray-900 text-2xl font-bold">
+          {user.display_name || user.fullname.split(" ")[0] || "display name"}
+        </h1>
+        <h1 className="text-gray-500 font-semibold">
+          {"@"}
           {user.username || "@username"}
         </h1>
 

@@ -75,6 +75,7 @@ export const authOptions: NextAuthOptions = {
             username: username,
             email: user.email,
             fullname: user.name,
+            display_name: user.name.split(" ")[0],
             profile_image: user.image,
             isProfileCompleted: false,
           });

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,23 +16,29 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
 import { PencilIcon } from "lucide-react";
+import { m } from "framer-motion";
 
 export default function EditAccountDialog({ user }: { user: any }) {
   const [loading, setLoading] = useState(false);
   const [profileImageUrl, setProfileImageUrl] = useState(user.profile_image);
+  const [displayName, setDisplayName] = useState(
+    user.display_name || user.fullname.split(" ")[0]
+  );
   const [userName, setUserName] = useState(user.username);
   const [bio, setBio] = useState(user.bio);
   const [error, setError] = useState<string | null>(null);
   const [isModified, setIsModified] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [usernameChanged, setUsernameChanged] = useState(false);
 
   useEffect(() => {
     // Check if any fields are modified
     if (
       userName !== user.username ||
       bio !== user.bio ||
-      profileImageUrl !== user.profile_image
+      profileImageUrl !== user.profile_image ||
+      displayName !== user.display_name
     ) {
       setIsModified(true);
     } else {
@@ -41,9 +47,20 @@ export default function EditAccountDialog({ user }: { user: any }) {
 
     // Check if username is taken when it's modified
     if (userName !== user.username) {
+      setUsernameChanged(true);
       checkUsernameAvailability(userName);
+    } else {
+      setUsernameChanged(false);
     }
-  }, [userName, bio, profileImageUrl, user.username, user.bio]);
+  }, [
+    userName,
+    bio,
+    profileImageUrl,
+    user.username,
+    user.bio,
+    user.profile_image,
+    displayName,
+  ]);
 
   const checkUsernameAvailability = async (newUsername: string) => {
     try {
@@ -86,6 +103,7 @@ export default function EditAccountDialog({ user }: { user: any }) {
       const response = await axios.put(`/api/users/user?id=${user._id}`, {
         detailsToUpdate: {
           username: userName,
+          display_name: displayName,
           bio,
           profile_image: profileImageUrl,
         },
@@ -152,11 +170,26 @@ export default function EditAccountDialog({ user }: { user: any }) {
             {usernameError && (
               <p className="text-red-500 mt-1 text-xs">{usernameError}</p>
             )}
+            {usernameChanged && !usernameError && (
+              <p className="text-amber-500 mt-1 text-xs">
+                Warning: Changing your username will break any links to your
+                creations and profile page.
+              </p>
+            )}
           </div>
         </div>
 
+        <Label className="mt-2">Display Name</Label>
+        <Input
+          placeholder="Enter your display name"
+          onChange={(e) => setDisplayName(e.target.value)}
+          value={displayName}
+          className="-mt-2"
+        />
+
+        <Label className="mt-2">Bio</Label>
         <Textarea
-          className="w-full h-32 mt-1"
+          className="w-full h-32 -mt-2"
           placeholder="Share something about yourself"
           onChange={(e) => setBio(e.target.value)}
           value={bio}

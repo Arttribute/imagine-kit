@@ -3,7 +3,7 @@ import dbConnect from "@/lib/dbConnect";
 import App from "@/models/App";
 import { NextResponse } from "next/server";
 
-export const revalidate = 10;
+export const revalidate = 0;
 
 /**
  * GET /api/apps - Get only published and public apps
