@@ -4,6 +4,7 @@ import WorldsList from "@/components/worlds/WorldsList";
 import Link from "next/link";
 import AccountMenu from "@/components/account/AccountMenu";
 import { Sparkles, BadgePlus } from "lucide-react";
+import BetaSticker from "@/components/layout/BetaSticker";
 
 export default function Worlds() {
   const [apps, setApps] = useState([]);
@@ -31,6 +32,7 @@ export default function Worlds() {
                   Imagine kit
                 </p>
                 <Sparkles className="h-4 w-4 mt-0.5 text-indigo-500" />
+                <BetaSticker />
               </div>
             </Link>
           </div>
