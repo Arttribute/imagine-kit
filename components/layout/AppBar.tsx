@@ -3,6 +3,7 @@ import { Menubar, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
 import { Sparkles } from "lucide-react";
 import AccountMenu from "@/components/account/AccountMenu";
 import Link from "next/link";
+import BetaSticker from "@/components/layout/BetaSticker";
 
 export default function AppBar() {
   return (
@@ -19,6 +20,7 @@ export default function AppBar() {
                 <Sparkles className="h-4 w-4 mt-0.5 text-indigo-500" />
               </div>
             </Link>
+            <BetaSticker />
           </MenubarTrigger>
         </MenubarMenu>
         <div className="grow" />
