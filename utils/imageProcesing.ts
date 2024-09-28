@@ -31,8 +31,7 @@ export async function getImageBlob(imageUrl: string) {
     console.log("Blob:", blob);
 
     // You can now use the Blob (e.g., display it as an image)
-    const imageObjectURL = URL.createObjectURL(blob);
-    (document.getElementById("image") as HTMLImageElement).src = imageObjectURL;
+    return blob;
   } catch (error) {
     console.error("Error:", error);
   }
