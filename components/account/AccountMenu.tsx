@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Link from "next/link";
 
 interface CustomUser {
   name?: string | null;
@@ -70,8 +71,24 @@ function AccountMenu() {
               <DropdownMenuItem onClick={handleProfileClick}>
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link
+                  href="https://forms.gle/g3tbYS2MuuhjiHvo9"
+                  passHref
+                  target="_blank"
+                >
+                  Report Issue
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link
+                  href="https://forms.gle/LZXhwd4ezJRKjxiS6"
+                  passHref
+                  target="_blank"
+                >
+                  Give Feedback
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               {/* Logout Button */}
               <DropdownMenuItem
