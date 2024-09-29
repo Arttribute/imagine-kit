@@ -14,6 +14,7 @@ import WordArrangerNode from "./WordArrangerNode";
 import FlipCardNode from "./FlipCardNode";
 import ChatInterfaceNode from "./ChatInterfaceNode";
 import MemoryNode from "./MemoryNode";
+import XMTPNode from "./XMTPNode";
 
 // Object to map node types to their respective components
 export const nodeTypes = {
@@ -31,6 +32,7 @@ export const nodeTypes = {
   flipCard: FlipCardNode,
   chatInterface: ChatInterfaceNode,
   memory: MemoryNode,
+  xmtp: XMTPNode,
 };
 
 // Object to map node type names and default data configurations
@@ -49,6 +51,7 @@ export const NODE_TYPE_MAPPING = {
     FlipCard: "flipCard",
     ChatInterface: "chatInterface",
     Memory: "memory",
+    XMTP: "xmtp",
     CustomNode: "custom",
   } as const, // Use 'as const' to make this object read-only and enable type-safe indexing
   ui: [
@@ -139,6 +142,10 @@ export const NODE_TYPE_MAPPING = {
       inputs: [],
       outputs: [],
       memoryFields: [{ id: "field-0", label: "Memory Field 1", value: "" }],
+    },
+    XMTP: {
+      outputs: [{ id: "output-0", label: "User input", value: "" }],
+      inputs: [{ id: "input-0", label: "Bot response", value: "" }],
     },
     CustomNode: {
       inputs: [],

@@ -155,6 +155,12 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
           type: "FlipCard",
           color: "rose",
         },
+        {
+          icon: <Keyboard className="w-5 h-5" />,
+          label: "XMTP",
+          type: "XMTP",
+          color: "rose",
+        },
       ],
     },
   ];
