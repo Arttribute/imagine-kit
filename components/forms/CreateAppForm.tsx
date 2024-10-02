@@ -79,7 +79,7 @@ const CreateAppForm = () => {
         const response = await axios.post("/api/apps", appData);
         console.log("Response", response.data);
         const appId = response.data._id;
-        router.push(`/${session?.user?.name || "bashy"}/worlds/${appId}/edit`);
+        router.push(`/${session?.user?.username || "b"}/worlds/${appId}/edit`);
         setLoading(false);
       }
     } catch (error) {

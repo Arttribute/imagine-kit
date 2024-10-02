@@ -1,5 +1,11 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
+import {
+  SketchAppExample,
+  TextToImageExample,
+  AITarotExample,
+  MosaicsExample,
+} from "@/lib/worldExamples";
 
 const API_KEY = process.env.OPENAI_API_KEY;
 const openai = new OpenAI({
@@ -219,6 +225,19 @@ export async function POST(request: Request) {
                 }
             }
         ]
+        
+        Here are examples of apps that can be created:
+
+        ${SketchAppExample}
+
+        ${TextToImageExample}
+
+        ${AITarotExample}
+
+        ${MosaicsExample}
+
+        Hint: For apps that may require complex behavior or logical understanding, use the LLM to process the input giving it the necessary instructions to follow to poduce the desired output.
+        If the app gets too long to generate avoid generating the UI components and focus on the nodes and edges.
      
     `;
 
