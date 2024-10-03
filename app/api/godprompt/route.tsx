@@ -242,7 +242,7 @@ export async function POST(request: Request) {
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo-0125",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
@@ -251,7 +251,7 @@ export async function POST(request: Request) {
         { role: "user", content: input },
       ],
       temperature: 1,
-      max_tokens: 1600,
+      max_tokens: 16384,
       top_p: 1.0,
       frequency_penalty: 0.0,
       presence_penalty: 0.0,
