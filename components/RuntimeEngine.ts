@@ -1,7 +1,18 @@
 import { callDalleApi } from "@/utils/apicalls/dalle";
 import { callGPTApi } from "@/utils/apicalls/gpt";
 import ky from "ky";
-import { filter, find, forEach, groupBy, keyBy } from "lodash";
+import {
+  filter,
+  find,
+  flatMap,
+  forEach,
+  get,
+  groupBy,
+  keyBy,
+  map,
+  uniq,
+} from "lodash";
+import { inspect } from "util";
 
 export class Node extends EventTarget {
   downstreamNodes: Node[] = [];
@@ -15,13 +26,43 @@ export class Node extends EventTarget {
   }
 
   initialize() {}
-  run(inputs?: any[]) {}
+  run(inputs?: any[]) {
+    console.log("Running Node");
+    return;
+  }
 
   setOutput(output: any) {
+    console.log("Setting output");
+    console.log({ output });
     if (this.output !== output) {
       this.output = output;
       this.dispatchEvent(new Event("change"));
     }
+  }
+}
+
+export class TextOutputNode extends Node {
+  constructor(public state: any) {
+    super(state);
+  }
+
+  async run(inputs?: string[]) {
+    if (!inputs) {
+      return;
+    }
+    console.log("Running TextOutputNode");
+    const labels = uniq(map(this.state.data.inputs, "label"));
+    const outputs = flatMap(inputs, (input) => {
+      if (typeof input == "object") {
+        return map(labels, (value) => {
+          return get(input, value);
+        });
+      }
+      return input;
+    });
+
+    super.setOutput(outputs.join(", "));
+    return;
   }
 }
 
@@ -34,10 +75,11 @@ export class LLMNode extends Node {
     if (!inputs) {
       return;
     }
+    console.log("Running LLMNode");
     const generatedOutput = await callGPTApi(
-      this.state.instruction ?? "",
+      this.state.data.instruction ?? "",
       inputs.join(", "),
-      this.state.outputs.map((output: any) => output.label).join(", ")
+      this.state.data.outputs.map((output: any) => output.label).join(", ")
     );
 
     const cleanedOutput = generatedOutput
@@ -61,6 +103,7 @@ export class ImageGenNode extends Node {
       return;
     }
 
+    console.log("Running ImageGenNode");
     const generatedOutput = await callDalleApi(inputs.join(", "));
 
     super.setOutput(generatedOutput);
@@ -70,7 +113,7 @@ export class ImageGenNode extends Node {
 
 export class RuntimeEngine {
   nodes: Node[] = [];
-  edges: any[] = [];
+  //   edges: any[] = [];
 
   private state: { nodes: any[]; edges: any[] } = { nodes: [], edges: [] };
   private markedForRun: { [key: string]: boolean } = {};
@@ -79,14 +122,21 @@ export class RuntimeEngine {
 
   public async load(appId: string) {
     const [nodesResponse, edgesResponse] = await Promise.all([
-      ky.get(`/api/nodes?appId=${appId}`).json<{ data: any[] }>(),
-      ky.get(`/api/edges?appId=${appId}`).json<{ data: any[] }>(),
+      ky
+        .get(`api/nodes?appId=${appId}`, { prefixUrl: process.env.PREFIX_URL })
+        .json<any[]>(),
+      ky
+        .get(`api/edges?appId=${appId}`, { prefixUrl: process.env.PREFIX_URL })
+        .json<any[]>(),
     ]);
 
     this.state = {
-      nodes: nodesResponse.data,
-      edges: edgesResponse.data,
+      nodes: nodesResponse,
+      edges: edgesResponse,
     };
+
+    console.log("Loaded nodes and edges");
+    console.log(inspect(this.state, { depth: null }));
   }
 
   public async compile() {
@@ -102,22 +152,37 @@ export class RuntimeEngine {
         case "imageGen":
           this.nodes.push(new ImageGenNode(node));
           break;
+        case "textOutput":
+          this.nodes.push(new TextOutputNode(node));
+          break;
+        default:
+          this.nodes.push(new Node(node));
+          break;
       }
     });
 
     const keyedByNodeId = keyBy(this.nodes, "state.node_id");
 
     this.nodes.forEach((node) => {
-      groupBySource[node.state.node_id].forEach((edge) => {
+      groupBySource[node.state.node_id]?.forEach((edge) => {
         node.downstreamNodes.push(keyedByNodeId[edge.target]);
       });
-      groupByTarget[node.state.node_id].forEach((edge) => {
+      groupByTarget[node.state.node_id]?.forEach((edge) => {
         node.upstreamNodes.push(keyedByNodeId[edge.source]);
       });
       node.initialize();
       node.addEventListener("change", () => {
+        console.log("Node changed", node.state.node_id);
         this.markForRun(node);
       });
+    });
+
+    console.log("Compiled nodes");
+    console.log(this.nodes);
+    this.nodes.forEach((node) => {
+      console.log(node.state.node_id);
+      console.log(node.upstreamNodes);
+      console.log(node.downstreamNodes);
     });
   }
 
@@ -161,10 +226,15 @@ export class RuntimeEngine {
   }
 
   public async run() {
+    console.log(">>>>>Engine Run: START<<<<<");
     const keyedByNodeId = keyBy(this.nodes, "state.node_id");
-    forEach(this.markedForRun, (node, key) => {
-      this.runNode(keyedByNodeId[key]);
-    });
+    const result = await Promise.all(
+      map(this.markedForRun, (node, key) => {
+        return this.runNode(keyedByNodeId[key]);
+      })
+    );
+    console.log(">>>>>Engine Run:  END <<<<<");
+    return result;
   }
 
   public register(nodeId: string) {

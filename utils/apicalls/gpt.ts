@@ -1,3 +1,5 @@
+import ky from "ky";
+
 export async function callGPTApi(
   instruction: string,
   inputs: string,
@@ -34,12 +36,9 @@ export async function callGPTApi(
       requestBody.image = image; // Include the base64 image string
     }
 
-    const response = await fetch("/api/llm/gpt", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody), // Dynamically include image if available
+    const response = await ky.post("api/llm/gpt", {
+      prefixUrl: process.env.PREFIX_URL,
+      json: requestBody, // Dynamically include image if available
     });
 
     if (!response.ok) {
