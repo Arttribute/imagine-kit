@@ -1,5 +1,11 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
+import {
+  SketchAppExample,
+  TextToImageExample,
+  AITarotExample,
+  MosaicsExample,
+} from "@/lib/worldExamples";
 
 const API_KEY = process.env.OPENAI_API_KEY;
 const openai = new OpenAI({
@@ -219,11 +225,24 @@ export async function POST(request: Request) {
                 }
             }
         ]
+        
+        Here are examples of apps that can be created:
+
+        ${SketchAppExample}
+
+        ${TextToImageExample}
+
+        ${AITarotExample}
+
+        ${MosaicsExample}
+
+        Hint: For apps that may require complex behavior or logical understanding, use the LLM to process the input giving it the necessary instructions to follow to poduce the desired output.
+        If the app gets too long to generate avoid generating the UI components and focus on the nodes and edges.
      
     `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo-0125",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
@@ -232,7 +251,7 @@ export async function POST(request: Request) {
         { role: "user", content: input },
       ],
       temperature: 1,
-      max_tokens: 1600,
+      max_tokens: 16384,
       top_p: 1.0,
       frequency_penalty: 0.0,
       presence_penalty: 0.0,

@@ -81,28 +81,40 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
         },
       ],
     },
-    {
-      section: "Logic",
-      icon: <SlidersHorizontal className="w-3 h-3 text-gray-600 mt-1" />,
-      tools: [
-        {
-          icon: <Brain className="w-5 h-5" />,
-          label: "Memory",
-          type: "Memory",
-          color: "green",
-        },
-        {
-          icon: <GitCompare className="w-5 h-5" />,
-          label: "Compare",
-          type: "Compare",
-          color: "red",
-        },
-      ],
-    },
+    // {
+    //   section: "Logic",
+    //   icon: <SlidersHorizontal className="w-3 h-3 text-gray-600 mt-1" />,
+    //   tools: [
+    //     {
+    //       icon: <Brain className="w-5 h-5" />,
+    //       label: "Memory",
+    //       type: "Memory",
+    //       color: "green",
+    //     },
+    //     {
+    //       icon: <GitCompare className="w-5 h-5" />,
+    //       label: "Compare",
+    //       type: "Compare",
+    //       color: "red",
+    //     },
+    //   ],
+    // },
     {
       section: "UI Elements",
       icon: <LayoutTemplate className="w-3 h-3 text-gray-600 mt-1" />,
       tools: [
+        {
+          icon: <PowerIcon className="w-5 h-5" />,
+          label: "Button",
+          type: "TriggerButton",
+          color: "green",
+        },
+        {
+          icon: <MessageSquare className="w-5 h-5" />,
+          label: "Chat",
+          type: "ChatInterface",
+          color: "red",
+        },
         {
           icon: <ImageIcon className="w-5 h-5" />,
           label: "Display",
@@ -140,12 +152,6 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
           color: "orange",
         },
         {
-          icon: <MessageSquare className="w-5 h-5" />,
-          label: "Chat",
-          type: "ChatInterface",
-          color: "lime",
-        },
-        {
           icon: <PencilLine className="w-5 h-5" />,
           label: "Sketch pad",
           type: "SketchPad",
@@ -156,12 +162,6 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
           label: "Flip card",
           type: "FlipCard",
           color: "rose",
-        },
-        {
-          icon: <PowerIcon className="w-5 h-5" />,
-          label: "Button",
-          type: "TriggerButton",
-          color: "indigo",
         },
       ],
     },
