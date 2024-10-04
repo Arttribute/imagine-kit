@@ -72,7 +72,7 @@ const CreateAppForm = () => {
         // await axios.post("/api/uicomponents", {
         //   uiComponents: uiComponentsToSave,
         // });
-        router.push(`/${session?.user?.name || "bashy"}/worlds/${appId}/edit`);
+        router.push(`/${session.user.username || "b"}/worlds/${appId}/edit`);
         setLoading(false);
       } else {
         console.log("App data", appData);
