@@ -5,7 +5,7 @@ import {
   TextToImageExample,
   AITarotExample,
   MosaicsExample,
-} from "@/lib/worldExamples";
+} from "@/lib/ptomptEngineering/worldExamples";
 
 const API_KEY = process.env.OPENAI_API_KEY;
 const openai = new OpenAI({
