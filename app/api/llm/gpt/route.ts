@@ -6,16 +6,23 @@ const openai = new OpenAI({
   apiKey: API_KEY,
 });
 
+export const revalidate = 0;
+
 export async function POST(request: Request) {
   try {
     const requestBody = await request.json();
-    const { instruction, inputs, outputs, image } = requestBody;
+    const { instruction, inputs, outputs, memory, image } = requestBody;
+    console.log("memory", memory);
 
     const prompt = `
       You are an assistant designed to output JSON.
       Your goal is to ${instruction}
 
       This is the input: ${inputs}
+      
+      The previous interaction data is provided so that you do not repeat yourself or ask unecessary questions. That means you need to keep track of the input you got and the outputs you provided inorder to provide a relevant response.
+      previous_interatioction_data=${memory}
+      
 
       and you should output the json in the following format:
       ${outputs}
