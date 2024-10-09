@@ -29,6 +29,7 @@ interface NodeData {
     outputs: { id: string; label: string; value: string }[];
     instruction?: string;
     memoryFields?: { id: string; label: string; value: string }[];
+    memory?: { inputs: string; outputs: string }[]; // Adding memory here
   };
   position: {
     x: number;
@@ -215,14 +216,20 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 
     const { instruction, inputs, outputs } = node.data;
 
-    const inputValues = inputs.map((input) => input.value).join(" ");
+    const inputOutputmemory = node.data.memory;
+    const CurrentnputValues = inputs.map((input) => input.value).join(" ");
     const outputFormat = outputs.map((output) => output.label).join(", ");
+
+    //lets send current input and  history of the past input and output to the API
+    //inputValues = {input: "current input", memory: [{inputs: "past input", outputs: "past output"}]}
+    //stringify the inputValues object and send it to the API
 
     try {
       const generatedOutput = await callGPTApi(
         instruction ?? "",
-        inputValues,
-        outputFormat
+        CurrentnputValues,
+        outputFormat,
+        JSON.stringify(inputOutputmemory ?? [])
       );
 
       // Remove backticks and sanitize GPT output before parsing - this due to a an issue that is specific to GPT-4o-mini
@@ -233,23 +240,24 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 
       const outputData = JSON.parse(cleanedOutput);
 
-      // Update the node's output data
-      setNodes((prev) =>
-        prev.map((n) =>
-          n.node_id === node.node_id
-            ? {
-                ...n,
-                data: {
-                  ...n.data,
-                  outputs: n.data.outputs.map((output) => ({
-                    ...output,
-                    value: outputData[output.label], //match gpt output to output label
-                  })),
-                },
-              }
-            : n
-        )
-      );
+      // Update the nodes memory with the current input and output
+      const updatedMemory = [
+        ...(node.data.memory ?? []),
+        {
+          inputs: CurrentnputValues,
+          outputs: outputData,
+        },
+      ];
+      const updatedOutputs = outputs.map((output) => ({
+        ...output,
+        value: outputData[output.label],
+      }));
+
+      nodes[nodes.findIndex((n) => n.node_id === node.node_id)].data.memory =
+        updatedMemory;
+      nodes[nodes.findIndex((n) => n.node_id === node.node_id)].data.outputs =
+        updatedOutputs;
+      setNodes([...nodes]);
 
       //propagate data to connected nodes
       const connectedEdges = edges.filter(

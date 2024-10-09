@@ -1,7 +1,8 @@
 export async function callGPTApi(
   instruction: string,
   inputs: string,
-  outputs: string
+  outputs: string,
+  memory: string
 ) {
   try {
     // Separate base64 image strings from other inputs
@@ -27,6 +28,7 @@ export async function callGPTApi(
       instruction,
       inputs: textInputs || "What’s in this image?",
       outputs,
+      memory,
     };
 
     // Only add image to the request body if it exists
