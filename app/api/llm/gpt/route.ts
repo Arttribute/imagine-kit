@@ -26,6 +26,7 @@ export async function POST(request: Request) {
 
       and you should output the json in the following format:
       ${outputs}
+      Note: the output fields in the JSON should be of string type.
     `;
 
     type UserContent =
