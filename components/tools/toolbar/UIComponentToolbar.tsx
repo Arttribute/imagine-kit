@@ -13,6 +13,7 @@ const UIComponentToolbar: React.FC = () => {
     { id: "flipCard", label: "Flip Card" },
     { id: "chatInterface", label: "Chat Interface" },
     { id: "triggerButton", label: "Trigger Button" },
+    { id: "audioPlayer", label: "Audio Player" },
   ];
 
   return (

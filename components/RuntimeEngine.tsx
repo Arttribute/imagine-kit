@@ -14,10 +14,12 @@ import SketchPad from "@/components/imaginekit/ui/sketchpad/SketchPad";
 import ChatInterface from "@/components/imaginekit/ui/chat/ChatInteface";
 import TriggerButton from "@/components/imaginekit/ui/triggerbutton/TriggerButton";
 import LoadingWorld from "@/components/worlds/LoadingWorld";
+import AudioPlayer from "@/components/imaginekit/ui/audio/AudioPlayer";
 
 // Utility function for calling LLM API
 import { callGPTApi } from "@/utils/apicalls/gpt";
 import { callDalleApi } from "@/utils/apicalls/dalle";
+import { callTTSApi } from "@/utils/apicalls/opentts";
 
 // Types for node, edge, and UI component data
 interface NodeData {
@@ -114,6 +116,9 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         break;
       case "imageGen":
         await executeImageGeneratorNode(node); // Execute Image Generator Node
+        break;
+      case "textToSpeech":
+        await executeTextToSpeechNode(node); // Execute Text to Speech Node
         break;
       case "textInput":
         await executeTextInputNode(node); // Now handle textInput node execution
@@ -340,6 +345,62 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     } catch (error) {
       console.error(
         `Error executing Image Generator Node (${node.node_id}):`,
+        error
+      );
+    }
+  };
+
+  const executeTextToSpeechNode = async (node: NodeData) => {
+    const textInput = node.data.inputs[0]?.value;
+    const textLabel = node.data.inputs[0]?.label;
+    if (!textInput || textInput === textLabel) return;
+
+    try {
+      const generatedAudio = (await callTTSApi(textInput)) as string;
+
+      setNodes((prev) =>
+        prev.map((n) =>
+          n.node_id === node.node_id
+            ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  outputs: n.data.outputs.map((output) =>
+                    output.id === "output-0"
+                      ? { ...output, value: generatedAudio }
+                      : output
+                  ),
+                },
+              }
+            : n
+        )
+      );
+
+      const connectedEdges = edges.filter(
+        (edge) => edge.source === node.node_id
+      );
+      connectedEdges.forEach((edge) => {
+        const targetNodeIndex = nodes.findIndex(
+          (node) => node.node_id === edge.target
+        );
+
+        if (targetNodeIndex !== -1) {
+          const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
+            (input) => input.id === edge.targetHandle
+          );
+
+          if (targetInputIndex !== -1) {
+            nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
+              generatedAudio;
+
+            setNodes([...nodes]);
+            addNodeToStack(nodes[targetNodeIndex]);
+          }
+        }
+      });
+    } catch (error) {
+      console.error(
+        `Error executing Text to Speech Node (${node.node_id}):`,
         error
       );
     }
@@ -621,6 +682,13 @@ const renderUIComponent = (
             label: input.label,
             value: input.value,
           }))}
+          loading={loading}
+        />
+      );
+    case "audioPlayer":
+      return (
+        <AudioPlayer
+          audio={nodeData?.data?.inputs[0]?.value}
           loading={loading}
         />
       );
