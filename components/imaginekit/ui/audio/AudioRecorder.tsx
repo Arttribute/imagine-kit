@@ -3,23 +3,29 @@
 import { useState, useRef } from "react";
 import {
   MicIcon,
-  TrashIcon,
+  RefreshCcwIcon,
   CircleStopIcon,
-  DownloadIcon,
   PauseIcon,
-  PlayIcon,
+  ArrowUpIcon,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const AudioRecorder: React.FC = () => {
+export default function AudioRecorder({
+  onSubmitAudio,
+  loading,
+}: {
+  onSubmitAudio: (audio: string) => void;
+  loading: boolean;
+}) {
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false); // Track whether the recording is paused
   const [audioUrl, setAudioUrl] = useState<string | null>(null); // Audio URL to play
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null); // Final Blob
   const [recordingTime, setRecordingTime] = useState(0); // Track time in seconds
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]); // Store all chunks of the recording
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const audioPlayerRef = useRef<HTMLAudioElement | null>(null); // Reference for audio playback
   const streamRef = useRef<MediaStream | null>(null); // Ref to store the audio stream
 
   const startRecording = async () => {
@@ -39,6 +45,13 @@ const AudioRecorder: React.FC = () => {
     mediaRecorder.ondataavailable = (event) => {
       audioChunksRef.current.push(event.data); // Collect the recorded audio data chunks
     };
+
+    mediaRecorder.onstop = () => {
+      // Create the audio blob and URL when the recording is paused or stopped
+      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
+      setAudioBlob(audioBlob);
+      setAudioUrl(URL.createObjectURL(audioBlob)); // Set the temporary URL for playback
+    };
   };
 
   const stopRecording = () => {
@@ -47,11 +60,6 @@ const AudioRecorder: React.FC = () => {
       setIsRecording(false);
       setIsPaused(false);
       if (timerRef.current) clearInterval(timerRef.current); // Stop the timer
-
-      // Create the final audio Blob and URL
-      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
-      setAudioBlob(audioBlob);
-      setAudioUrl(URL.createObjectURL(audioBlob));
     }
   };
 
@@ -60,10 +68,6 @@ const AudioRecorder: React.FC = () => {
       mediaRecorderRef.current.stop(); // Stop recording to finalize the chunks
       setIsPaused(true);
       if (timerRef.current) clearInterval(timerRef.current); // Pause the timer
-
-      // Create a temporary audio Blob to allow playback of what has been recorded so far
-      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
-      setAudioUrl(URL.createObjectURL(audioBlob)); // Set the temporary URL for playback
     }
   };
 
@@ -82,6 +86,15 @@ const AudioRecorder: React.FC = () => {
       mediaRecorder.ondataavailable = (event) => {
         audioChunksRef.current.push(event.data); // Append new chunks to the existing ones
       };
+
+      mediaRecorder.onstop = () => {
+        // Create the audio blob and URL after resuming and stopping
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/wav",
+        });
+        setAudioBlob(audioBlob);
+        setAudioUrl(URL.createObjectURL(audioBlob));
+      };
     }
   };
 
@@ -90,16 +103,29 @@ const AudioRecorder: React.FC = () => {
     setAudioBlob(null);
     setRecordingTime(0);
     setIsPaused(false);
+    setIsRecording(false); // Reset recording state
     audioChunksRef.current = []; // Clear all recorded chunks
+
+    // Reset the media recorder references
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current = null;
+    }
   };
 
-  const saveRecording = () => {
+  //submit recording as base64
+  const submitRecording = () => {
     if (audioBlob) {
-      const url = URL.createObjectURL(audioBlob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "recording.wav";
-      a.click();
+      //change blob to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      reader.onloadend = () => {
+        const base64data = reader.result?.toString().split(",")[1];
+        if (base64data) {
+          console.log("Base64 audio:", base64data);
+          onSubmitAudio(base64data);
+          resetRecording();
+        }
+      };
     }
   };
 
@@ -113,92 +139,131 @@ const AudioRecorder: React.FC = () => {
     )}`;
   };
 
+  // Recording animation colors
+  const colors = ["bg-black", "bg-gray-500", "bg-gray-700", "bg-gray-300"];
+  const delays = ["", "delay-100", "delay-200", "delay-300"];
+
   return (
-    <div className="flex flex-col items-center p-4 space-y-4 bg-gray-100 rounded-lg shadow-md">
-      <h2 className="text-xl font-bold">Audio Recorder</h2>
-
-      {/* Start Recording */}
-      {!isRecording && !audioUrl && (
-        <button
-          onClick={startRecording}
-          className="p-4 text-white bg-blue-500 rounded-full hover:bg-blue-700"
-        >
-          <MicIcon className="h-5 w-5" />
-        </button>
-      )}
-
-      {/* Stop Recording */}
-      {isRecording && (
-        <button
-          onClick={stopRecording}
-          className="p-4 text-white bg-red-500 rounded-full hover:bg-red-700"
-        >
-          <CircleStopIcon className="h-5 w-5" />
-        </button>
-      )}
-
-      {/* Pause/Resume Recording */}
-      {isRecording && !isPaused && (
-        <button
-          onClick={pauseRecording}
-          className="p-4 text-white bg-yellow-500 rounded-full hover:bg-yellow-700"
-        >
-          <PauseIcon className="h-5 w-5" />
-        </button>
-      )}
-
-      {isPaused && (
-        <button
-          onClick={resumeRecording}
-          className="p-4 text-white bg-green-500 rounded-full hover:bg-green-700"
-        >
-          <PlayIcon className="h-5 w-5" />
-        </button>
-      )}
-
-      {/* Progress Bar and Timer */}
-      {isRecording && (
-        <div className="w-full mt-4">
-          <div className="relative pt-1">
-            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
-              <div
-                style={{ width: `${(recordingTime % 60) * (100 / 60)}%` }} // Simple progress bar logic
-                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"
-              />
-            </div>
-            <div className="text-center font-medium">
-              <span>Recording: {formatTime(recordingTime)}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Audio Preview */}
-      {audioUrl && (
+    <div className="flex flex-col items-center p-2 space-y-3 border rounded-3xl shadow-xl w-96">
+      {/* Display audio player only when recording is paused or stopped */}
+      {(isPaused || !isRecording) && audioUrl && (
         <audio ref={audioPlayerRef} controls src={audioUrl} className="w-full">
           Your browser does not support the audio element.
         </audio>
       )}
 
-      {/* Save/Reset Buttons */}
-      {audioUrl && (
-        <div className="flex space-x-4">
-          <button
-            onClick={saveRecording}
-            className="p-2 text-white bg-green-500 rounded hover:bg-green-700"
-          >
-            <DownloadIcon className="h-5 w-5" />
-          </button>
-          <button
-            onClick={resetRecording}
-            className="p-2 text-white bg-gray-500 rounded hover:bg-gray-700"
-          >
-            <TrashIcon className="h-5 w-5" />
-          </button>
+      {/* audio placeholder when there is no audio and nothing is being recored*/}
+
+      {!isRecording && !audioUrl && (
+        <div className="w-full">
+          <div className="flex bg-gray-100 rounded-full p-4 w-full">
+            <div className="flex justify-center items-center w-full">
+              <MicIcon className="h-4 w-4 text-gray-300 mr-1" />
+              <p className="text-xs text-gray-400">Start recording</p>
+            </div>
+          </div>
         </div>
       )}
+
+      {/* Progress Bar and Timer when recording */}
+      {isRecording && !isPaused && (
+        <div className="w-full">
+          <div className="flex bg-gray-100 rounded-full p-4 w-full">
+            <div className="flex-none text-center text-sm mr-2 w-12 mb-0.5">
+              {formatTime(recordingTime)}
+            </div>
+
+            <div className="grow flex justify-center items-center">
+              <div className="flex items-center justify-center space-x-2">
+                {Array.from({ length: 5 }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    className={`w-2 h-2 ${
+                      colors[idx % colors.length]
+                    } rounded-full animate-bounce ${
+                      delays[idx % delays.length]
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex-none w-12"></div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center justify-center w-full">
+        <div className="flex-none w-20">
+          {/* Reset Buttons */}
+          {audioUrl && (
+            <button
+              onClick={resetRecording}
+              className="flex items-center p-2 rounded"
+            >
+              <RefreshCcwIcon className="h-5 w-5 text-gray-800" />
+              <p className="text-xs text-gray-500 ml-2">Reset</p>
+            </button>
+          )}
+        </div>
+
+        <div className="grow flex justify-center items-center">
+          {/* Start Recording */}
+          {!isRecording && !audioUrl && (
+            <button
+              onClick={startRecording}
+              className="p-4 text-white bg-blue-500 rounded-full hover:bg-blue-700"
+            >
+              <MicIcon className="h-5 w-5" />
+            </button>
+          )}
+
+          {/* Pause/Resume Recording */}
+          {isRecording && !isPaused && (
+            <button
+              onClick={pauseRecording}
+              className="p-4 rounded-full border shadow-sm"
+            >
+              <PauseIcon className="h-5 w-5 text-gray-600" />
+            </button>
+          )}
+
+          {isPaused && (
+            <button
+              onClick={resumeRecording}
+              className="p-4 rounded-full border shadow-sm"
+            >
+              <MicIcon className="h-5 w-5 text-red-500" />
+            </button>
+          )}
+        </div>
+
+        <div className="flex-none w-20">
+          {/* Stop Recording */}
+          {isRecording && (
+            <button
+              onClick={stopRecording}
+              className="p-1 text-white bg-red-500 rounded-full hover:bg-red-600"
+            >
+              <CircleStopIcon className="h-4 w-4" />
+            </button>
+          )}
+          {audioUrl ? (
+            <Button
+              onClick={submitRecording}
+              className={`ml-1 p-3 rounded-xl ${!isRecording && "ml-6"}`}
+            >
+              <ArrowUpIcon className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              disabled
+              className={`ml-1 p-3 rounded-xl ${!isRecording && "ml-7"}`}
+            >
+              <ArrowUpIcon className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   );
-};
-
-export default AudioRecorder;
+}

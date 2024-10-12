@@ -134,6 +134,9 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
       case "sketchPad":
         await executeSketchPadNode(node); // Execute Sketch Pad Node
         break;
+      case "audioRecorder":
+        await executeAudioRecorderNode(node); // Execute Audio Player Node
+        break;
       default:
         console.warn(`Unknown node type: ${node.type}`);
         break;
@@ -509,6 +512,27 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     });
   };
 
+  const executeAudioRecorderNode = async (node: NodeData) => {
+    const connectedEdges = edges.filter((edge) => edge.source === node.node_id);
+    connectedEdges.forEach((edge) => {
+      const targetNodeIndex = nodes.findIndex(
+        (node) => node.node_id === edge.target
+      );
+
+      if (targetNodeIndex !== -1) {
+        const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
+          (input) => input.id === edge.targetHandle
+        );
+
+        if (targetInputIndex !== -1) {
+          nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
+            node.data.outputs[0].value;
+          addNodeToStack(nodes[targetNodeIndex]);
+        }
+      }
+    });
+  };
+
   const handleTriggerButtonClick = (nodeId: string, buttonValue: string) => {
     console.log("Trigger button clicked:", buttonValue);
     //log current output value of the node with the given nodeId
@@ -598,6 +622,33 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   };
 
+  const handleAudioSubmit = (nodeId: string, audioData: string) => {
+    setNodes((prevNodes) =>
+      prevNodes.map((node) =>
+        node.node_id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                outputs: [
+                  {
+                    ...node.data.outputs[0],
+                    value: audioData,
+                  },
+                ],
+              },
+            }
+          : node
+      )
+    );
+
+    const node = nodes.find((n) => n.node_id === nodeId);
+    if (node) {
+      addNodeToStack(node);
+      console.log("Audio Recorder node added to stack:", node);
+    }
+  };
+
   return (
     <div
       style={{
@@ -631,7 +682,8 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
                 loading,
                 handleTextInputSubmit,
                 handleSketchPadSubmit,
-                handleTriggerButtonClick
+                handleTriggerButtonClick,
+                handleAudioSubmit
               )}
             </div>
           );
@@ -655,7 +707,8 @@ const renderUIComponent = (
     fields: Array<{ label: string; value: string }>
   ) => void,
   handleSketchPadSubmit: (nodeId: string, imageData: string) => void,
-  handleTriggerButtonClick: (nodeId: string, buttonValue: string) => void
+  handleTriggerButtonClick: (nodeId: string, buttonValue: string) => void,
+  handleAudioSubmit: (nodeId: string, audioData: string) => void
 ): React.ReactNode => {
   switch (component.type) {
     case "triggerButton":
@@ -754,7 +807,14 @@ const renderUIComponent = (
         />
       );
     case "audioRecorder":
-      return <AudioRecorder />;
+      return (
+        <AudioRecorder
+          onSubmitAudio={(audioData: string) =>
+            handleAudioSubmit(nodeData?.node_id, audioData)
+          }
+          loading={loading}
+        />
+      );
     default:
       return <div>Unsupported component type: {component.type}</div>;
   }

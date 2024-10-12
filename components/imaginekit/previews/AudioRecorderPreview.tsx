@@ -7,11 +7,19 @@ const AudioRecorderPreview: React.FC<AudioRecorderPreviewProps> = () => {
   return (
     <div className="flex flex-col rounded-full w-96">
       {/* Static input description */}
-      <div className="flex items-center justify-center w-full p-2 pr-8 border rounded-full">
-        <div className="p-2 border rounded-full">
+      <div className="flex flex-col items-center justify-center w-full p-2 space-y-3 border rounded-3xl">
+        <div className="w-full">
+          <div className="flex bg-gray-100 rounded-full p-4 w-full">
+            <div className="flex justify-center items-center w-full">
+              <MicIcon className="h-4 w-4 text-gray-300 mr-1" />
+              <p className="text-xs text-gray-400">Start recording</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 border rounded-full">
           <MicIcon className="w-5 h-5 text-gray-700" />
         </div>
-        <div className="h-2 w-full bg-gray-100 rounded-lg px-4 m-2 border"></div>
       </div>
     </div>
   );
