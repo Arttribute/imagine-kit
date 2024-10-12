@@ -21,6 +21,8 @@ import {
   Volume2Icon,
   AudioLinesIcon,
   SpeechIcon,
+  MicIcon,
+  AudioWaveformIcon,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -87,6 +89,12 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
           label: "TTSpeech",
           type: "TextToSpeech",
           color: "pink",
+        },
+        {
+          icon: <AudioWaveformIcon className="w-5 h-5" />,
+          label: "SpeechTText",
+          type: "SpeechToText",
+          color: "indigo",
         },
       ],
     },
@@ -177,6 +185,12 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
           label: "Player",
           type: "AudioPlayer",
           color: "indigo",
+        },
+        {
+          icon: <MicIcon className="w-5 h-5" />,
+          label: "Recorder",
+          type: "AudioRecorder",
+          color: "purple",
         },
       ],
     },

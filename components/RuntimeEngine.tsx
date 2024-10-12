@@ -15,11 +15,13 @@ import ChatInterface from "@/components/imaginekit/ui/chat/ChatInteface";
 import TriggerButton from "@/components/imaginekit/ui/triggerbutton/TriggerButton";
 import LoadingWorld from "@/components/worlds/LoadingWorld";
 import AudioPlayer from "@/components/imaginekit/ui/audio/AudioPlayer";
+import AudioRecorder from "@/components/imaginekit/ui/audio/AudioRecorder";
 
 // Utility function for calling LLM API
 import { callGPTApi } from "@/utils/apicalls/gpt";
 import { callDalleApi } from "@/utils/apicalls/dalle";
 import { callTTSApi } from "@/utils/apicalls/opentts";
+import { callWhisperApi } from "@/utils/apicalls/whisper";
 
 // Types for node, edge, and UI component data
 interface NodeData {
@@ -119,6 +121,9 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         break;
       case "textToSpeech":
         await executeTextToSpeechNode(node); // Execute Text to Speech Node
+        break;
+      case "speechToText":
+        await executeSpeechToTextNode(node); // Execute Speech to Text Node
         break;
       case "textInput":
         await executeTextInputNode(node); // Now handle textInput node execution
@@ -401,6 +406,62 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     } catch (error) {
       console.error(
         `Error executing Text to Speech Node (${node.node_id}):`,
+        error
+      );
+    }
+  };
+
+  const executeSpeechToTextNode = async (node: NodeData) => {
+    const audioInput = node.data.inputs[0]?.value;
+    const audioLabel = node.data.inputs[0]?.label;
+    if (!audioInput || audioInput === audioLabel) return;
+
+    try {
+      const generatedText = await callWhisperApi(audioInput);
+
+      setNodes((prev) =>
+        prev.map((n) =>
+          n.node_id === node.node_id
+            ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  outputs: n.data.outputs.map((output) =>
+                    output.id === "output-0"
+                      ? { ...output, value: generatedText }
+                      : output
+                  ),
+                },
+              }
+            : n
+        )
+      );
+
+      const connectedEdges = edges.filter(
+        (edge) => edge.source === node.node_id
+      );
+      connectedEdges.forEach((edge) => {
+        const targetNodeIndex = nodes.findIndex(
+          (node) => node.node_id === edge.target
+        );
+
+        if (targetNodeIndex !== -1) {
+          const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
+            (input) => input.id === edge.targetHandle
+          );
+
+          if (targetInputIndex !== -1) {
+            nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
+              generatedText;
+
+            setNodes([...nodes]);
+            addNodeToStack(nodes[targetNodeIndex]);
+          }
+        }
+      });
+    } catch (error) {
+      console.error(
+        `Error executing Speech to Text Node (${node.node_id}):`,
         error
       );
     }
@@ -692,6 +753,8 @@ const renderUIComponent = (
           loading={loading}
         />
       );
+    case "audioRecorder":
+      return <AudioRecorder />;
     default:
       return <div>Unsupported component type: {component.type}</div>;
   }

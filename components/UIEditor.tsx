@@ -12,6 +12,7 @@ import ChatInterfacePreview from "@/components/imaginekit/previews/ChatInterface
 import FlipCardPreview from "@/components/imaginekit/previews/FlipCardPreview";
 import TriggerButton from "@/components/imaginekit/previews/TriggerButtonPreview";
 import AudioPlayerPreview from "@/components/imaginekit/previews/AudioPlayerPreview";
+import AudioRecorderPreview from "@/components/imaginekit/previews/AudioRecorderPreview";
 
 interface ComponentPosition {
   x: number;
@@ -105,6 +106,7 @@ const UIEditor: React.FC<UIEditorProps> = ({
     flipCard: FlipCardPreview,
     triggerButton: TriggerButton,
     audioPlayer: AudioPlayerPreview,
+    audioRecorder: AudioRecorderPreview,
   };
 
   return (
