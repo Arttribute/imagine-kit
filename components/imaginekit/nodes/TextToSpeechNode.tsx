@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { SpeechIcon, TypeOutlineIcon } from "lucide-react";
+import { AudioLinesIcon, TypeOutlineIcon } from "lucide-react";
 import BaseNode from "@/components/imaginekit/nodes/BaseNode";
 
 interface TextToSpeechNodeProps {
@@ -27,13 +27,13 @@ const TextToSpeechNode: React.FC<TextToSpeechNodeProps> = ({ data, id }) => {
       type="both"
       inputs={inputs}
       outputs={outputs}
-      icon={<SpeechIcon className="w-5 h-5 text-gray-400" />}
+      icon={<AudioLinesIcon className="w-5 h-5 text-gray-400" />}
       onDataChange={onDataChange}
       onRemoveNode={onRemoveNode}
     >
       <div className="relative bg-gray-50 flex rounded-lg border-2 p-2">
         <TypeOutlineIcon className="w-5 h-5 text-gray-400 mr-2" />
-        <SpeechIcon className="w-5 h-5 text-gray-400 mr-2" />
+        <AudioLinesIcon className="w-5 h-5 text-gray-400 mr-2" />
         <p className="text-gray-400 text-sm">Convert text to speech</p>
       </div>
     </BaseNode>

@@ -19,6 +19,7 @@ import {
   MessageSquare,
   PowerIcon,
   Volume2Icon,
+  AudioLinesIcon,
   SpeechIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -82,7 +83,7 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
           color: "purple",
         },
         {
-          icon: <SpeechIcon className="w-5 h-5" />,
+          icon: <AudioLinesIcon className="w-5 h-5" />,
           label: "TTSpeech",
           type: "TextToSpeech",
           color: "pink",
