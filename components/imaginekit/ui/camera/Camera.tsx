@@ -1,10 +1,10 @@
 "use client";
+
 import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
 import { CameraIcon, ArrowUpIcon, DownloadIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { set } from "lodash";
 
 export default function Camera({
   onPhotoSubmit,
@@ -17,10 +17,18 @@ export default function Camera({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [photoData, setPhotoData] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Start camera stream
   const startCamera = async () => {
     try {
+      // Check if HTTPS is required
+      if (
+        window.location.protocol !== "https:" &&
+        process.env.NODE_ENV === "production"
+      ) {
+        throw new Error("Camera access requires HTTPS in production.");
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" }, // Use 'user' for the front camera
         audio: false,
@@ -29,8 +37,10 @@ export default function Camera({
         videoRef.current.srcObject = stream;
       }
       setIsStreaming(true);
+      setError(null);
     } catch (err) {
       console.error("Error accessing the camera", err);
+      setError("Unable to access the camera. Please check permissions.");
     }
   };
 
@@ -54,6 +64,7 @@ export default function Camera({
     }
   };
 
+  // Handle download of the photo
   const handleDownload = async (imageSrc: string, fileName: string) => {
     try {
       const blob = await fetch(imageSrc).then((res) => res.blob());
@@ -73,6 +84,7 @@ export default function Camera({
     }
   };
 
+  // Handle submission of the photo
   const handleSubmitPhoto = () => {
     if (photoData) {
       onPhotoSubmit(photoData);
@@ -84,8 +96,8 @@ export default function Camera({
   }, []);
 
   return (
-    <div className="flex flex-col items-center jusitfy-center w-96 h-96 border border-gray-300 shadow-2xl p-2 rounded-xl">
-      {isStreaming && (
+    <div className="flex flex-col items-center justify-center w-96 h-96 border border-gray-300 shadow-2xl p-2 rounded-xl">
+      {isStreaming && !error && (
         <video
           ref={videoRef}
           className="w-full h-auto rounded-lg border border-indigo-300"
@@ -94,8 +106,11 @@ export default function Camera({
           muted
         ></video>
       )}
+      {/* Display error message if there's an issue */}
+      {error && <p className="text-red-500">{error}</p>}
+
       {/* Placeholder waiting for camera feed */}
-      {!isStreaming && (
+      {!isStreaming && !error && (
         <div className="flex items-center justify-center w-full h-64 bg-gray-100  rounded-lg border border-indigo-300">
           <CameraIcon className="w-12 h-12 text-gray-400" />
         </div>
@@ -113,7 +128,7 @@ export default function Camera({
                     alt="Captured"
                     width={30}
                     height={30}
-                    className="w-full h-full  object-cover aspect-[1/1] rounded-sm shadow-md"
+                    className="w-full h-full object-cover aspect-[1/1] rounded-sm shadow-md"
                   />
                 </div>
               </DialogTrigger>
