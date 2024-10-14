@@ -54,7 +54,7 @@ const SketchPad = forwardRef<HTMLCanvasElement, SketchPadProps>(
 
     return (
       <div className="w-96 m-2">
-        <div className="h-[50vh] mb-16">
+        <div className="h-96 mb-16">
           <DrawingCanvas
             ref={canvasRef}
             isCanvasDirty={isCanvasDirty}
