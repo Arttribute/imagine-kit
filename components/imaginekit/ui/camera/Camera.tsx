@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { CameraIcon, ArrowUpIcon, DownloadIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { set } from "lodash";
 
 export default function Camera({
   onPhotoSubmit,
@@ -15,6 +16,7 @@ export default function Camera({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [photoData, setPhotoData] = useState<string | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
 
   // Start camera stream
   const startCamera = async () => {
@@ -26,6 +28,7 @@ export default function Camera({
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
+      setIsStreaming(true);
     } catch (err) {
       console.error("Error accessing the camera", err);
     }
@@ -81,24 +84,26 @@ export default function Camera({
   }, []);
 
   return (
-    <div className="flex flex-col items-center jusitfy-center w-96 h-auto border border-gray-300 shadow-2xl p-2 rounded-xl">
-      <video
-        ref={videoRef}
-        className="w-full h-auto rounded-lg border border-indigo-300"
-        autoPlay
-        playsInline
-        muted
-      ></video>
+    <div className="flex flex-col items-center jusitfy-center w-96 h-96 border border-gray-300 shadow-2xl p-2 rounded-xl">
+      {isStreaming && (
+        <video
+          ref={videoRef}
+          className="w-full h-auto rounded-lg border border-indigo-300"
+          autoPlay
+          playsInline
+          muted
+        ></video>
+      )}
       {/* Placeholder waiting for camera feed */}
-      {!videoRef && (
-        <div className="flex items-center justify-center w-full h-64">
+      {!isStreaming && (
+        <div className="flex items-center justify-center w-full h-64 bg-gray-100  rounded-lg border border-indigo-300">
           <CameraIcon className="w-12 h-12 text-gray-400" />
         </div>
       )}
 
       {/* Camera controls */}
       <div className="flex items-center justify-center w-full mt-1">
-        <div className="flex-none w-12">
+        <div className="flex-none w-16">
           {photoData && (
             <Dialog>
               <DialogTrigger asChild>
@@ -137,9 +142,9 @@ export default function Camera({
         <div className="grow flex justify-center items-center">
           <button
             onClick={takePhoto}
-            className="p-1 mt-2 border rounded-full shadow-sm"
+            className="p-1 mt-2 border rounded-full shadow-md hover:bg-gray-50"
           >
-            <div className="p-2 border border-red-200 rounded-full">
+            <div className="p-3 border border-red-200 rounded-full">
               <CameraIcon className="w-5 h-5 text-red-500" />
             </div>
           </button>
@@ -148,12 +153,12 @@ export default function Camera({
           {photoData && !loading ? (
             <Button
               onClick={handleSubmitPhoto}
-              className={` p-3 rounded-xl ${""}`}
+              className={`py-6 px-4 rounded-xl ${""}`}
             >
               <ArrowUpIcon className="h-4 w-4" />
             </Button>
           ) : (
-            <Button disabled className={` p-3 rounded-xl ${""}`}>
+            <Button disabled className={`py-6 px-4  rounded-xl ${""}`}>
               <ArrowUpIcon className="h-4 w-4" />
             </Button>
           )}
