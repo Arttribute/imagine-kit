@@ -16,6 +16,7 @@ import TriggerButton from "@/components/imaginekit/ui/triggerbutton/TriggerButto
 import LoadingWorld from "@/components/worlds/LoadingWorld";
 import AudioPlayer from "@/components/imaginekit/ui/audio/AudioPlayer";
 import AudioRecorder from "@/components/imaginekit/ui/audio/AudioRecorder";
+import Camera from "@/components/imaginekit/ui/camera/Camera";
 
 // Utility function for calling LLM API
 import { callGPTApi } from "@/utils/apicalls/gpt";
@@ -136,6 +137,9 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         break;
       case "audioRecorder":
         await executeAudioRecorderNode(node); // Execute Audio Player Node
+        break;
+      case "camera":
+        await executeCameraNode(node); // Execute Camera Node
         break;
       default:
         console.warn(`Unknown node type: ${node.type}`);
@@ -533,6 +537,27 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     });
   };
 
+  const executeCameraNode = async (node: NodeData) => {
+    const connectedEdges = edges.filter((edge) => edge.source === node.node_id);
+    connectedEdges.forEach((edge) => {
+      const targetNodeIndex = nodes.findIndex(
+        (node) => node.node_id === edge.target
+      );
+
+      if (targetNodeIndex !== -1) {
+        const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
+          (input) => input.id === edge.targetHandle
+        );
+
+        if (targetInputIndex !== -1) {
+          nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
+            node.data.outputs[0].value;
+          addNodeToStack(nodes[targetNodeIndex]);
+        }
+      }
+    });
+  };
+
   const handleTriggerButtonClick = (nodeId: string, buttonValue: string) => {
     console.log("Trigger button clicked:", buttonValue);
     //log current output value of the node with the given nodeId
@@ -649,6 +674,33 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   };
 
+  const handlePhotoSubmit = (nodeId: string, photoData: string) => {
+    setNodes((prevNodes) =>
+      prevNodes.map((node) =>
+        node.node_id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                outputs: [
+                  {
+                    ...node.data.outputs[0],
+                    value: photoData,
+                  },
+                ],
+              },
+            }
+          : node
+      )
+    );
+
+    const node = nodes.find((n) => n.node_id === nodeId);
+    if (node) {
+      addNodeToStack(node);
+      console.log("Camera node added to stack:", node);
+    }
+  };
+
   return (
     <div
       style={{
@@ -683,7 +735,8 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
                 handleTextInputSubmit,
                 handleSketchPadSubmit,
                 handleTriggerButtonClick,
-                handleAudioSubmit
+                handleAudioSubmit,
+                handlePhotoSubmit
               )}
             </div>
           );
@@ -708,7 +761,8 @@ const renderUIComponent = (
   ) => void,
   handleSketchPadSubmit: (nodeId: string, imageData: string) => void,
   handleTriggerButtonClick: (nodeId: string, buttonValue: string) => void,
-  handleAudioSubmit: (nodeId: string, audioData: string) => void
+  handleAudioSubmit: (nodeId: string, audioData: string) => void,
+  handlePhotoSubmit: (nodeId: string, photoData: string) => void
 ): React.ReactNode => {
   switch (component.type) {
     case "triggerButton":
@@ -811,6 +865,15 @@ const renderUIComponent = (
         <AudioRecorder
           onSubmitAudio={(audioData: string) =>
             handleAudioSubmit(nodeData?.node_id, audioData)
+          }
+          loading={loading}
+        />
+      );
+    case "camera":
+      return (
+        <Camera
+          onPhotoSubmit={(photoData: string) =>
+            handlePhotoSubmit(nodeData?.node_id, photoData)
           }
           loading={loading}
         />

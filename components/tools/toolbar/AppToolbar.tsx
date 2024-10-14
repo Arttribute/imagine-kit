@@ -23,6 +23,7 @@ import {
   SpeechIcon,
   MicIcon,
   AudioWaveformIcon,
+  CameraIcon,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -191,6 +192,12 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
           label: "Recorder",
           type: "AudioRecorder",
           color: "purple",
+        },
+        {
+          icon: <CameraIcon className="w-5 h-5" />,
+          label: "Camera",
+          type: "Camera",
+          color: "green",
         },
       ],
     },

@@ -19,6 +19,7 @@ import AudioPlayerNode from "./AudioPlayerNode";
 import TextToSpeech from "./TextToSpeechNode";
 import SpeechToText from "./SpeechToTextNode";
 import AudioRecorder from "./AudioRecorderNode";
+import CameraNode from "./CameraNode";
 
 // Object to map node types to their respective components
 export const nodeTypes = {
@@ -41,6 +42,7 @@ export const nodeTypes = {
   textToSpeech: TextToSpeech,
   audioRecorder: AudioRecorder,
   speechToText: SpeechToText,
+  camera: CameraNode,
 };
 
 // Object to map node type names and default data configurations
@@ -65,6 +67,7 @@ export const NODE_TYPE_MAPPING = {
     TextToSpeech: "textToSpeech",
     AudioRecorder: "audioRecorder",
     SpeechToText: "speechToText",
+    Camera: "camera",
   } as const, // Use 'as const' to make this object read-only and enable type-safe indexing
   ui: [
     "imageDisplay",
@@ -79,6 +82,7 @@ export const NODE_TYPE_MAPPING = {
     "triggerButton",
     "audioPlayer",
     "audioRecorder",
+    "camera",
   ],
   defaultData: {
     LLMNode: {
@@ -174,6 +178,11 @@ export const NODE_TYPE_MAPPING = {
       inputs: [{ id: "input-0", label: "Audio Source", value: "" }],
       outputs: [{ id: "output-0", label: "Text", value: "" }],
       speechToTextName: "Speech to Text",
+    },
+    Camera: {
+      inputs: [],
+      outputs: [{ id: "output-0", label: "Photo", value: "" }],
+      cameraName: "Camera",
     },
     Memory: {
       inputs: [],
