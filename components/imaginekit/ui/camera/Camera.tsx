@@ -1,5 +1,4 @@
 "use client";
-
 import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
 import { CameraIcon, ArrowUpIcon, DownloadIcon } from "lucide-react";
@@ -17,6 +16,7 @@ export default function Camera({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [photoData, setPhotoData] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [cameraStarted, setCameraStarted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Start camera stream
@@ -34,13 +34,16 @@ export default function Camera({
         audio: false,
       });
       if (videoRef.current) {
+        console.log("Camera access granted.");
         videoRef.current.srcObject = stream;
       }
       setIsStreaming(true);
       setError(null);
     } catch (err) {
       console.error("Error accessing the camera", err);
-      setError("Unable to access the camera. Please check permissions.");
+      setError(
+        "Unable to access the camera. Please check permissions and ensure you're using HTTPS."
+      );
     }
   };
 
@@ -91,12 +94,29 @@ export default function Camera({
     }
   };
 
-  useEffect(() => {
+  // Trigger camera only when button is clicked
+  const handleStartCamera = () => {
+    setCameraStarted(true);
     startCamera();
-  }, []);
+  };
+
+  useEffect(() => {
+    if (cameraStarted) {
+      startCamera();
+    }
+  }, [cameraStarted]);
 
   return (
     <div className="flex flex-col items-center justify-center w-96 h-96 border border-gray-300 shadow-2xl p-2 rounded-xl">
+      {!cameraStarted && (
+        <button
+          onClick={handleStartCamera}
+          className="p-2 bg-indigo-500 text-white rounded-lg"
+        >
+          Start Camera
+        </button>
+      )}
+
       {isStreaming && !error && (
         <video
           ref={videoRef}
@@ -111,7 +131,7 @@ export default function Camera({
 
       {/* Placeholder waiting for camera feed */}
       {!isStreaming && !error && (
-        <div className="flex items-center justify-center w-full h-64 bg-gray-100  rounded-lg border border-indigo-300">
+        <div className="flex items-center justify-center w-full h-64 bg-gray-100 rounded-lg border border-indigo-300">
           <CameraIcon className="w-12 h-12 text-gray-400" />
         </div>
       )}
@@ -164,7 +184,7 @@ export default function Camera({
             </div>
           </button>
         </div>
-        <div className="flex-none ">
+        <div className="flex-none">
           {photoData && !loading ? (
             <Button
               onClick={handleSubmitPhoto}
@@ -173,7 +193,7 @@ export default function Camera({
               <ArrowUpIcon className="h-4 w-4" />
             </Button>
           ) : (
-            <Button disabled className={`py-6 px-4  rounded-xl ${""}`}>
+            <Button disabled className={`py-6 px-4 rounded-xl ${""}`}>
               <ArrowUpIcon className="h-4 w-4" />
             </Button>
           )}
