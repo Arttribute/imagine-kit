@@ -1,7 +1,13 @@
 "use client";
 import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
-import { CameraIcon, ArrowUpIcon, DownloadIcon } from "lucide-react";
+import {
+  CameraIcon,
+  ArrowUpIcon,
+  DownloadIcon,
+  VideoOffIcon,
+  VideoIcon,
+} from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -107,16 +113,7 @@ export default function Camera({
   }, [cameraStarted]);
 
   return (
-    <div className="flex flex-col items-center justify-center w-96 h-96 border border-gray-300 shadow-2xl p-2 rounded-xl">
-      {!cameraStarted && (
-        <button
-          onClick={handleStartCamera}
-          className="p-2 bg-indigo-500 text-white rounded-lg"
-        >
-          Start Camera
-        </button>
-      )}
-
+    <div className="flex flex-col items-center jusitfy-center w-96 h-96 border border-gray-300 shadow-2xl p-2 rounded-xl">
       {isStreaming && !error && (
         <video
           ref={videoRef}
@@ -183,6 +180,16 @@ export default function Camera({
               <CameraIcon className="w-5 h-5 text-red-500" />
             </div>
           </button>
+
+          {!cameraStarted ? (
+            <button onClick={handleStartCamera} className="m-2 mt-4 rounded-lg">
+              <VideoOffIcon className="w-5 h-5 text-red-500" />
+            </button>
+          ) : (
+            <button disabled className="m-2 mt-4 rounded-lg">
+              <VideoIcon className="w-5 h-5 text-gray-500" />
+            </button>
+          )}
         </div>
         <div className="flex-none">
           {photoData && !loading ? (
