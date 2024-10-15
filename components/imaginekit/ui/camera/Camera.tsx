@@ -5,7 +5,7 @@ import {
   CameraIcon,
   ArrowUpIcon,
   DownloadIcon,
-  VideoOffIcon,
+  CirclePowerIcon,
   VideoIcon,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -106,11 +106,26 @@ export default function Camera({
     startCamera();
   };
 
+  const handleStopCamera = () => {
+    setIsStreaming(false);
+    (videoRef.current?.srcObject as MediaStream)
+      ?.getTracks()
+      .forEach((track) => {
+        track.stop();
+      });
+    setCameraStarted(false);
+  };
+
   useEffect(() => {
     if (cameraStarted) {
       startCamera();
     }
   }, [cameraStarted]);
+
+  useEffect(() => {
+    startCamera();
+    setCameraStarted(true);
+  }, []);
 
   return (
     <div className="flex flex-col items-center jusitfy-center w-96 h-96 border border-gray-300 shadow-2xl p-2 rounded-xl">
@@ -128,8 +143,9 @@ export default function Camera({
 
       {/* Placeholder waiting for camera feed */}
       {!isStreaming && !error && (
-        <div className="flex items-center justify-center w-full h-64 bg-gray-100 rounded-lg border border-indigo-300">
+        <div className="flex flex-col items-center justify-center w-full h-72 bg-gray-100 rounded-lg border border-indigo-300">
           <CameraIcon className="w-12 h-12 text-gray-400" />
+          <p className="text-sm text-gray-500">Waiting for camera...</p>
         </div>
       )}
 
@@ -182,12 +198,20 @@ export default function Camera({
           </button>
 
           {!cameraStarted ? (
-            <button onClick={handleStartCamera} className="m-2 mt-4 rounded-lg">
-              <VideoOffIcon className="w-5 h-5 text-red-500" />
+            <button
+              onClick={handleStartCamera}
+              className="flex items-center justify-center m-2 mt-4 rounded-lg"
+            >
+              <CirclePowerIcon className="w-5 h-5 text-gray-600" />
+              <div className="h-1 w-1 m-0.5 bg-red-400 rounded-full"></div>
             </button>
           ) : (
-            <button disabled className="m-2 mt-4 rounded-lg">
-              <VideoIcon className="w-5 h-5 text-gray-500" />
+            <button
+              onClick={handleStopCamera}
+              className="flex items-center justify-center m-2 mt-4 rounded-lg"
+            >
+              <CirclePowerIcon className="w-5 h-5 text-gray-600" />
+              <div className="h-1 w-1 m-0.5 bg-green-500 rounded-full"></div>
             </button>
           )}
         </div>
