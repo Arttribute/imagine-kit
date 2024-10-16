@@ -170,8 +170,8 @@ export default function EditAccountDialog({ user }: { user: any }) {
             {usernameError && (
               <p className="text-red-500 mt-1 text-xs">{usernameError}</p>
             )}
-            {usernameChanged && !usernameError && (
-              <p className="text-amber-500 mt-1 text-xs">
+            {usernameChanged && (
+              <p className="text-amber-600 mt-1 text-xs">
                 Warning: Changing your username will break any links to your
                 creations and profile page.
               </p>
