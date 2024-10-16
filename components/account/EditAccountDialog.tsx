@@ -67,8 +67,8 @@ export default function EditAccountDialog({ user }: { user: any }) {
       const response = await axios.get(
         `/api/users/checkusername?username=${newUsername}`
       );
-      if (response.data.isTaken) {
-        setUsernameError("Username is already taken.");
+      if (response.data.isInvalid) {
+        setUsernameError(response.data.errorMessage);
       } else {
         setUsernameError(null);
       }
@@ -185,6 +185,7 @@ export default function EditAccountDialog({ user }: { user: any }) {
           onChange={(e) => setDisplayName(e.target.value)}
           value={displayName}
           className="-mt-2"
+          autoFocus
         />
 
         <Label className="mt-2">Bio</Label>
@@ -201,7 +202,7 @@ export default function EditAccountDialog({ user }: { user: any }) {
           {!loading && (
             <Button
               onClick={handleSubmit}
-              disabled={!isModified || usernameError !== null}
+              disabled={!isModified || !userName || usernameError !== null}
               className="w-full mt-2 bg-indigo-500 hover:bg-indigo-600"
             >
               {isSaved ? "Saved" : "Save Changes"}
