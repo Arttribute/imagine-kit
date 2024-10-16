@@ -10,6 +10,7 @@ import { ScrollArea } from "@radix-ui/react-scroll-area";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { BadgePlus, Earth } from "lucide-react";
+import NoWorldsPlaceholder from "@/components/worlds/NoWorldsPlaceholder";
 
 interface CustomUser {
   username?: string | null;
@@ -118,7 +119,16 @@ export default function Profile({ params }: { params: { username: string } }) {
                             <WorldCard key={world._id} app={world} />
                           </div>
                         ))}
-                      {userWorlds.length === 0 && <p>No worlds created yet.</p>}
+                      {userWorlds.length === 0 && (
+                        <div className="col-span-12 h-[70vh]">
+                          <div className=" h-full flex flex-col items-center justify-center">
+                            <NoWorldsPlaceholder
+                              isAccountOwner={isAccountOwner}
+                              isPublishTab={false}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </ScrollArea>
                 </TabsContent>
@@ -137,7 +147,14 @@ export default function Profile({ params }: { params: { username: string } }) {
                         </div>
                       ))}
                     {publishedWorlds.length === 0 && (
-                      <p>No worlds published yet.</p>
+                      <div className="col-span-12 h-[70vh]">
+                        <div className=" h-full flex flex-col items-center justify-center">
+                          <NoWorldsPlaceholder
+                            isAccountOwner={isAccountOwner}
+                            isPublishTab={true}
+                          />
+                        </div>
+                      </div>
                     )}
                   </div>
                 </ScrollArea>
