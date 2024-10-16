@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import RetroGrid from "@/components/magicui/retro-grid";
@@ -9,44 +9,52 @@ import { Sparkles } from "lucide-react";
 
 function SignupPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      router.replace("/worlds");
-    }
-  }, [status, router]);
+  const previousPage =
+    typeof window !== "undefined" && document.referrer
+      ? new URL(document.referrer).pathname // Extract just the path part
+      : "/worlds";
 
-  //function to login with google and store details in loacal storage
+  const redirectTo = searchParams.get("from") || previousPage;
+
+  useEffect(() => {
+    console.log("Redirecting to", redirectTo);
+    if (status === "authenticated") {
+      router.replace(redirectTo);
+    }
+  }, [status, router, redirectTo]);
+
   const handleGoogleLogin = async () => {
     const response = await signIn("google", {
-      callbackUrl: `${window.location.origin}/worlds`,
-      redirect: false, // Prevent auto-redirect to handle errors properly
+      callbackUrl: `${window.location.origin}${redirectTo}`, // Use the dynamic redirectTo value
+      redirect: false,
     });
 
     if (response?.error) {
       console.error("Google sign-in error:", response.error);
       // Handle the error (e.g., display a message to the user)
     } else if (response?.url) {
-      window.location.href = response.url; // Manually redirect after successful sign-in
+      window.location.href = response.url; // Redirect after successful sign-in
     }
   };
 
   return (
     <div className="h-screen flex flex-col items-center justify-center">
       <div className="border border-gray-500 shadow-2xl shadow-indigo-300 rounded-2xl bg-white z-10 p-2 w-96 lg:w-[460px]">
-        <div className="p-6 border  border-purple-300 rounded-xl">
-          <div className="flex  justify-center">
-            <p className="p-1 whitespace-pre-wrap bg-gradient-to-r from-orange-500 via-pink-500 to-indigo-500 bg-clip-text text-xl font-bold text-center  leading-none tracking-tighter text-transparent">
+        <div className="p-6 border border-purple-300 rounded-xl">
+          <div className="flex justify-center">
+            <p className="p-1 whitespace-pre-wrap bg-gradient-to-r from-orange-500 via-pink-500 to-indigo-500 bg-clip-text text-xl font-bold text-center leading-none tracking-tighter text-transparent">
               Imagine kit
             </p>
             <Sparkles className="h-4 w-4 mt-0.5 text-indigo-500" />
           </div>
 
           <div className="p-6 flex flex-col items-center justify-center">
-            <h1 className="text-2xl font-semibold ">Start using it!</h1>
-            <p className="text-base text-center mb-2 ">
-              Sign up - or login in to your existing account
+            <h1 className="text-2xl font-semibold">Start using it!</h1>
+            <p className="text-base text-center mb-2">
+              Sign up - or login to your existing account
               <br />
             </p>
           </div>

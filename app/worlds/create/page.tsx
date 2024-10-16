@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import CreateAppForm from "@/components/forms/CreateAppForm";
 import FlickeringGrid from "@/components/magicui/flickering-grid";
 import { useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import AccountMenu from "@/components/account/AccountMenu";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -11,14 +11,15 @@ import { Earth } from "lucide-react";
 
 export default function CreateWorld() {
   const { data: session, status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     // Only redirect if the session is not loading and there is no session data
     if (status === "loading") return; // Do nothing while loading
     if (!session) {
-      redirect("/signin");
+      router.push(`/signin?from=/worlds/create`); // Pass the intended page as the "from" query parameter
     }
-  }, [session, status]);
+  }, [session, status, router]);
 
   // While loading, you might want to show a loading spinner or some feedback to the user
   if (status === "loading") {
