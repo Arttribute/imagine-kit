@@ -701,31 +701,69 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   };
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Effect to detect mobile screen size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize(); // Run on initial load
+    window.addEventListener("resize", handleResize); // Update on window resize
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Function to group components by columns based on `x` range
+  const groupByColumns = (components: any[], columnWidth = 100) => {
+    const columns: { [key: number]: any[] } = {};
+    components.forEach((component) => {
+      const x = component.position.x;
+      // Calculate the column by dividing x by columnWidth (adjust this width as needed)
+      const column = Math.floor(x / columnWidth);
+
+      if (!columns[column]) {
+        columns[column] = [];
+      }
+      columns[column].push(component);
+    });
+    return columns;
+  };
+
+  const sortedComponents = isMobile
+    ? Object.values(groupByColumns(uiComponents))
+        // Sort each column by `y` position in ascending order
+        .map((column) => column.sort((a, b) => a.position.y - b.position.y))
+        // Flatten the sorted columns into one array
+        .flat()
+    : uiComponents;
+
   return (
     <div
+      className={`${isMobile && "fixed left-0 right-0"} p-1`}
       style={{
         display: "flex",
+        flexDirection: isMobile ? "column" : "initial", // Stack components vertically for mobile
       }}
     >
       <div
-        className=""
         style={{
-          position: "relative", // Makes children position relative to this parent
-          width: "600px", // Set width based on your design
-          height: "400px", // Set height based on your design
+          position: "relative",
         }}
       >
-        {uiComponents.map((component) => {
+        {sortedComponents.map((component) => {
           const position = component.position;
           return (
             <div
               key={component.component_id}
               style={{
-                position: "absolute",
-                left: position.x,
-                top: position.y,
+                position: isMobile ? "relative" : "absolute", // Absolute for desktop, relative for mobile
+                left: isMobile ? "auto" : position.x,
+                top: isMobile ? "auto" : position.y,
                 width: position.width,
                 height: position.height,
+                marginBottom: isMobile ? "20px" : "0", // Add spacing between components for mobile
               }}
             >
               {renderUIComponent(
