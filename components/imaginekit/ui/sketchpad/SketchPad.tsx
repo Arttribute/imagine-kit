@@ -53,7 +53,7 @@ const SketchPad = forwardRef<HTMLCanvasElement, SketchPadProps>(
     }, []);
 
     return (
-      <div className="w-96 m-2">
+      <div className="w-96">
         <div className="h-96 mb-16">
           <DrawingCanvas
             ref={canvasRef}

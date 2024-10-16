@@ -115,8 +115,10 @@ export default function World({ params }: { params: { id: string } }) {
           <EnterWorld app={app} setStartInteraction={setStartInteraction} />
         ) : null
       ) : (
-        <div style={{ display: "flex", height: "86vh", width: "80vw" }}>
-          <RuntimeEngine appId={appId} />
+        <div className="flex items-center justify-center">
+          <div style={{ display: "flex", height: "86vh", width: "80vw" }}>
+            <RuntimeEngine appId={appId} />
+          </div>
         </div>
       )}
       {!isWorldOwner && !app.is_published && <WorldScaffolding />}

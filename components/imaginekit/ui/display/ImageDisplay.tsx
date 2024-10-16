@@ -46,7 +46,7 @@ export default function ImagesDisplay({
   loading: boolean;
 }) {
   return (
-    <div className="border p-0.5 m-2 rounded-xl w-96">
+    <div className="border p-0.5 rounded-xl w-96">
       <div className="grid grid-cols-2">
         {!loading &&
           images.length > 0 &&

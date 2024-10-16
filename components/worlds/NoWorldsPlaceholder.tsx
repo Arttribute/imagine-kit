@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Button } from "@/components/ui/button";
 import { BadgePlus } from "lucide-react";
 import Link from "next/link";
 
@@ -14,7 +13,7 @@ export default function NoWorldsPlaceholder({
     <div className="border border-gray-400 shadow-2xl shadow-indigo-100 rounded-2xl bg-white  p-2 w-96">
       <div className="p-4 border  border-gray-300 rounded-xl">
         <div className="p-3 mb-4 flex flex-col items-center justify-center">
-          <h1 className="text-2xl font-semibold">Formless and Void </h1>
+          <h1 className="text-2xl font-semibold">Formless and Void</h1>
           <p className="text-gray-500 text-center">
             {isAccountOwner
               ? `You have not ${
