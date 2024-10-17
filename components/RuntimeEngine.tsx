@@ -178,8 +178,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   }, [runApp, nodeExecutionStack]);
 
-  // Function to execute a Trigger Button Node
-  const executeTriggerButtonNode = async (node: NodeData) => {
+  const propagateDataToConnectedNodes = (node: NodeData) => {
     const connectedEdges = edges.filter((edge) => edge.source === node.node_id);
     connectedEdges.forEach((edge) => {
       const targetNodeIndex = nodes.findIndex(
@@ -194,16 +193,15 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         if (targetInputIndex !== -1) {
           nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
             node.data.outputs[0].value;
-          setNodes([...nodes]);
-          //log value passed to target node
-          console.log(
-            "Value passed to target node:",
-            node.data.outputs[0].value
-          );
           addNodeToStack(nodes[targetNodeIndex]);
         }
       }
     });
+  };
+
+  // Function to execute a Trigger Button Node
+  const executeTriggerButtonNode = async (node: NodeData) => {
+    propagateDataToConnectedNodes(node);
     //reset the button value
     setNodes((prev) =>
       prev.map((n) =>
@@ -475,230 +473,59 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   };
 
   const executeSketchPadNode = async (node: NodeData) => {
-    const connectedEdges = edges.filter((edge) => edge.source === node.node_id);
-    connectedEdges.forEach((edge) => {
-      const targetNodeIndex = nodes.findIndex(
-        (node) => node.node_id === edge.target
-      );
-
-      if (targetNodeIndex !== -1) {
-        const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
-          (input) => input.id === edge.targetHandle
-        );
-
-        if (targetInputIndex !== -1) {
-          nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
-            node.data.outputs[0].value;
-          addNodeToStack(nodes[targetNodeIndex]);
-        }
-      }
-    });
+    propagateDataToConnectedNodes(node);
   };
 
   const executeTextInputNode = async (node: NodeData) => {
-    const connectedEdges = edges.filter((edge) => edge.source === node.node_id);
-    connectedEdges.forEach((edge) => {
-      const targetNodeIndex = nodes.findIndex(
-        (node) => node.node_id === edge.target
-      );
-
-      if (targetNodeIndex !== -1) {
-        const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
-          (input) => input.id === edge.targetHandle
-        );
-
-        if (targetInputIndex !== -1) {
-          nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
-            node.data.outputs[0].value;
-          addNodeToStack(nodes[targetNodeIndex]);
-        }
-      }
-    });
+    propagateDataToConnectedNodes(node);
   };
 
   const executeAudioRecorderNode = async (node: NodeData) => {
-    const connectedEdges = edges.filter((edge) => edge.source === node.node_id);
-    connectedEdges.forEach((edge) => {
-      const targetNodeIndex = nodes.findIndex(
-        (node) => node.node_id === edge.target
-      );
-
-      if (targetNodeIndex !== -1) {
-        const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
-          (input) => input.id === edge.targetHandle
-        );
-
-        if (targetInputIndex !== -1) {
-          nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
-            node.data.outputs[0].value;
-          addNodeToStack(nodes[targetNodeIndex]);
-        }
-      }
-    });
+    propagateDataToConnectedNodes(node);
   };
 
   const executeCameraNode = async (node: NodeData) => {
-    const connectedEdges = edges.filter((edge) => edge.source === node.node_id);
-    connectedEdges.forEach((edge) => {
-      const targetNodeIndex = nodes.findIndex(
-        (node) => node.node_id === edge.target
+    propagateDataToConnectedNodes(node);
+  };
+
+  const handleDataSubmit = (
+    nodeId: string,
+    data: string | Array<{ label: string; value: string }>,
+    nodeName: string
+  ) => {
+    setNodes((prevNodes) => {
+      const updatedNodes = prevNodes.map((node) =>
+        node.node_id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                outputs: Array.isArray(data)
+                  ? data.map(({ label, value }) => ({
+                      id: label,
+                      label,
+                      value,
+                    }))
+                  : [
+                      {
+                        ...node.data.outputs[0],
+                        value: data,
+                      },
+                    ],
+              },
+            }
+          : node
       );
 
-      if (targetNodeIndex !== -1) {
-        const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
-          (input) => input.id === edge.targetHandle
-        );
-
-        if (targetInputIndex !== -1) {
-          nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
-            node.data.outputs[0].value;
-          addNodeToStack(nodes[targetNodeIndex]);
-        }
+      // Find the updated node to add to the stack
+      const updatedNode = updatedNodes.find((n) => n.node_id === nodeId);
+      if (updatedNode) {
+        addNodeToStack(updatedNode);
+        console.log(`${nodeName} added to stack:`, updatedNode);
       }
+
+      return updatedNodes;
     });
-  };
-
-  const handleTriggerButtonClick = (nodeId: string, buttonValue: string) => {
-    console.log("Trigger button clicked:", buttonValue);
-    //log current output value of the node with the given nodeId
-    setNodes((prevNodes) =>
-      prevNodes.map((node) =>
-        node.node_id === nodeId
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                outputs: [
-                  {
-                    ...node.data.outputs[0],
-                    value: buttonValue,
-                  },
-                ],
-              },
-            }
-          : node
-      )
-    );
-
-    const node = nodes.find((n) => n.node_id === nodeId);
-    if (node) {
-      addNodeToStack(node);
-      console.log("trigger button node added to stack:", node);
-    }
-  };
-
-  const handleTextInputSubmit = async (
-    nodeId: string,
-    fields: Array<{ label: string; value: string }>
-  ) => {
-    // Find the node that matches the nodeId and update its data
-    setNodes((prevNodes) =>
-      prevNodes.map((node) =>
-        node.node_id === nodeId
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                outputs: fields.map((field) => ({
-                  id: field.label,
-                  label: field.label,
-                  value: field.value,
-                })),
-              },
-            }
-          : node
-      )
-    );
-
-    // After the data is updated, execute the node
-    const node = nodes.find((n) => n.node_id === nodeId);
-    if (node) {
-      //add node to execution stack
-      addNodeToStack(node);
-      //await executeNode(node);
-      console.log("text input node added to stack:", node);
-    }
-  };
-
-  const handleSketchPadSubmit = (nodeId: string, imageData: string) => {
-    setNodes((prevNodes) =>
-      prevNodes.map((node) =>
-        node.node_id === nodeId
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                outputs: [
-                  {
-                    ...node.data.outputs[0],
-                    value: imageData,
-                  },
-                ],
-              },
-            }
-          : node
-      )
-    );
-
-    const node = nodes.find((n) => n.node_id === nodeId);
-    if (node) {
-      addNodeToStack(node);
-      console.log("Sketch pad added to stack:", node);
-    }
-  };
-
-  const handleAudioSubmit = (nodeId: string, audioData: string) => {
-    setNodes((prevNodes) =>
-      prevNodes.map((node) =>
-        node.node_id === nodeId
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                outputs: [
-                  {
-                    ...node.data.outputs[0],
-                    value: audioData,
-                  },
-                ],
-              },
-            }
-          : node
-      )
-    );
-
-    const node = nodes.find((n) => n.node_id === nodeId);
-    if (node) {
-      addNodeToStack(node);
-      console.log("Audio Recorder node added to stack:", node);
-    }
-  };
-
-  const handlePhotoSubmit = (nodeId: string, photoData: string) => {
-    setNodes((prevNodes) =>
-      prevNodes.map((node) =>
-        node.node_id === nodeId
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                outputs: [
-                  {
-                    ...node.data.outputs[0],
-                    value: photoData,
-                  },
-                ],
-              },
-            }
-          : node
-      )
-    );
-
-    const node = nodes.find((n) => n.node_id === nodeId);
-    if (node) {
-      addNodeToStack(node);
-      console.log("Camera node added to stack:", node);
-    }
   };
 
   const [isMobile, setIsMobile] = useState(false);
@@ -770,11 +597,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
                 component,
                 nodes.find((node) => node.node_id === component.component_id),
                 loading,
-                handleTextInputSubmit,
-                handleSketchPadSubmit,
-                handleTriggerButtonClick,
-                handleAudioSubmit,
-                handlePhotoSubmit
+                handleDataSubmit
               )}
             </div>
           );
@@ -793,14 +616,11 @@ const renderUIComponent = (
   component: UIComponentData,
   nodeData: any,
   loading: boolean,
-  handleTextInputSubmit: (
+  handleDataSubmit: (
     nodeId: string,
-    fields: Array<{ label: string; value: string }>
-  ) => void,
-  handleSketchPadSubmit: (nodeId: string, imageData: string) => void,
-  handleTriggerButtonClick: (nodeId: string, buttonValue: string) => void,
-  handleAudioSubmit: (nodeId: string, audioData: string) => void,
-  handlePhotoSubmit: (nodeId: string, photoData: string) => void
+    data: string | Array<{ label: string; value: string }>,
+    nodeName: string
+  ) => void
 ): React.ReactNode => {
   switch (component.type) {
     case "triggerButton":
@@ -808,7 +628,7 @@ const renderUIComponent = (
         <TriggerButton
           buttonName={nodeData?.data?.outputs[0]?.label}
           onClickButton={(buttonValue) =>
-            handleTriggerButtonClick(nodeData?.node_id, buttonValue)
+            handleDataSubmit(nodeData?.node_id, buttonValue, "Trigger Button")
           }
           loading={loading}
         />
@@ -848,7 +668,7 @@ const renderUIComponent = (
             value: "",
           }))}
           onSubmit={(fields) =>
-            handleTextInputSubmit(nodeData?.node_id, fields)
+            handleDataSubmit(nodeData?.node_id, fields, "Text Input")
           }
           loading={loading}
         />
@@ -876,7 +696,7 @@ const renderUIComponent = (
       return (
         <SketchPad
           setImageData={(imageData) =>
-            handleSketchPadSubmit(nodeData?.node_id, imageData)
+            handleDataSubmit(nodeData?.node_id, imageData, "Sketch Pad")
           }
         />
       );
@@ -902,7 +722,7 @@ const renderUIComponent = (
       return (
         <AudioRecorder
           onSubmitAudio={(audioData: string) =>
-            handleAudioSubmit(nodeData?.node_id, audioData)
+            handleDataSubmit(nodeData?.node_id, audioData, "Audio Recorder")
           }
           loading={loading}
         />
@@ -911,7 +731,7 @@ const renderUIComponent = (
       return (
         <Camera
           onPhotoSubmit={(photoData: string) =>
-            handlePhotoSubmit(nodeData?.node_id, photoData)
+            handleDataSubmit(nodeData?.node_id, photoData, "Camera")
           }
           loading={loading}
         />
