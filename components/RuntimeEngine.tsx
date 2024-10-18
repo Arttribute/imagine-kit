@@ -17,6 +17,7 @@ import LoadingWorld from "@/components/worlds/LoadingWorld";
 import AudioPlayer from "@/components/imaginekit/ui/audio/AudioPlayer";
 import AudioRecorder from "@/components/imaginekit/ui/audio/AudioRecorder";
 import Camera from "@/components/imaginekit/ui/camera/Camera";
+import FileUpload from "@/components/imaginekit/ui/fileupload/FileUpload";
 
 // Utility function for calling LLM API
 import { callGPTApi } from "@/utils/apicalls/gpt";
@@ -72,15 +73,10 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   const [nodes, setNodes] = useState<NodeData[]>([]);
   const [edges, setEdges] = useState<EdgeData[]>([]);
   const [uiComponents, setUIComponents] = useState<UIComponentData[]>([]);
-  const [nodeOutputs, setNodeOutputs] = useState<{ [key: string]: any }>({});
   const [nodeExecutionStack, setNodeExecutionStack] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [loadingWorldComponents, setLoadingWorldComponents] =
     useState<boolean>(false);
-  // const [executedNodes, setExecutedNodes] = useState<Set<string>>(new Set());
-  // const [pendingExecution, setPendingExecution] = useState<
-  //   Map<string, Promise<void>>
-  // >(new Map());
 
   // Load data from the database
   useEffect(() => {
@@ -140,6 +136,9 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         break;
       case "camera":
         await executeCameraNode(node); // Execute Camera Node
+        break;
+      case "fileUpload":
+        await executeFileUploadNode(node); // Execute File Upload Node
         break;
       default:
         console.warn(`Unknown node type: ${node.type}`);
@@ -488,6 +487,10 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     propagateDataToConnectedNodes(node);
   };
 
+  const executeFileUploadNode = async (node: NodeData) => {
+    propagateDataToConnectedNodes(node);
+  };
+
   const handleDataSubmit = (
     nodeId: string,
     data: string | Array<{ label: string; value: string }>,
@@ -732,6 +735,15 @@ const renderUIComponent = (
         <Camera
           onPhotoSubmit={(photoData: string) =>
             handleDataSubmit(nodeData?.node_id, photoData, "Camera")
+          }
+          loading={loading}
+        />
+      );
+    case "fileUpload":
+      return (
+        <FileUpload
+          onUpload={(fileData: string) =>
+            handleDataSubmit(nodeData?.node_id, fileData, "File Upload")
           }
           loading={loading}
         />

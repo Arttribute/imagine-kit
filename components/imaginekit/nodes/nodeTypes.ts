@@ -20,6 +20,7 @@ import TextToSpeech from "./TextToSpeechNode";
 import SpeechToText from "./SpeechToTextNode";
 import AudioRecorder from "./AudioRecorderNode";
 import CameraNode from "./CameraNode";
+import FileUploadNode from "./FileUploadNode";
 
 // Object to map node types to their respective components
 export const nodeTypes = {
@@ -43,6 +44,7 @@ export const nodeTypes = {
   audioRecorder: AudioRecorder,
   speechToText: SpeechToText,
   camera: CameraNode,
+  fileUpload: FileUploadNode,
 };
 
 // Object to map node type names and default data configurations
@@ -68,6 +70,7 @@ export const NODE_TYPE_MAPPING = {
     AudioRecorder: "audioRecorder",
     SpeechToText: "speechToText",
     Camera: "camera",
+    FileUpload: "fileUpload",
   } as const, // Use 'as const' to make this object read-only and enable type-safe indexing
   ui: [
     "imageDisplay",
@@ -83,6 +86,7 @@ export const NODE_TYPE_MAPPING = {
     "audioPlayer",
     "audioRecorder",
     "camera",
+    "fileUpload",
   ],
   defaultData: {
     LLMNode: {
@@ -188,6 +192,11 @@ export const NODE_TYPE_MAPPING = {
       inputs: [],
       outputs: [],
       memoryFields: [{ id: "field-0", label: "Memory Field 1", value: "" }],
+    },
+    FileUpload: {
+      inputs: [],
+      outputs: [{ id: "output-0", label: "File", value: "" }],
+      fileUploadName: "File Upload",
     },
     CustomNode: {
       inputs: [],

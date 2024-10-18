@@ -14,6 +14,7 @@ import TriggerButton from "@/components/imaginekit/previews/TriggerButtonPreview
 import AudioPlayerPreview from "@/components/imaginekit/previews/AudioPlayerPreview";
 import AudioRecorderPreview from "@/components/imaginekit/previews/AudioRecorderPreview";
 import CameraPreview from "@/components/imaginekit/previews/CameraPreview";
+import FileUploadPreview from "@/components/imaginekit/previews/FileUploadPreview";
 
 interface ComponentPosition {
   x: number;
@@ -109,6 +110,7 @@ const UIEditor: React.FC<UIEditorProps> = ({
     audioPlayer: AudioPlayerPreview,
     audioRecorder: AudioRecorderPreview,
     camera: CameraPreview,
+    fileUpload: FileUploadPreview,
   };
 
   return (
