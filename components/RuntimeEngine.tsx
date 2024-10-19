@@ -571,7 +571,9 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 
   return (
     <div
-      className={`${isMobile && "fixed left-0 right-0"} p-1`}
+      className={`${
+        isMobile && "fixed left-0 right-0 flex items-center justify-center"
+      } p-1 `}
       style={{
         display: "flex",
         flexDirection: isMobile ? "column" : "initial", // Stack components vertically for mobile
