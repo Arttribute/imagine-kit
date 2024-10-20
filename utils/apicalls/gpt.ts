@@ -5,25 +5,44 @@ export async function callGPTApi(
   memory: string
 ) {
   try {
-    // Separate base64 image strings from other inputs
-    const inputArray = inputs.split(" ");
     let image = null;
+    let fileBase64 = null;
+
+    // Separate text, image, and file (base64) inputs from the inputs string
+    const inputArray = inputs.split(" ");
     let textInputs = inputArray
       .filter((input) => {
-        //if istring start with data:image or url then it is image
         if (
           input.startsWith("data:image") ||
           input.startsWith("http://") ||
           input.startsWith("https://")
         ) {
-          image = input; // Assume this is the image base64 data
+          image = input; // This is the image input (base64 or URL)
           return false; // Exclude image from text inputs
+        } else if (input.startsWith("data:application")) {
+          fileBase64 = input; // This is the file input (base64)
+          return false; // Exclude file from text inputs
         }
-        return true; // Keep non-image inputs
+        return true; // Keep non-image, non-file inputs as text
       })
-      .join(" "); // Combine back the text inputs
+      .join(" "); // Combine the text inputs back
 
-    // Create request body object
+    // If a base64 file is detected, process it
+    if (fileBase64) {
+      const fileInfo = await fetch("/api/filesearch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ base64File: fileBase64 }),
+      }).then((res) => res.json());
+
+      // Append extracted file info to text inputs
+      textInputs += ` ${fileInfo.fileInfo}`;
+      console.log("File info extracted:", fileInfo.fileInfo);
+    }
+
+    // Create request body object for the GPT route
     const requestBody: any = {
       instruction,
       inputs: textInputs || "What’s in this image?",
@@ -31,17 +50,17 @@ export async function callGPTApi(
       memory,
     };
 
-    // Only add image to the request body if it exists
     if (image) {
-      requestBody.image = image; // Include the base64 image string
+      requestBody.image = image;
     }
 
+    // Call the original GPT API route
     const response = await fetch("/api/llm/gpt", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(requestBody), // Dynamically include image if available
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
