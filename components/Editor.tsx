@@ -11,7 +11,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
 } from "reactflow";
-import axios from "axios"; // Use axios for API requests
+import ky from "ky"; // Use axios for API requests
 import { useAppDispatch, useAppSelector } from "@/store/store";
 import {
   addNode,
@@ -105,24 +105,24 @@ export default function Editor({
           edgesResponse,
           uiComponentsResponse,
         ] = await Promise.all([
-          axios.get(`/api/apps/app?appId=${appId}`),
-          axios.get(`/api/nodes?appId=${appId}`),
-          axios.get(`/api/edges?appId=${appId}`),
-          axios.get(`/api/uicomponents?appId=${appId}`),
+          ky.get(`/api/apps/app?appId=${appId}`).json<any>(),
+          ky.get(`/api/nodes?appId=${appId}`).json<any>(),
+          ky.get(`/api/edges?appId=${appId}`).json<any>(),
+          ky.get(`/api/uicomponents?appId=${appId}`).json<any>(),
         ]);
 
-        const appData = appResponse.data;
+        const appData = appResponse;
 
-        const fetchedNodes = await nodesResponse.data.map((node: any) => ({
+        const fetchedNodes = await nodesResponse.map((node: any) => ({
           ...node,
           id: node.node_id,
           position: node.position,
         }));
-        const fetchedEdges = await edgesResponse.data.map((edge: any) => ({
+        const fetchedEdges = await edgesResponse.map((edge: any) => ({
           ...edge,
           id: edge.id?.toString(),
         }));
-        const uiComponentsData = uiComponentsResponse.data;
+        const uiComponentsData = uiComponentsResponse;
 
         console.log("Fetched App Data:", appData); // Debugging log
         console.log("Fetched Nodes:", fetchedNodes); // Debugging log
@@ -189,8 +189,10 @@ export default function Editor({
 
       try {
         // Save updated positions to the database
-        await axios.post("/api/uicomponents", {
-          uiComponents: uiComponentsToSave,
+        await ky.post("/api/uicomponents", {
+          json: {
+            uiComponents: uiComponentsToSave,
+          },
         });
         console.log("Saved UI Component Positions:", uiComponentsToSave); // Debugging log
         setSaveStatus("saved"); // Set as saved
@@ -254,10 +256,12 @@ export default function Editor({
       }));
 
       // Save nodes, edges, and UI components to the database
-      await axios.post("/api/nodes", { nodes: nodeData });
-      await axios.post("/api/edges", { edges: edgeData });
-      await axios.post("/api/uicomponents", {
-        uiComponents: uiComponentsToSave,
+      await ky.post("/api/nodes", { json: { nodes: nodeData } });
+      await ky.post("/api/edges", { json: { edges: edgeData } });
+      await ky.post("/api/uicomponents", {
+        json: {
+          uiComponents: uiComponentsToSave,
+        },
       });
 
       console.log("Nodes, Edges, and UI Components saved successfully"); // Debugging log
@@ -265,7 +269,7 @@ export default function Editor({
 
       // Remove nodes marked for deletion after saving
       for (const nodeId of pendingRemovals) {
-        await axios.delete(`/api/nodes?id=${nodeId}&appId=${appId}`);
+        await ky.delete(`/api/nodes?id=${nodeId}&appId=${appId}`);
       }
       setPendingRemovals(new Set()); // Clear pending removals
     } catch (error) {

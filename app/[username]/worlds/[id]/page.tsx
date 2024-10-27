@@ -6,7 +6,7 @@ import RuntimeEngine from "@/components/RuntimeEngine";
 import EnterWorld from "@/components/worlds/EnterWorld";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import axios from "axios";
+import ky from "ky";
 import { Earth, PencilIcon } from "lucide-react";
 import WorldScaffolding from "@/components/worlds/WorldScaffolding";
 import LoadingWorld from "@/components/worlds/LoadingWorld";
@@ -56,7 +56,9 @@ export default function World({ params }: { params: { id: string } }) {
     const fetchApp = async () => {
       setLoadingWorld(true);
       try {
-        const { data } = await axios.get(`/api/apps/app?appId=${appId}`);
+        const { data } = await ky
+          .get(`/api/apps/app?appId=${appId}`)
+          .json<any>();
         setAppData({ app: data, loading: false });
       } catch (error) {
         console.error("Failed to load app data", error);

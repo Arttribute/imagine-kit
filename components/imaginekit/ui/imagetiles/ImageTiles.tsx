@@ -12,7 +12,7 @@ import {
   base64ToBlob,
 } from "@/utils/imageProcesing";
 
-import axios from "axios";
+import ky from "ky";
 import { set } from "lodash";
 import { reset } from "canvas-confetti";
 

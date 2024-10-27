@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import WorldPublished from "./WorldPublished";
-import axios from "axios";
+import ky from "ky";
 import { set } from "lodash";
 
 interface appData {
@@ -71,11 +71,10 @@ export default function EditWorldMetadata({ appData }: { appData: appData }) {
     data.append("upload_preset", "studio-upload");
 
     setLoading(true);
-    const res = await axios.post(
-      "https://api.cloudinary.com/v1_1/arttribute/upload",
-      data
-    );
-    const uploadedFile = res.data;
+    const res = await ky
+      .post("https://api.cloudinary.com/v1_1/arttribute/upload", { body: data })
+      .json<any>();
+    const uploadedFile = res;
     setWorldImageUrl(uploadedFile.secure_url); // Set the uploaded image URL
     setLoading(false);
   };
@@ -92,13 +91,15 @@ export default function EditWorldMetadata({ appData }: { appData: appData }) {
 
     try {
       // Make an API request to publish the world
-      await axios.put(`/api/apps/app?appId=${appData._id}`, {
-        detailsToUpdate: {
-          name,
-          description,
-          is_private: isPrivate,
-          is_published: true,
-          banner_url: worldImageUrl,
+      await ky.put(`/api/apps/app?appId=${appData._id}`, {
+        json: {
+          detailsToUpdate: {
+            name,
+            description,
+            is_private: isPrivate,
+            is_published: true,
+            banner_url: worldImageUrl,
+          },
         },
       });
 
@@ -121,13 +122,15 @@ export default function EditWorldMetadata({ appData }: { appData: appData }) {
 
     try {
       // Make an API request to unpublish the world
-      await axios.put(`/api/apps/app?appId=${appData._id}`, {
-        detailsToUpdate: {
-          name,
-          description,
-          is_private: isPrivate,
-          is_published: false,
-          banner_url: worldImageUrl,
+      await ky.put(`/api/apps/app?appId=${appData._id}`, {
+        json: {
+          detailsToUpdate: {
+            name,
+            description,
+            is_private: isPrivate,
+            is_published: false,
+            banner_url: worldImageUrl,
+          },
         },
       });
 

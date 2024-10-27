@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
 import { Sparkles } from "lucide-react";
 import GodPromptDialog from "./GodPromptDialog";
-import axios from "axios";
+import ky from "ky";
 import Link from "next/link";
 
 const CreateAppForm = () => {
@@ -48,9 +48,11 @@ const CreateAppForm = () => {
           name: genData.name,
           description: genData.description,
         };
-        const response = await axios.post("/api/apps", generatedappData);
-        console.log("Response", response.data);
-        const appId = response.data._id;
+        const response = await ky
+          .post("/api/apps", { json: generatedappData })
+          .json<any>();
+        console.log("Response", response);
+        const appId = response._id;
 
         const nodeData = genData.nodes.map((node: any) => ({
           ...node,
@@ -67,16 +69,20 @@ const CreateAppForm = () => {
           })
         );
 
-        await axios.post("/api/nodes", { nodes: nodeData });
-        await axios.post("/api/edges", { edges: edgeData });
-        await axios.post("/api/uicomponents", {
-          uiComponents: uiComponentsToSave,
+        await ky.post("/api/nodes", { json: { nodes: nodeData } });
+        await ky.post("/api/edges", { json: { edges: edgeData } });
+        await ky.post("/api/uicomponents", {
+          json: {
+            uiComponents: uiComponentsToSave,
+          },
         });
         router.push(`/${session?.user?.name || "bashy"}/worlds/${appId}/edit`);
         setLoading(false);
       } else {
         console.log("App data", appData);
-        const response = await axios.post("/api/apps", appData);
+        const response = await ky
+          .post("/api/apps", { json: appData })
+          .json<any>();
         console.log("Response", response.data);
         const appId = response.data._id;
         router.push(`/${session?.user?.name || "bashy"}/worlds/${appId}/edit`);

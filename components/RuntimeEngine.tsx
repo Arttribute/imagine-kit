@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useCallback } from "react";
-import axios from "axios";
+import ky from "ky";
 
 // User-Facing Components
 import ImageDisplay from "@/components/imaginekit/ui/display/ImageDisplay";
@@ -83,14 +83,14 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         setLoadingWorldComponents(true);
         const [nodesResponse, edgesResponse, uiComponentsResponse] =
           await Promise.all([
-            axios.get(`/api/nodes?appId=${appId}`),
-            axios.get(`/api/edges?appId=${appId}`),
-            axios.get(`/api/uicomponents?appId=${appId}`),
+            ky.get(`/api/nodes?appId=${appId}`).json<any>(),
+            ky.get(`/api/edges?appId=${appId}`).json<any>(),
+            ky.get(`/api/uicomponents?appId=${appId}`).json<any>(),
           ]);
 
-        setNodes(nodesResponse.data);
-        setEdges(edgesResponse.data);
-        setUIComponents(uiComponentsResponse.data);
+        setNodes(nodesResponse);
+        setEdges(edgesResponse);
+        setUIComponents(uiComponentsResponse);
         setLoadingWorldComponents(false);
         //setNodeExecutionStack(nodesResponse.data);
       } catch (error) {

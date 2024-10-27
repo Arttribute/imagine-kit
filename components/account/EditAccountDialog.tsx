@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, use } from "react";
-import axios from "axios";
+import ky from "ky";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -64,10 +64,10 @@ export default function EditAccountDialog({ user }: { user: any }) {
 
   const checkUsernameAvailability = async (newUsername: string) => {
     try {
-      const response = await axios.get(
-        `/api/users/checkusername?username=${newUsername}`
-      );
-      if (response.data.isTaken) {
+      const response = await ky
+        .get(`/api/users/checkusername?username=${newUsername}`)
+        .json<any>();
+      if (response.isTaken) {
         setUsernameError("Username is already taken.");
       } else {
         setUsernameError(null);
@@ -84,11 +84,10 @@ export default function EditAccountDialog({ user }: { user: any }) {
     data.append("upload_preset", "studio-upload");
 
     setLoading(true);
-    const res = await axios.post(
-      "https://api.cloudinary.com/v1_1/arttribute/upload",
-      data
-    );
-    const uploadedFile = res.data;
+    const res = await ky
+      .post("https://api.cloudinary.com/v1_1/arttribute/upload", { body: data })
+      .json<any>();
+    const uploadedFile = res;
     setProfileImageUrl(uploadedFile.secure_url); // Set the uploaded image URL
     setLoading(false);
   };
@@ -100,12 +99,14 @@ export default function EditAccountDialog({ user }: { user: any }) {
     setIsSaved(false);
 
     try {
-      const response = await axios.put(`/api/users/user?id=${user._id}`, {
-        detailsToUpdate: {
-          username: userName,
-          display_name: displayName,
-          bio,
-          profile_image: profileImageUrl,
+      const response = await ky.put(`/api/users/user?id=${user._id}`, {
+        json: {
+          detailsToUpdate: {
+            username: userName,
+            display_name: displayName,
+            bio,
+            profile_image: profileImageUrl,
+          },
         },
       });
 
