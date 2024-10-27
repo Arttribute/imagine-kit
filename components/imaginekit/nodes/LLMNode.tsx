@@ -8,8 +8,8 @@ import { Bot, Plus, CircleX, Trash2 } from "lucide-react";
 
 interface LLMNodeProps {
   data: {
-    inputs: { id: string; value: string }[];
-    outputs: { id: string; value: string }[];
+    inputs: { id: string; value: string; color?: string }[]; // Add optional color field
+    outputs: { id: string; value: string; color?: string }[]; // Add optional color field
     instruction: string;
     botName: string;
     onRemoveNode: (id: string) => void;
@@ -19,9 +19,9 @@ interface LLMNodeProps {
 }
 
 const LLMNode: React.FC<LLMNodeProps> = ({ data, id }) => {
-  const { onRemoveNode, onDataChange } = data; // Extract functions from data
+  const { onRemoveNode, onDataChange } = data;
 
-  const [isEditingBotName, setIsEditingBotName] = useState(false); // State to manage bot name editing
+  const [isEditingBotName, setIsEditingBotName] = useState(false);
 
   const handleInputChange = (index: number, value: string) => {
     const newInputs = [...data.inputs];
@@ -121,7 +121,8 @@ const LLMNode: React.FC<LLMNodeProps> = ({ data, id }) => {
                 marginLeft: "-18px",
                 height: "12px",
                 width: "12px",
-                backgroundColor: "#3949ab",
+                // Apply color if defined, otherwise default
+                backgroundColor: input.color || "#3949ab",
               }}
             />
             <Input
@@ -174,7 +175,8 @@ const LLMNode: React.FC<LLMNodeProps> = ({ data, id }) => {
                 marginRight: "-18px",
                 height: "12px",
                 width: "12px",
-                backgroundColor: "#00838f",
+                // Apply color if defined, otherwise default
+                backgroundColor: output.color || "#00838f",
               }}
             />
           </div>

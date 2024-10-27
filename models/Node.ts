@@ -13,6 +13,10 @@ const InputOutputSchema = new mongoose.Schema({
   value: {
     type: String,
   },
+  color: {
+    type: String, // New field to store color of each input/output connector
+    default: "", // Default to an empty string if color is not set
+  },
 });
 
 const NodeSchema = new mongoose.Schema({

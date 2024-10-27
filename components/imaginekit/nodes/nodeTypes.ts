@@ -1,5 +1,3 @@
-// components/imaginekit/nodes/index.ts
-
 import CustomNode from "./CustomNode";
 import LLMNode from "./LLMNode";
 import ImageGeneratorNode from "./ImageGeneratorNode";
@@ -71,7 +69,7 @@ export const NODE_TYPE_MAPPING = {
     SpeechToText: "speechToText",
     Camera: "camera",
     FileUpload: "fileUpload",
-  } as const, // Use 'as const' to make this object read-only and enable type-safe indexing
+  },
   ui: [
     "imageDisplay",
     "imageTiles",
@@ -91,111 +89,128 @@ export const NODE_TYPE_MAPPING = {
   defaultData: {
     LLMNode: {
       inputs: [],
-      outputs: [{ id: "output-0", label: "Output", value: "" }],
+      outputs: [{ id: "output-0", label: "Output", value: "", color: "" }],
       instruction: "",
       botName: "Bot Name",
     },
     ImageGen: {
-      inputs: [
-        { id: "input-0", label: "Prompt", value: "" },
-        // { id: "input-1", label: "Reference Image", value: "" },
+      inputs: [{ id: "input-0", label: "Prompt", value: "", color: "" }],
+      outputs: [
+        { id: "output-0", label: "Generated Image", value: "", color: "" },
       ],
-      outputs: [{ id: "output-0", label: "Generated Image", value: "" }],
       imageGenName: "Image Generator",
     },
     ImagesDisplay: {
-      inputs: [{ id: "input-0", label: "Image Source", value: "" }],
-      outputs: [{ id: "output-0", label: "Display Image", value: "" }],
+      inputs: [{ id: "input-0", label: "Image Source", value: "", color: "" }],
+      outputs: [
+        { id: "output-0", label: "Display Image", value: "", color: "" },
+      ],
       imageDisplayName: "Image Display",
     },
     ImageTiles: {
-      inputs: [{ id: "input-0", label: "Image Source", value: "" }],
-      outputs: [{ id: "output-0", label: "Arranged Images", value: "" }],
+      inputs: [{ id: "input-0", label: "Image Source", value: "", color: "" }],
+      outputs: [
+        { id: "output-0", label: "Arranged Images", value: "", color: "" },
+      ],
     },
     SketchPad: {
-      outputs: [{ id: "output-0", label: "Sketch result", value: "" }],
+      outputs: [
+        { id: "output-0", label: "Sketch result", value: "", color: "" },
+      ],
     },
     Compare: {
       inputs: [
-        { id: "input-0", label: "Input 1", value: "" },
-        { id: "input-1", label: "Input 2", value: "" },
+        { id: "input-0", label: "Input 1", value: "", color: "" },
+        { id: "input-1", label: "Input 2", value: "", color: "" },
       ],
-      outputs: [{ id: "output-0", label: "Comparison result", value: "" }],
+      outputs: [
+        { id: "output-0", label: "Comparison result", value: "", color: "" },
+      ],
     },
     TriggerButton: {
       inputs: [],
-      outputs: [{ id: "output-0", label: "Button name", value: "" }],
+      outputs: [{ id: "output-0", label: "Button name", value: "", color: "" }],
     },
     TextInput: {
       inputs: [],
-      outputs: [{ id: "output-0", label: "User content", value: "" }],
+      outputs: [
+        { id: "output-0", label: "User content", value: "", color: "" },
+      ],
     },
     TextOutput: {
-      inputs: [{ id: "input-0", label: "Text source", value: "" }],
+      inputs: [{ id: "input-0", label: "Text source", value: "", color: "" }],
       outputs: [],
     },
     WordSelector: {
       inputs: [
-        { id: "input-0", label: "Correct words", value: "" },
-        { id: "input-1", label: "Incorrect words", value: "" },
+        { id: "input-0", label: "Correct words", value: "", color: "" },
+        { id: "input-1", label: "Incorrect words", value: "", color: "" },
       ],
-      outputs: [{ id: "output-0", label: "Selected words", value: "" }],
+      outputs: [
+        { id: "output-0", label: "Selected words", value: "", color: "" },
+      ],
     },
     WordArranger: {
       inputs: [
-        { id: "input-0", label: "Correct words", value: "" },
-        { id: "input-1", label: "Incorrect words", value: "" },
+        { id: "input-0", label: "Correct words", value: "", color: "" },
+        { id: "input-1", label: "Incorrect words", value: "", color: "" },
       ],
-      outputs: [{ id: "output-0", label: "Arranged words", value: "" }],
+      outputs: [
+        { id: "output-0", label: "Arranged words", value: "", color: "" },
+      ],
     },
     FlipCard: {
       inputs: [
-        { id: "input-0", label: "Front title", value: "" },
-        { id: "input-1", label: "Back title", value: "" },
-        { id: "input-2", label: "Front text", value: "" },
-        { id: "input-3", label: "Back text", value: "" },
-        { id: "input-4", label: "Front image", value: "" },
-        { id: "input-5", label: "Back image", value: "" },
+        { id: "input-0", label: "Front title", value: "", color: "" },
+        { id: "input-1", label: "Back title", value: "", color: "" },
+        { id: "input-2", label: "Front text", value: "", color: "" },
+        { id: "input-3", label: "Back text", value: "", color: "" },
+        { id: "input-4", label: "Front image", value: "", color: "" },
+        { id: "input-5", label: "Back image", value: "", color: "" },
       ],
       outputs: [],
     },
     ChatInterface: {
-      inputs: [{ id: "input-0", label: "Participant 1", value: "" }],
-      outputs: [{ id: "output-0", label: "Interaction data", value: "" }],
+      inputs: [{ id: "input-0", label: "Participant 1", value: "", color: "" }],
+      outputs: [
+        { id: "output-0", label: "Interaction data", value: "", color: "" },
+      ],
     },
     AudioPlayer: {
-      inputs: [{ id: "input-0", label: "Text Source", value: "" }],
+      inputs: [{ id: "input-0", label: "Text Source", value: "", color: "" }],
       outputs: [],
       audioPlayerName: "Audio Player",
     },
     AudioRecorder: {
       inputs: [],
-      outputs: [{ id: "output-0", label: "Audio", value: "" }],
+      outputs: [{ id: "output-0", label: "Audio", value: "", color: "" }],
       audioRecorderName: "Audio Recorder",
     },
     TextToSpeech: {
-      inputs: [{ id: "input-0", label: "Text Source", value: "" }],
-      outputs: [{ id: "output-0", label: "Audio ", value: "" }],
+      inputs: [{ id: "input-0", label: "Text Source", value: "", color: "" }],
+      outputs: [{ id: "output-0", label: "Audio", value: "", color: "" }],
       textToSpeechName: "Text to Speech",
     },
     SpeechToText: {
-      inputs: [{ id: "input-0", label: "Audio Source", value: "" }],
-      outputs: [{ id: "output-0", label: "Text", value: "" }],
+      inputs: [{ id: "input-0", label: "Audio Source", value: "", color: "" }],
+      outputs: [{ id: "output-0", label: "Text", value: "", color: "" }],
       speechToTextName: "Speech to Text",
     },
     Camera: {
       inputs: [],
-      outputs: [{ id: "output-0", label: "Photo", value: "" }],
+      outputs: [{ id: "output-0", label: "Photo", value: "", color: "" }],
       cameraName: "Camera",
     },
     Memory: {
       inputs: [],
       outputs: [],
-      memoryFields: [{ id: "field-0", label: "Memory Field 1", value: "" }],
+      memoryFields: [
+        { id: "field-0", label: "Memory Field 1", value: "", color: "" },
+      ],
     },
     FileUpload: {
       inputs: [],
-      outputs: [{ id: "output-0", label: "File", value: "" }],
+      outputs: [{ id: "output-0", label: "File", value: "", color: "" }],
       fileUploadName: "File Upload",
     },
     CustomNode: {

@@ -11,6 +11,7 @@ interface NodeData {
 }
 
 interface EdgeData {
+  color?: string;
   id: any;
   source: string;
   target: string;

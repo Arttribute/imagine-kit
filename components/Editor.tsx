@@ -37,7 +37,7 @@ import Link from "next/link";
 import LoadingWorld from "./worlds/LoadingWorld";
 
 import AccountMenu from "@/components/account/AccountMenu";
-import { set } from "lodash";
+import { color } from "framer-motion";
 
 interface ComponentPosition {
   x: number;
@@ -61,6 +61,7 @@ export default function Editor({
   appId: string;
   owner: string;
 }) {
+  const connectionColors = ["#f44336", "#9c27b0", "#2196f3", "#43a047"];
   const dispatch = useAppDispatch();
   const nodesFromStore = useAppSelector((state) => state.flow.nodes);
   const edgesFromStore = useAppSelector((state) => state.flow.edges);
@@ -80,6 +81,7 @@ export default function Editor({
     edgesFromStore.map((edge) => ({
       ...edge,
       id: edge.id?.toString() || `${edge.source}-${edge.target}`,
+      style: { stroke: edge.color || "#000" },
     }))
   );
 
@@ -121,6 +123,12 @@ export default function Editor({
         const fetchedEdges = await edgesResponse.data.map((edge: any) => ({
           ...edge,
           id: edge.id?.toString(),
+          data: {
+            sourceHandle: edge.sourceHandle,
+            targetHandle: edge.targetHandle,
+            color: edge.color,
+          },
+          style: { stroke: edge.color },
         }));
         const uiComponentsData = uiComponentsResponse.data;
 
@@ -237,6 +245,7 @@ export default function Editor({
           target: edge.target,
           sourceHandle: edge.sourceHandle,
           targetHandle: edge.targetHandle,
+          color: edge.data.color || "", // Ensure color is set or default to an empty string
           app_id: appId, // Replace with actual app ID
         }));
 
@@ -262,6 +271,7 @@ export default function Editor({
 
       console.log("Nodes, Edges, and UI Components saved successfully"); // Debugging log
       setSaveStatus("saved"); // Set as saved
+      console.log("Saved Edge Data:", edgeData); // Debugging log
 
       // Remove nodes marked for deletion after saving
       for (const nodeId of pendingRemovals) {
@@ -320,6 +330,13 @@ export default function Editor({
       const sourceNode = nodes.find((node) => node.id === source);
       const targetNode = nodes.find((node) => node.id === target);
 
+      //assign color - let edges of the same source have the same color
+      let color = "";
+      if (sourceNode) {
+        const sourceIndex = nodes.findIndex((node) => node.id === source);
+        color = connectionColors[sourceIndex];
+      }
+
       if (sourceNode && targetNode) {
         const outputIndex = parseInt(
           sourceHandle?.replace(/^(output-|field-)/, "") || "0",
@@ -356,7 +373,19 @@ export default function Editor({
           newInputs[inputIndex] = {
             ...newInputs[inputIndex],
             value: outputValue,
+            color: color,
           };
+
+          const newOutputs = [...(sourceNode.data.outputs || [])];
+          newOutputs[outputIndex] = {
+            ...newOutputs[outputIndex],
+            color: color,
+          };
+
+          handleDataChange(sourceNode.id, {
+            ...sourceNode.data,
+            outputs: newOutputs,
+          });
 
           handleDataChange(targetNode.id, {
             ...targetNode.data,
@@ -385,7 +414,9 @@ export default function Editor({
         data: {
           sourceHandle: params.sourceHandle,
           targetHandle: params.targetHandle,
+          color: color,
         },
+        style: { stroke: color },
       };
 
       setEdges((eds) => addEdge(newEdge as Edge, eds));

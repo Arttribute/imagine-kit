@@ -33,7 +33,8 @@ export async function POST(request: Request) {
 
     const savedEdges = await Promise.all(
       edges.map(async (edgeData) => {
-        const { source, target, sourceHandle, targetHandle, app_id } = edgeData;
+        const { source, target, sourceHandle, targetHandle, app_id, color } =
+          edgeData;
 
         // // Validate and save each edge
         // if (!source || !target || !sourceHandle || !targetHandle || !app_id) {
@@ -42,8 +43,8 @@ export async function POST(request: Request) {
         // }
 
         return Edge.findOneAndUpdate(
-          { source, target, sourceHandle, targetHandle, app_id },
-          { source, target, sourceHandle, targetHandle, app_id },
+          { source, target, sourceHandle, targetHandle, color, app_id },
+          { source, target, sourceHandle, targetHandle, color, app_id },
           { upsert: true, new: true, runValidators: true }
         );
       })

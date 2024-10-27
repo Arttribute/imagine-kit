@@ -19,6 +19,10 @@ const EdgeSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  color: {
+    type: String, // New field to store color of the edge
+    default: "", // Default to an empty string if color is not set
+  },
   app_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: App,
