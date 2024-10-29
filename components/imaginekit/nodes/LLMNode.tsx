@@ -104,6 +104,8 @@ const LLMNode: React.FC<LLMNodeProps> = ({ data, id }) => {
           placeholder="Type your instructions here"
           value={data.instruction}
           onChange={(e) => handleInstructionChange(e.target.value)}
+          className="nodrag overflow-auto"
+          onWheelCapture={(e) => e.stopPropagation()} // Prevent canvas zooming when scrolling
         />
       </div>
 

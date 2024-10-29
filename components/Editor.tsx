@@ -485,7 +485,10 @@ export default function Editor({
 
   return (
     <ReactFlowProvider>
-      <div style={{ display: "flex", height: "100vh" }}>
+      <div
+        className="overflow-hidden"
+        style={{ display: "flex", height: "100vh" }}
+      >
         <AppToolbar addNewNode={addNewNode} />
 
         <Tabs defaultValue="nodes" className="w-full">
@@ -541,7 +544,7 @@ export default function Editor({
           </div>
           {loadingWorldComponents && <LoadingWorld />}
           <TabsContent value="nodes">
-            <div style={{ display: "flex", height: "93vh" }}>
+            <div style={{ display: "flex", height: "91vh" }}>
               <div
                 style={{
                   flexGrow: 1,
