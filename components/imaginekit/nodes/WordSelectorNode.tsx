@@ -27,6 +27,8 @@ const WordSelectorNode: React.FC<WordSelectorNodeProps> = ({ data, id }) => {
       type="both"
       inputs={inputs}
       outputs={outputs}
+      inputPlaceholders={["Correct Words", "Incorrect Words"]}
+      outputPlaceholders={["Selected Word"]}
       icon={
         <div className="flex items-center">
           <MousePointer className="w-4 h-4 text-gray-400 mr-1" />

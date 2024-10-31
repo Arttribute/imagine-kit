@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { MousePointer, TypeOutlineIcon, Shuffle } from "lucide-react";
+import { TypeOutlineIcon, Shuffle } from "lucide-react";
 import BaseNode from "@/components/imaginekit/nodes/BaseNode";
 
 interface WordArrangerNodeProps {
@@ -27,6 +27,8 @@ const WordArrangerNode: React.FC<WordArrangerNodeProps> = ({ data, id }) => {
       type="both"
       inputs={inputs}
       outputs={outputs}
+      inputPlaceholders={["Correct Words", "Incorrect Words"]}
+      outputPlaceholders={["Arranged Words"]}
       icon={
         <div className="flex items-center">
           <Shuffle className="w-4 h-4 text-gray-400 mr-1" />

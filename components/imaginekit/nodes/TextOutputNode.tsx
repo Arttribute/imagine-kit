@@ -23,6 +23,7 @@ const TextOutputNode: React.FC<TextOutputNodeProps> = ({ data, id }) => {
       nameKey="textOutputName"
       type="input"
       inputs={inputs}
+      inputPlaceholders={["Text"]}
       icon={<AlignLeftIcon className="w-5 h-5 text-gray-400" />}
       onDataChange={onDataChange}
       onRemoveNode={onRemoveNode}

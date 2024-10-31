@@ -24,6 +24,14 @@ const FlipCardNode: React.FC<FlipCardNodeProps> = ({ data, id }) => {
       nameKey="flipCardName"
       type="input"
       inputs={inputs}
+      inputPlaceholders={[
+        "Front title",
+        "Back title",
+        "Front text",
+        "Back text",
+        "Front image",
+        "Back image",
+      ]}
       icon={
         <div className="flex items-center">
           <StickyNote className="w-4 h-4 text-gray-400 mr-1" />

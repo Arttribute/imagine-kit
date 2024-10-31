@@ -23,9 +23,9 @@ const SketchPadNode: React.FC<SketchPadNodeProps> = ({ data, id }) => {
       name={sketchName}
       defaultName="Sketch Pad"
       nameKey="sketchName"
-      type="both"
-      inputs={inputs}
+      type="output"
       outputs={outputs}
+      outputPlaceholders={["Sketch data"]}
       icon={<PencilLine className="w-5 h-5 text-gray-400" />}
       onDataChange={onDataChange}
       onRemoveNode={onRemoveNode}

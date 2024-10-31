@@ -29,6 +29,7 @@ const FileUploadNode: React.FC<FileUploadNodeProps> = ({ data, id }) => {
       nameKey="fileUploadName"
       type="output"
       outputs={outputs}
+      outputPlaceholders={["File"]}
       icon={<FileIcon className="w-5 h-5 text-gray-400" />}
       onDataChange={onDataChange}
       onRemoveNode={onRemoveNode}

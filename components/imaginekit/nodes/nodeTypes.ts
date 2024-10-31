@@ -177,7 +177,7 @@ export const NODE_TYPE_MAPPING = {
       ],
     },
     AudioPlayer: {
-      inputs: [{ id: "input-0", label: "Text Source", value: "", color: "" }],
+      inputs: [{ id: "input-0", label: "Audio Source", value: "", color: "" }],
       outputs: [],
       audioPlayerName: "Audio Player",
     },

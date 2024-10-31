@@ -11,8 +11,20 @@ interface BaseNodeProps {
   name: string; // Node name
   defaultName: string; // Default name if name is empty
   type: "input" | "output" | "both"; // Type of node
-  inputs?: { id: string; label: string; value: string; color?: string }[]; // Optional inputs with color
-  outputs?: { id: string; label: string; value: string; color?: string }[]; // Optional outputs with color
+  inputs?: {
+    id: string;
+    label: string;
+    value: string;
+    color?: string;
+  }[];
+  outputs?: {
+    id: string;
+    label: string;
+    value: string;
+    color?: string;
+  }[];
+  inputPlaceholders?: string[];
+  outputPlaceholders?: string[];
   icon?: ReactNode; // Icon to display
   onDataChange: (id: string, data: any) => void;
   onRemoveNode: (id: string) => void;
@@ -27,6 +39,8 @@ const BaseNode: React.FC<BaseNodeProps> = ({
   type,
   inputs = [],
   outputs = [],
+  inputPlaceholders,
+  outputPlaceholders,
   icon,
   onDataChange,
   onRemoveNode,
@@ -90,10 +104,16 @@ const BaseNode: React.FC<BaseNodeProps> = ({
               }}
             />
             <div className="flex flex-col relative z-10">
-              <p className="mb-1 text-sm font-semibold">{input.label}</p>
+              <p className="mb-1 text-sm font-semibold">
+                {(inputPlaceholders && inputPlaceholders[index]) ||
+                  `${inputPlaceholders && inputPlaceholders[0]} ${index + 1}`}
+              </p>
               <Input
                 type="text"
-                placeholder={input.label}
+                placeholder={
+                  (inputPlaceholders && inputPlaceholders[index]) ||
+                  `${inputPlaceholders && inputPlaceholders[0]} ${index + 1}`
+                }
                 value={input.value}
                 onChange={(e) => handleInputChange(index, e.target.value)}
                 className="border rounded p-1 flex-grow bg-white"
@@ -109,10 +129,16 @@ const BaseNode: React.FC<BaseNodeProps> = ({
       {type !== "input" &&
         outputs.map((output, index) => (
           <div key={output.id} className="relative mt-4">
-            <p className="text-sm font-semibold">{output.label}</p>
+            <p className="text-sm font-semibold">
+              {(outputPlaceholders && outputPlaceholders[index]) ||
+                `${outputPlaceholders && outputPlaceholders[0]} ${index + 1}`}
+            </p>
             <Input
               type="text"
-              placeholder={output.label}
+              placeholder={
+                (outputPlaceholders && outputPlaceholders[index]) ||
+                `${outputPlaceholders && outputPlaceholders[0]} ${index + 1}`
+              }
               value={output.value}
               onChange={(e) => handleOutputChange(index, e.target.value)}
               className="border rounded p-1 flex-grow bg-white"

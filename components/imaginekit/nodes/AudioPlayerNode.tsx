@@ -24,6 +24,7 @@ const AudioPlayerNode: React.FC<AudioPlayerNodeProps> = ({ data, id }) => {
       nameKey="audioPlayerName"
       type="input"
       inputs={inputs}
+      inputPlaceholders={["Audio Source"]}
       icon={<Volume2Icon className="w-5 h-5 text-gray-400" />}
       onDataChange={onDataChange}
       onRemoveNode={onRemoveNode}

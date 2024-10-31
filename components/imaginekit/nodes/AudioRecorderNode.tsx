@@ -24,6 +24,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ data, id }) => {
       nameKey="audioRecoderName"
       type="output"
       outputs={outputs}
+      outputPlaceholders={["Audio"]}
       icon={<MicIcon className="w-5 h-5 text-gray-400" />}
       onDataChange={onDataChange}
       onRemoveNode={onRemoveNode}
