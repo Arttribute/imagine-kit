@@ -337,6 +337,28 @@ export default function Editor({
       setEdges((eds) =>
         eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
       );
+      //Set input values for connected nodes to empty string
+      edges.forEach((edge) => {
+        if (edge.source === nodeId) {
+          const targetNode = nodes.find((node) => node.id === edge.target);
+          if (targetNode) {
+            const outputIndex = parseInt(
+              edge.data.sourceHandle?.replace(/^(output-|field-)/, "") || "0",
+              10
+            );
+            const newInputs = [...(targetNode.data.inputs || [])];
+            newInputs[outputIndex] = {
+              ...newInputs[outputIndex],
+              value: "",
+              color: "",
+            };
+            handleDataChange(edge.target, {
+              ...targetNode.data,
+              inputs: newInputs,
+            });
+          }
+        }
+      });
 
       // Mark the node for deletion on next save
       setPendingRemovals((prev) => new Set(prev).add(nodeId));
