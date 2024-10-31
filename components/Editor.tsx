@@ -37,7 +37,6 @@ import Link from "next/link";
 import LoadingWorld from "./worlds/LoadingWorld";
 
 import AccountMenu from "@/components/account/AccountMenu";
-import { color } from "framer-motion";
 
 interface ComponentPosition {
   x: number;
@@ -298,6 +297,28 @@ export default function Editor({
           ...output,
           label: output.value,
         }));
+        //propagate the output value to the connected nodes
+        edges.forEach((edge) => {
+          if (edge.source === id) {
+            const targetNode = nodes.find((node) => node.id === edge.target);
+            if (targetNode) {
+              const outputIndex = parseInt(
+                edge.data.sourceHandle?.replace(/^(output-|field-)/, "") || "0",
+                10
+              );
+              const newInputs = [...(targetNode.data.inputs || [])];
+              newInputs[outputIndex] = {
+                ...newInputs[outputIndex],
+                value: data.outputs[outputIndex].value,
+                color: edge.data.color,
+              };
+              handleDataChange(edge.target, {
+                ...targetNode.data,
+                inputs: newInputs,
+              });
+            }
+          }
+        });
       }
 
       setNodes((nds) =>
