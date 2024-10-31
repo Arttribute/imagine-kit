@@ -10,6 +10,8 @@ import ReactFlow, {
   Node,
   useNodesState,
   useEdgesState,
+  NodeChange,
+  EdgeChange,
 } from "reactflow";
 import axios from "axios"; // Use axios for API requests
 import { useAppDispatch, useAppSelector } from "@/store/store";
@@ -93,6 +95,13 @@ export default function Editor({
   const [pendingRemovals, setPendingRemovals] = useState<Set<string>>(
     new Set()
   ); // Track pending removals
+  const [history, setHistory] = useState<
+    { nodes: Node<any>[]; edges: Edge<any>[] }[]
+  >([]);
+  const [redoStack, setRedoStack] = useState<
+    { nodes: Node<any>[]; edges: Edge<any>[] }[]
+  >([]);
+
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref to store timeout ID
 
   // Fetch nodes, edges, and UI components from the database on component mount
@@ -526,6 +535,45 @@ export default function Editor({
     saveNodesEdgesAndUIComponents,
   ]);
 
+  // Function to save the current state to the history stack
+  const saveToHistory = () => {
+    setHistory((prevHistory) => [...prevHistory, { nodes, edges }]);
+    setRedoStack([]); // Clear redo stack on new action
+  };
+
+  // Undo handler
+  const handleUndo = () => {
+    if (history.length > 0) {
+      const previousState = history[history.length - 1];
+      setRedoStack((prevRedo) => [...prevRedo, { nodes, edges }]);
+      setNodes(previousState.nodes);
+      setEdges(previousState.edges);
+      setHistory((prevHistory) => prevHistory.slice(0, -1));
+    }
+  };
+
+  // Redo handler
+  const handleRedo = () => {
+    if (redoStack.length > 0) {
+      const nextState = redoStack[redoStack.length - 1];
+      setHistory((prevHistory) => [...prevHistory, { nodes, edges }]);
+      setNodes(nextState.nodes);
+      setEdges(nextState.edges);
+      setRedoStack((prevRedo) => prevRedo.slice(0, -1));
+    }
+  };
+
+  // Trigger save to history on node or edge changes
+  const onNodesChangeWithHistory = (changes: NodeChange[]) => {
+    onNodesChange(changes);
+    saveToHistory();
+  };
+
+  const onEdgesChangeWithHistory = (changes: EdgeChange[]) => {
+    onEdgesChange(changes);
+    saveToHistory();
+  };
+
   return (
     <ReactFlowProvider>
       <div
@@ -549,6 +597,14 @@ export default function Editor({
                 <PlayIcon className="w-4 h-4 ml-1 " />
               </Button>
             </Link>
+            <div className="flex  m-2">
+              <Button onClick={handleUndo} disabled={history.length === 0}>
+                Undo
+              </Button>
+              <Button onClick={handleRedo} disabled={redoStack.length === 0}>
+                Redo
+              </Button>
+            </div>
 
             {/* Save Button */}
             <button
@@ -605,14 +661,8 @@ export default function Editor({
                     },
                   }))}
                   edges={edges}
-                  onNodesChange={(changes) => {
-                    onNodesChange(changes);
-                    setSaveStatus("save changes"); // Mark as unsaved when nodes are changed
-                  }}
-                  onEdgesChange={(changes) => {
-                    onEdgesChange(changes);
-                    setSaveStatus("save changes"); // Mark as unsaved when edges are changed
-                  }}
+                  onNodesChange={onNodesChangeWithHistory}
+                  onEdgesChange={onEdgesChangeWithHistory}
                   onConnect={onConnect}
                   nodeTypes={nodeTypes}
                   fitView
