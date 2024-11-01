@@ -603,7 +603,7 @@ export default function Editor({
   return (
     <ReactFlowProvider>
       <div
-        className="overflow-hidden"
+        className="overflow-hidden bg-slate-50"
         style={{ display: "flex", height: "100vh" }}
       >
         <AppToolbar addNewNode={addNewNode} />
@@ -686,7 +686,7 @@ export default function Editor({
             </div>
           </div>
           {loadingWorldComponents && <LoadingWorld />}
-          <TabsContent value="nodes">
+          <TabsContent value="nodes" className="bg-white">
             <div style={{ display: "flex", height: "91vh" }}>
               <div
                 style={{
@@ -718,7 +718,7 @@ export default function Editor({
               </div>
             </div>
           </TabsContent>
-          <TabsContent value="preview">
+          <TabsContent value="preview" className="bg-white">
             <div style={{ display: "flex", height: "86vh", width: "80vw" }}>
               <UIEditor
                 uiComponents={uiComponents}

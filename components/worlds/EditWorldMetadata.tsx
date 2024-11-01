@@ -146,7 +146,7 @@ export default function EditWorldMetadata({ appData }: { appData: appData }) {
     <div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <button className="flex items-center justify-center border border-indigo-200 shadow-lg  shadow-purple-200 rounded-full p-1">
+          <button className="flex items-center justify-center border border-indigo-200 shadow-lg bg-white shadow-purple-200 rounded-full p-1">
             <EarthIcon className="w-6 h-6 text-indigo-500 m-1" />
             <div className="p-1  truncate w-36 ">
               <p className="text-sm text-gray-800 font-semibold text-ellipsis overflow-hidden ">
