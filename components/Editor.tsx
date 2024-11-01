@@ -34,6 +34,8 @@ import {
   CircleCheckBigIcon,
   Loader2Icon,
   AlertTriangleIcon,
+  Undo2Icon,
+  Redo2Icon,
 } from "lucide-react";
 import Link from "next/link";
 import LoadingWorld from "./worlds/LoadingWorld";
@@ -574,6 +576,31 @@ export default function Editor({
     saveToHistory();
   };
 
+  // Keyboard shortcuts for undo (Ctrl+Z or Cmd+Z) and redo (Ctrl+Shift+Z or Cmd+Shift+Z)
+  useEffect(() => {
+    const handleKeyDown = (event: {
+      ctrlKey: any;
+      metaKey: any;
+      key: string;
+      shiftKey: any;
+      preventDefault: () => void;
+    }) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "z") {
+        if (event.shiftKey) {
+          handleRedo(); // Ctrl+Shift+Z or Cmd+Shift+Z for redo
+        } else {
+          handleUndo(); // Ctrl+Z or Cmd+Z for undo
+        }
+        event.preventDefault(); // Prevent default browser action
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleUndo, handleRedo]);
+
   return (
     <ReactFlowProvider>
       <div
@@ -597,14 +624,6 @@ export default function Editor({
                 <PlayIcon className="w-4 h-4 ml-1 " />
               </Button>
             </Link>
-            <div className="flex  m-2">
-              <Button onClick={handleUndo} disabled={history.length === 0}>
-                Undo
-              </Button>
-              <Button onClick={handleRedo} disabled={redoStack.length === 0}>
-                Redo
-              </Button>
-            </div>
 
             {/* Save Button */}
             <button
@@ -635,6 +654,30 @@ export default function Editor({
                 <AlertTriangleIcon className="w-3 h-3 ml-1" />
               )}
             </button>
+            <div className="flex m-2">
+              <button
+                onClick={handleUndo}
+                disabled={history.length === 0}
+                className="border px-3 rounded-xl bg-white hover:bg-gray-100"
+              >
+                <Undo2Icon
+                  className={`w-4 h-4
+                ${history.length === 0 ? "text-gray-300" : "text-gray-700"}
+                  `}
+                />
+              </button>
+              <button
+                onClick={handleRedo}
+                disabled={redoStack.length === 0}
+                className="border px-3 rounded-xl bg-white hover:bg-gray-100 ml-1"
+              >
+                <Redo2Icon
+                  className={`w-4 h-4
+                ${redoStack.length === 0 ? "text-gray-300" : "text-gray-700"}
+                  `}
+                />
+              </button>
+            </div>
 
             <div className="flex-grow" />
             <div className="m-2">
