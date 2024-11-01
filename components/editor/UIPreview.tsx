@@ -29,13 +29,13 @@ interface UIComponent {
   type: string; // Add type to determine which preview to show
 }
 
-interface UIEditorProps {
+interface UIPreviewProps {
   uiComponents: UIComponent[];
   savedPositions: { [key: string]: ComponentPosition };
   savePositions: (positions: { [key: string]: ComponentPosition }) => void;
 }
 
-const UIEditor: React.FC<UIEditorProps> = ({
+const UIPreview: React.FC<UIPreviewProps> = ({
   uiComponents,
   savedPositions,
   savePositions,
@@ -151,4 +151,4 @@ const UIEditor: React.FC<UIEditorProps> = ({
   );
 };
 
-export default UIEditor;
+export default UIPreview;
