@@ -566,8 +566,7 @@ export default function Editor({
   };
 
   // Trigger save to history on node or edge changes
-  const onNodesChangeWithHistory = (changes: NodeChange[]) => {
-    onNodesChange(changes);
+  const onNodeDragStop = () => {
     saveToHistory();
   };
 
@@ -706,7 +705,8 @@ export default function Editor({
                     },
                   }))}
                   edges={edges}
-                  onNodesChange={onNodesChangeWithHistory}
+                  onNodesChange={onNodesChange}
+                  onNodeDragStop={onNodeDragStop}
                   onEdgesChange={onEdgesChangeWithHistory}
                   onConnect={onConnect}
                   nodeTypes={nodeTypes}
