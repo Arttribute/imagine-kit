@@ -97,6 +97,7 @@ export default function Editor({
   const [pendingRemovals, setPendingRemovals] = useState<Set<string>>(
     new Set()
   ); // Track pending removals
+  // History and redo stack states
   const [history, setHistory] = useState<
     { nodes: Node<any>[]; edges: Edge<any>[] }[]
   >([]);
@@ -475,6 +476,7 @@ export default function Editor({
 
       setEdges((eds) => addEdge(newEdge as Edge, eds));
       dispatch(addEdgeAction(newEdge as Edge));
+      saveToHistory();
       setSaveStatus("save changes"); // Mark as unsaved when edges are changed
     },
     [setEdges, dispatch, nodes, handleDataChange]
@@ -543,7 +545,6 @@ export default function Editor({
     setRedoStack([]); // Clear redo stack on new action
   };
 
-  // Undo handler
   const handleUndo = () => {
     if (history.length > 0) {
       const previousState = history[history.length - 1];
@@ -554,7 +555,6 @@ export default function Editor({
     }
   };
 
-  // Redo handler
   const handleRedo = () => {
     if (redoStack.length > 0) {
       const nextState = redoStack[redoStack.length - 1];
@@ -566,8 +566,7 @@ export default function Editor({
   };
 
   // Trigger save to history on node or edge changes
-  const onNodesChangeWithHistory = (changes: NodeChange[]) => {
-    onNodesChange(changes);
+  const onNodeDragStop = () => {
     saveToHistory();
   };
 
@@ -654,7 +653,7 @@ export default function Editor({
                 <AlertTriangleIcon className="w-3 h-3 ml-1" />
               )}
             </button>
-            <div className="flex m-2">
+            <div className="flex m-2 ml-1 p-0.5">
               <button
                 onClick={handleUndo}
                 disabled={history.length === 0}
@@ -665,6 +664,7 @@ export default function Editor({
                 ${history.length === 0 ? "text-gray-300" : "text-gray-700"}
                   `}
                 />
+                {/* <p>{history.length}</p> */}
               </button>
               <button
                 onClick={handleRedo}
@@ -676,6 +676,7 @@ export default function Editor({
                 ${redoStack.length === 0 ? "text-gray-300" : "text-gray-700"}
                   `}
                 />
+                {/* <p>{redoStack.length}</p> */}
               </button>
             </div>
 
@@ -704,7 +705,8 @@ export default function Editor({
                     },
                   }))}
                   edges={edges}
-                  onNodesChange={onNodesChangeWithHistory}
+                  onNodesChange={onNodesChange}
+                  onNodeDragStop={onNodeDragStop}
                   onEdgesChange={onEdgesChangeWithHistory}
                   onConnect={onConnect}
                   nodeTypes={nodeTypes}
