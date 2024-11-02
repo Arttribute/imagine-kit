@@ -23,6 +23,7 @@ import useEditorHistory from "@/components/editor/hooks/useEditorHistory";
 import NodeFlow from "./NodeFlow";
 import { Node } from "reactflow";
 import { NODE_TYPE_MAPPING } from "@/components/imaginekit/nodes/nodeTypes";
+import Sophia from "@/components/sophia/Sophia";
 
 interface EditorProps {
   appId: string;
@@ -290,6 +291,9 @@ const Editor: React.FC<EditorProps> = ({ appId, owner }) => {
           </div>
         </TabsContent>
       </Tabs>
+      <div className="absolute right-0 m-4 bottom-0">
+        <Sophia />
+      </div>
     </div>
   );
 };
