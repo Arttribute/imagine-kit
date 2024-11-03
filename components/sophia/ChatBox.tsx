@@ -29,7 +29,10 @@ interface ChatBoxProps {
   nodes: Node[];
   edges: Edge[];
   appData: any;
+  userId: string;
+  appId: string;
   interactionData: any[];
+  setInteractionData: React.Dispatch<React.SetStateAction<any[]>>;
   setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge<any>[]>>;
 }
@@ -51,20 +54,21 @@ function ChatBox({
   nodes,
   edges,
   appData,
+  userId,
+  appId,
   interactionData,
+  setInteractionData,
   setNodes,
   setEdges,
 }: ChatBoxProps) {
   const [input, setInput] = useState("");
-  const [filteredInteractionData, setFilteredInteractionData] = useState<any[]>(
-    interactionData || []
-  );
   const [loadingResponse, setLoadingResponse] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [filteredInteractionData, loadingResponse]);
+  }, [interactionData, loadingResponse]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -75,13 +79,18 @@ function ChatBox({
   const onSubmit = async () => {
     if (input.trim() === "") return;
 
+    if (!userId || !appId) {
+      console.error("User ID or App ID is missing.");
+      return;
+    }
+
     setLoadingResponse(true);
 
     try {
       // Send data to backend
       const response = await axios.post("/api/sophia", {
         message: input,
-        interactionData: filteredInteractionData,
+        interactionData: interactionData,
         nodes,
         edges,
         appData,
@@ -92,30 +101,41 @@ function ChatBox({
 
       let aiResponse;
       try {
-        // Remove backticks and sanitize GPT output before parsing - this due to a an issue that is specific to GPT-4o-mini
+        // Remove backticks and sanitize GPT output before parsing
         const cleanedOutput = aiResponseText
-          .replace(/```json/g, "") // Remove "```json" if present
-          .replace(/```/g, "") // Remove trailing "```"
-          .trim(); // Trim any extra spaces or newlines
+          .replace(/```json/g, "")
+          .replace(/```/g, "")
+          .trim();
         aiResponse = JSON.parse(cleanedOutput);
       } catch (e) {
         console.error("Failed to parse AI response:", e);
         aiResponse = { text: aiResponseText };
       }
 
-      setFilteredInteractionData((prevData) => [
+      // Update the interaction data in state
+      setInteractionData((prevData) => [
         ...prevData,
         {
-          input_type: "text",
           user_message: input,
           system_message: aiResponse,
         },
       ]);
 
+      // Save the interaction to the database
+      const interactionToSave = {
+        owner: userId,
+        app_id: appId,
+        user_message: input,
+        system_message: aiResponse, // Save the entire system message object
+      };
+
+      await axios.post("/api/buildchat", {
+        interactionData: interactionToSave,
+      });
+
       setInput("");
     } catch (error) {
       console.error("Error communicating with Sophia:", error);
-      // Optionally display an error message to the user
     } finally {
       setLoadingResponse(false);
     }
@@ -128,6 +148,7 @@ function ChatBox({
 
       setNodes(newNodes);
       setEdges(newEdges);
+      setOpenDialog(false);
     }
   };
 
@@ -135,8 +156,8 @@ function ChatBox({
     <>
       <div className="h-full m-1">
         <ScrollArea className="bg-slate-50 border border-indigo-200 rounded-xl p-2 h-[70vh]">
-          {filteredInteractionData &&
-            filteredInteractionData.map((interaction: any, index: number) => (
+          {interactionData &&
+            interactionData.map((interaction: any, index: number) => (
               <div key={index} className="mb-4">
                 {/* User Message */}
                 <div className="flex justify-end">
@@ -153,54 +174,74 @@ function ChatBox({
                     <p className="text-sm text-gray-700">
                       {interaction.system_message.text}
                     </p>
-                    {interaction.system_message.node_diagram && (
-                      <div className="mt-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline">View Node Diagram</Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-2xl">
-                            <DialogHeader>
-                              <DialogTitle>Suggested Node Diagram</DialogTitle>
-                              <DialogDescription>
-                                {"Here's the node diagram suggested by Sophia."}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <NodeDiagram
-                              data={interaction.system_message.node_diagram}
-                            />
-                            <div className="flex justify-end mt-4 space-x-2">
+                    {interaction.system_message.node_diagram &&
+                      interaction.system_message.node_diagram.nodes.length >
+                        0 && (
+                        <div className="mt-2">
+                          <Dialog
+                            open={openDialog}
+                            onOpenChange={setOpenDialog}
+                          >
+                            <DialogTrigger asChild>
                               <Button
-                                variant="secondary"
-                                onClick={() =>
-                                  handleAcceptSuggestion(
-                                    interaction.system_message
-                                  )
-                                }
+                                variant="outline"
+                                onClick={() => setOpenDialog(true)}
                               >
-                                Accept
+                                View Node Diagram
                               </Button>
-                              <Button variant="ghost">Decline</Button>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    )}
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-2xl">
+                              <DialogHeader>
+                                <DialogTitle>
+                                  Suggested Node Diagram
+                                </DialogTitle>
+                                <DialogDescription>
+                                  {
+                                    "Here's the node diagram suggested by Sophia."
+                                  }
+                                </DialogDescription>
+                              </DialogHeader>
+                              <NodeDiagram
+                                data={interaction.system_message.node_diagram}
+                              />
+                              <div className="flex justify-end mt-4 space-x-2">
+                                <Button
+                                  variant="secondary"
+                                  onClick={() =>
+                                    handleAcceptSuggestion(
+                                      interaction.system_message
+                                    )
+                                  }
+                                >
+                                  Apply Changes
+                                </Button>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>
             ))}
 
           {loadingResponse && (
-            <div className="flex flex-col items-start">
-              <div className="flex justify-start">
-                <div className="bg-white border rounded-2xl p-4 px-12 my-2 mx-auto w-full max-w-md shadow-sm ">
-                  <LoadingChat />
+            <>
+              <div className="flex justify-end">
+                <div className="bg-blue-100 p-3 rounded-2xl shadow-sm max-w-full">
+                  <p className="text-sm text-gray-800">{input}</p>
                 </div>
               </div>
-            </div>
+              <div className="flex flex-col items-start">
+                <div className="flex justify-start">
+                  <div className="bg-white border rounded-2xl p-4 px-12 my-2 mx-auto w-full max-w-md shadow-sm ">
+                    <LoadingChat />
+                  </div>
+                </div>
+              </div>
+            </>
           )}
-          {filteredInteractionData.length > 0 && <div ref={messagesEndRef} />}
+          {interactionData.length > 0 && <div ref={messagesEndRef} />}
         </ScrollArea>
 
         <div className="flex w-full space-x-2 mt-2">

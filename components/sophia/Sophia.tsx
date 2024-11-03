@@ -1,14 +1,15 @@
 // Sophia.tsx
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ChatBox from "@/components/sophia/ChatBox";
 import { Edge } from "reactflow";
+import axios from "axios";
+import { useSession } from "next-auth/react";
 
 interface SophiaProps {
   nodes: any[];
   edges: Edge[];
   appData: any;
-  interactionData: any[];
   setNodes: React.Dispatch<React.SetStateAction<any[]>>; // For updating nodes
   setEdges: React.Dispatch<React.SetStateAction<Edge<any>[]>>; // For updating edges
 }
@@ -17,15 +18,45 @@ export default function Sophia({
   nodes,
   edges,
   appData,
-  interactionData,
   setNodes,
   setEdges,
 }: SophiaProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [interactionData, setInteractionData] = useState<any[]>([]);
+
+  const userId = appData?.owner?._id;
+  const appId = appData?._id;
 
   const toggleDrawer = (): void => {
     setIsOpen(!isOpen);
   };
+
+  // Fetch interactions when component mounts
+  useEffect(() => {
+    const fetchInteractions = async () => {
+      try {
+        const response = await axios.get("/api/buildchat", {
+          params: {
+            appId: appId,
+            userId: userId,
+          },
+        });
+
+        const interactions = response.data.map((interaction: any) => ({
+          user_message: interaction.user_message,
+          system_message: interaction.system_message,
+        }));
+
+        setInteractionData(interactions);
+      } catch (error) {
+        console.error("Error fetching interactions:", error);
+      }
+    };
+
+    if (appId && userId) {
+      fetchInteractions();
+    }
+  }, [appId, userId]);
 
   return (
     <div className="relative">
@@ -53,9 +84,12 @@ export default function Sophia({
             nodes={nodes}
             edges={edges}
             appData={appData}
+            userId={userId}
+            appId={appId}
             interactionData={interactionData}
-            setNodes={setNodes} // Pass setNodes to update nodes upon accepting suggestions
-            setEdges={setEdges} // Pass setEdges to update edges upon accepting suggestions
+            setInteractionData={setInteractionData}
+            setNodes={setNodes}
+            setEdges={setEdges}
           />
         </div>
       </div>
