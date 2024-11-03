@@ -35,6 +35,7 @@ interface ChatBoxProps {
   setInteractionData: React.Dispatch<React.SetStateAction<any[]>>;
   setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge<any>[]>>;
+  saveToHistory: () => void;
 }
 
 function NodeDiagram({ data }: NodeDiagramProps) {
@@ -60,6 +61,7 @@ function ChatBox({
   setInteractionData,
   setNodes,
   setEdges,
+  saveToHistory,
 }: ChatBoxProps) {
   const [input, setInput] = useState("");
   const [loadingResponse, setLoadingResponse] = useState(false);
@@ -149,6 +151,7 @@ function ChatBox({
       setNodes(newNodes);
       setEdges(newEdges);
       setOpenDialog(false);
+      saveToHistory();
     }
   };
 

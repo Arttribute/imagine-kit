@@ -4,14 +4,14 @@ import { useState, useEffect } from "react";
 import ChatBox from "@/components/sophia/ChatBox";
 import { Edge } from "reactflow";
 import axios from "axios";
-import { useSession } from "next-auth/react";
 
 interface SophiaProps {
   nodes: any[];
   edges: Edge[];
   appData: any;
-  setNodes: React.Dispatch<React.SetStateAction<any[]>>; // For updating nodes
-  setEdges: React.Dispatch<React.SetStateAction<Edge<any>[]>>; // For updating edges
+  setNodes: React.Dispatch<React.SetStateAction<any[]>>;
+  setEdges: React.Dispatch<React.SetStateAction<Edge<any>[]>>;
+  saveToHistory: () => void;
 }
 
 export default function Sophia({
@@ -20,6 +20,7 @@ export default function Sophia({
   appData,
   setNodes,
   setEdges,
+  saveToHistory,
 }: SophiaProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [interactionData, setInteractionData] = useState<any[]>([]);
@@ -90,6 +91,7 @@ export default function Sophia({
             setInteractionData={setInteractionData}
             setNodes={setNodes}
             setEdges={setEdges}
+            saveToHistory={saveToHistory}
           />
         </div>
       </div>

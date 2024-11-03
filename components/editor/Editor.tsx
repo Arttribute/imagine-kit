@@ -296,9 +296,9 @@ const Editor: React.FC<EditorProps> = ({ appId, owner }) => {
           nodes={nodes}
           edges={edges}
           appData={appData}
-          interactionData={[]}
-          setNodes={setNodes} // Pass setNodes to update nodes upon accepting suggestions
-          setEdges={setEdges} // Pass setEdges to update edges upon accepting suggestions
+          setNodes={setNodes}
+          setEdges={setEdges}
+          saveToHistory={saveToHistory}
         />
       </div>
     </div>
