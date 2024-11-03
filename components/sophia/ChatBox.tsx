@@ -92,16 +92,12 @@ function ChatBox({
 
       let aiResponse;
       try {
-        //if Ai response includes backticks, remove them
-        if (aiResponseText.includes("```")) {
-          // Remove backticks and sanitize GPT output before parsing - this due to a an issue that is specific to GPT-4o-mini
-          const cleanedOutput = aiResponseText
-            .replace(/```json/g, "") // Remove "```json" if present
-            .replace(/```/g, "") // Remove trailing "```"
-            .trim(); // Trim any extra spaces or newlines
-          aiResponse = JSON.parse(cleanedOutput);
-        }
-        aiResponse = JSON.parse(aiResponseText);
+        // Remove backticks and sanitize GPT output before parsing - this due to a an issue that is specific to GPT-4o-mini
+        const cleanedOutput = aiResponseText
+          .replace(/```json/g, "") // Remove "```json" if present
+          .replace(/```/g, "") // Remove trailing "```"
+          .trim(); // Trim any extra spaces or newlines
+        aiResponse = JSON.parse(cleanedOutput);
       } catch (e) {
         console.error("Failed to parse AI response:", e);
         aiResponse = { text: aiResponseText };
@@ -167,7 +163,7 @@ function ChatBox({
                             <DialogHeader>
                               <DialogTitle>Suggested Node Diagram</DialogTitle>
                               <DialogDescription>
-                                Here's the node diagram suggested by Sophia.
+                                {"Here's the node diagram suggested by Sophia."}
                               </DialogDescription>
                             </DialogHeader>
                             <NodeDiagram
