@@ -292,7 +292,14 @@ const Editor: React.FC<EditorProps> = ({ appId, owner }) => {
         </TabsContent>
       </Tabs>
       <div className="absolute right-0 m-4 bottom-0">
-        <Sophia />
+        <Sophia
+          nodes={nodes}
+          edges={edges}
+          appData={appData}
+          interactionData={[]}
+          setNodes={setNodes} // Pass setNodes to update nodes upon accepting suggestions
+          setEdges={setEdges} // Pass setEdges to update edges upon accepting suggestions
+        />
       </div>
     </div>
   );

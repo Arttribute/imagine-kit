@@ -13,8 +13,10 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import ReactFlow, { MiniMap, Controls, Background } from "reactflow";
+import ReactFlow, { Controls, Background, Edge } from "reactflow";
 import "reactflow/dist/style.css";
+import axios from "axios";
+import nodeTypes from "@/components/imaginekit/nodes/nodeTypes";
 
 interface NodeDiagramProps {
   data: {
@@ -23,12 +25,21 @@ interface NodeDiagramProps {
   };
 }
 
+interface ChatBoxProps {
+  nodes: Node[];
+  edges: Edge[];
+  appData: any;
+  interactionData: any[];
+  setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
+  setEdges: React.Dispatch<React.SetStateAction<Edge<any>[]>>;
+}
+
 function NodeDiagram({ data }: NodeDiagramProps) {
   const { nodes, edges } = data;
 
   return (
     <div style={{ height: "400px", width: "100%" }}>
-      <ReactFlow nodes={nodes} edges={edges}>
+      <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes}>
         <Controls />
         <Background />
       </ReactFlow>
@@ -36,43 +47,17 @@ function NodeDiagram({ data }: NodeDiagramProps) {
   );
 }
 
-function ChatBox() {
+function ChatBox({
+  nodes,
+  edges,
+  appData,
+  interactionData,
+  setNodes,
+  setEdges,
+}: ChatBoxProps) {
   const [input, setInput] = useState("");
   const [filteredInteractionData, setFilteredInteractionData] = useState<any[]>(
-    [
-      {
-        input_type: "text",
-        user_message: "Hello",
-        system_message: { text: "Hi, how can I help you?" },
-      },
-      {
-        input_type: "text",
-        user_message: "Can you suggest a node diagram for a simple flow?",
-        system_message: {
-          text: "Sure! Here's a simple node diagram for you.",
-          node_diagram: {
-            nodes: [
-              { id: "1", data: { label: "Start" }, position: { x: 0, y: 0 } },
-              {
-                id: "2",
-                data: { label: "Process" },
-                position: { x: 150, y: 0 },
-              },
-              { id: "3", data: { label: "End" }, position: { x: 300, y: 0 } },
-            ],
-            edges: [
-              { id: "e1-2", source: "1", target: "2", type: "smoothstep" },
-              { id: "e2-3", source: "2", target: "3", type: "smoothstep" },
-            ],
-          },
-        },
-      },
-      {
-        input_type: "text",
-        user_message: "Thanks! That looks great.",
-        system_message: { text: "Glad I could help!" },
-      },
-    ]
+    interactionData || []
   );
   const [loadingResponse, setLoadingResponse] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -87,14 +72,73 @@ function ChatBox() {
     }
   };
 
-  const onSubmit = () => {
-    // Handle the submission and update filteredInteractionData
+  const onSubmit = async () => {
+    if (input.trim() === "") return;
+
+    setLoadingResponse(true);
+
+    try {
+      // Send data to backend
+      const response = await axios.post("/api/sophia", {
+        message: input,
+        interactionData: filteredInteractionData,
+        nodes,
+        edges,
+        appData,
+      });
+
+      // The response data is a JSON string; we need to parse it
+      const aiResponseText = response.data;
+
+      let aiResponse;
+      try {
+        //if Ai response includes backticks, remove them
+        if (aiResponseText.includes("```")) {
+          // Remove backticks and sanitize GPT output before parsing - this due to a an issue that is specific to GPT-4o-mini
+          const cleanedOutput = aiResponseText
+            .replace(/```json/g, "") // Remove "```json" if present
+            .replace(/```/g, "") // Remove trailing "```"
+            .trim(); // Trim any extra spaces or newlines
+          aiResponse = JSON.parse(cleanedOutput);
+        }
+        aiResponse = JSON.parse(aiResponseText);
+      } catch (e) {
+        console.error("Failed to parse AI response:", e);
+        aiResponse = { text: aiResponseText };
+      }
+
+      setFilteredInteractionData((prevData) => [
+        ...prevData,
+        {
+          input_type: "text",
+          user_message: input,
+          system_message: aiResponse,
+        },
+      ]);
+
+      setInput("");
+    } catch (error) {
+      console.error("Error communicating with Sophia:", error);
+      // Optionally display an error message to the user
+    } finally {
+      setLoadingResponse(false);
+    }
+  };
+
+  const handleAcceptSuggestion = (systemMessage: any) => {
+    if (systemMessage.node_diagram) {
+      const newNodes = systemMessage.node_diagram.nodes;
+      const newEdges = systemMessage.node_diagram.edges;
+
+      setNodes(newNodes);
+      setEdges(newEdges);
+    }
   };
 
   return (
     <>
       <div className="h-full m-1">
-        <ScrollArea className="bg-slate-50 border border-indigo-200 rounded-xl p-2 h-full">
+        <ScrollArea className="bg-slate-50 border border-indigo-200 rounded-xl p-2 h-[70vh]">
           {filteredInteractionData &&
             filteredInteractionData.map((interaction: any, index: number) => (
               <div key={index} className="mb-4">
@@ -129,6 +173,19 @@ function ChatBox() {
                             <NodeDiagram
                               data={interaction.system_message.node_diagram}
                             />
+                            <div className="flex justify-end mt-4 space-x-2">
+                              <Button
+                                variant="secondary"
+                                onClick={() =>
+                                  handleAcceptSuggestion(
+                                    interaction.system_message
+                                  )
+                                }
+                              >
+                                Accept
+                              </Button>
+                              <Button variant="ghost">Decline</Button>
+                            </div>
                           </DialogContent>
                         </Dialog>
                       </div>
@@ -138,13 +195,6 @@ function ChatBox() {
               </div>
             ))}
 
-          {loadingResponse && (
-            <div className="flex justify-end">
-              <div className="bg-blue-100 p-3 rounded-2xl shadow-sm max-w-full">
-                <p className="text-sm text-gray-800">{input}</p>
-              </div>
-            </div>
-          )}
           {loadingResponse && (
             <div className="flex flex-col items-start">
               <div className="flex justify-start">
@@ -157,7 +207,7 @@ function ChatBox() {
           {filteredInteractionData.length > 0 && <div ref={messagesEndRef} />}
         </ScrollArea>
 
-        <div className="flex w-full space-x-2  mt-2">
+        <div className="flex w-full space-x-2 mt-2">
           <Input
             placeholder="Type your message here"
             onChange={(e) => setInput(e.target.value)}
