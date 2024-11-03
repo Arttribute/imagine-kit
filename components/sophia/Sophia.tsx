@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import ChatBox from "@/components/sophia/ChatBox";
 import { Edge } from "reactflow";
 import axios from "axios";
+import { LightbulbIcon, ChevronDownIcon, LoaderPinwheel } from "lucide-react";
 
 interface SophiaProps {
   nodes: any[];
@@ -63,24 +64,30 @@ export default function Sophia({
     <div className="relative">
       <button
         onClick={toggleDrawer}
-        className="fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-md"
+        className="fixed bottom-4 right-4 border border-indigo-500 bg-white px-4 py-2 rounded-lg shadow-lg shadow-sky-200"
       >
-        {isOpen ? "Close Assistant" : "Open Assistant"}
+        <div className="flex items-center text-sm">
+          <LoaderPinwheel className="w-5 h-5 mr-2 text-indigo-600" />
+          {isOpen ? "Close Assistant" : "Open Assistant"}
+          <LightbulbIcon className="w-4 h-4 text-amber-500" />
+        </div>
       </button>
 
       <div
-        className={`fixed border border-indigo-400 bottom-0 right-4 w-80 max-w-md h-6/7 bg-white shadow-xl shadow-sky-800 rounded-t-xl transform transition-transform z-20 ${
+        className={`fixed border border-indigo-400 bottom-0 right-4 w-80 max-w-md h-6/7 bg-white shadow-xl shadow-sky-600 rounded-t-xl transform transition-transform z-20 ${
           isOpen ? "translate-y-0" : "translate-y-full"
         }`}
       >
-        <button
-          onClick={toggleDrawer}
-          className="absolute top-4 right-4 text-gray-600"
-        >
-          Close
-        </button>
         <div className="p-2">
-          <h2 className="text-lg font-bold">Sophia</h2>
+          <div className="flex justify-between items-center p-1">
+            <h2 className="text-base font-bold">Sophia</h2>
+            <button
+              onClick={toggleDrawer}
+              className=" border rounded-lg p-1 top-1 right-3 text-gray-600"
+            >
+              <ChevronDownIcon className="w-5 h-5" />
+            </button>
+          </div>
           <ChatBox
             nodes={nodes}
             edges={edges}

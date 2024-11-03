@@ -195,12 +195,10 @@ function ChatBox({
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-2xl">
                               <DialogHeader>
-                                <DialogTitle>
-                                  Suggested Node Diagram
-                                </DialogTitle>
+                                <DialogTitle>Suggested Flow</DialogTitle>
                                 <DialogDescription>
                                   {
-                                    "Here's the node diagram suggested by Sophia."
+                                    "Here's the suggested flow based on your conversation."
                                   }
                                 </DialogDescription>
                               </DialogHeader>
@@ -237,7 +235,7 @@ function ChatBox({
               </div>
               <div className="flex flex-col items-start">
                 <div className="flex justify-start">
-                  <div className="bg-white border rounded-2xl p-4 px-12 my-2 mx-auto w-full max-w-md shadow-sm ">
+                  <div className="bg-white border rounded-2xl py-3 pl-4 pr-8 my-2 mx-auto w-full max-w-md shadow-sm ">
                     <LoadingChat />
                   </div>
                 </div>
