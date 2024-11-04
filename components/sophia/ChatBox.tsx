@@ -164,7 +164,7 @@ function ChatBox({
               <div key={index} className="mb-4">
                 {/* User Message */}
                 <div className="flex justify-end">
-                  <div className="bg-blue-100 p-3 rounded-2xl shadow-sm max-w-full">
+                  <div className="bg-sky-100 p-3 rounded-2xl shadow-sm max-w-full">
                     <p className="text-sm text-gray-800">
                       {interaction.user_message}
                     </p>
@@ -173,7 +173,7 @@ function ChatBox({
 
                 {/* System Message */}
                 <div className="flex justify-start mt-4">
-                  <div className="border bg-white rounded-2xl p-4 px-5 shadow-sm max-w-full">
+                  <div className="border border-blue-200 bg-white rounded-2xl p-4 px-5 shadow-sm max-w-full">
                     <p className="text-sm text-gray-700">
                       {interaction.system_message.text}
                     </p>
@@ -189,6 +189,7 @@ function ChatBox({
                               <Button
                                 variant="outline"
                                 onClick={() => setOpenDialog(true)}
+                                className="rounded-lg border border-indigo-300 text-indigo-700 hover:text-indigo-800"
                               >
                                 View Node Diagram
                               </Button>
@@ -229,7 +230,7 @@ function ChatBox({
           {loadingResponse && (
             <>
               <div className="flex justify-end">
-                <div className="bg-blue-100 p-3 rounded-2xl shadow-sm max-w-full">
+                <div className="bg-sky-100 p-3 rounded-2xl shadow-sm max-w-full">
                   <p className="text-sm text-gray-800">{input}</p>
                 </div>
               </div>

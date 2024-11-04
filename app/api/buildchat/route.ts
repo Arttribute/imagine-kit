@@ -31,7 +31,6 @@ export async function POST(request: Request) {
   try {
     await dbConnect();
     const { interactionData } = await request.json();
-    console.log("interactionData", interactionData);
     // Validate that owner and app_id are provided
     if (!interactionData.owner || !interactionData.app_id) {
       return NextResponse.json(

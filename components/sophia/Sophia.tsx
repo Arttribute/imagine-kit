@@ -66,10 +66,17 @@ export default function Sophia({
         onClick={toggleDrawer}
         className="fixed bottom-4 right-4 border border-indigo-500 bg-white px-4 py-2 rounded-lg shadow-lg shadow-sky-200"
       >
-        <div className="flex items-center text-sm">
-          <LoaderPinwheel className="w-5 h-5 mr-2 text-indigo-600" />
-          {isOpen ? "Close Assistant" : "Open Assistant"}
-          <LightbulbIcon className="w-4 h-4 text-amber-500" />
+        <div className="flex items-center ">
+          <LoaderPinwheel className="w-4 h-4 mr-1 text-indigo-600" />{" "}
+          {isOpen ? (
+            "Close Assistant"
+          ) : (
+            <div className="flex items-center">
+              <p className="text-sm font-medium bg-gradient-to-r from-indigo-600 via-pink-500 to-purple-600 bg-clip-text text-transparent">
+                {"Build with Sophia"}{" "}
+              </p>
+            </div>
+          )}
         </div>
       </button>
 
@@ -80,7 +87,12 @@ export default function Sophia({
       >
         <div className="p-2">
           <div className="flex justify-between items-center p-1">
-            <h2 className="text-base font-bold">Sophia</h2>
+            <div className="flex items-center">
+              <LoaderPinwheel className="w-4 h-4 mr-1 text-indigo-600" />{" "}
+              <h2 className="text-sm font-semibold bg-gradient-to-r from-indigo-600 via-pink-500 to-purple-600 bg-clip-text text-transparent">
+                Build with Sophia
+              </h2>
+            </div>
             <button
               onClick={toggleDrawer}
               className=" border rounded-lg p-1 top-1 right-3 text-gray-600"
