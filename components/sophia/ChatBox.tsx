@@ -65,7 +65,7 @@ function ChatBox({
 }: ChatBoxProps) {
   const [input, setInput] = useState("");
   const [loadingResponse, setLoadingResponse] = useState(false);
-  const [openDialog, setOpenDialog] = useState(false);
+  const [openDialog, setOpenDialog] = useState<number | null>(null); // Change to track index
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -150,7 +150,7 @@ function ChatBox({
 
       setNodes(newNodes);
       setEdges(newEdges);
-      setOpenDialog(false);
+      setOpenDialog(null); // Close the dialog
       saveToHistory();
     }
   };
@@ -182,13 +182,15 @@ function ChatBox({
                         0 && (
                         <div className="mt-2">
                           <Dialog
-                            open={openDialog}
-                            onOpenChange={setOpenDialog}
+                            open={openDialog === index}
+                            onOpenChange={(isOpen) =>
+                              setOpenDialog(isOpen ? index : null)
+                            }
                           >
                             <DialogTrigger asChild>
                               <Button
                                 variant="outline"
-                                onClick={() => setOpenDialog(true)}
+                                onClick={() => setOpenDialog(index)}
                                 className="rounded-lg border border-indigo-300 text-indigo-700 hover:text-indigo-800"
                               >
                                 View Node Diagram
