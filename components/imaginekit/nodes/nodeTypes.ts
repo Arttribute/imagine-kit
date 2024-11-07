@@ -14,9 +14,9 @@ import ChatInterfaceNode from "./ChatInterfaceNode";
 import MemoryNode from "./MemoryNode";
 import TriggerButtonNode from "./TriggerButtonNode";
 import AudioPlayerNode from "./AudioPlayerNode";
-import TextToSpeech from "./TextToSpeechNode";
-import SpeechToText from "./SpeechToTextNode";
-import AudioRecorder from "./AudioRecorderNode";
+import TextToSpeechNode from "./TextToSpeechNode";
+import SpeechToTextNode from "./SpeechToTextNode";
+import AudioRecorderNode from "./AudioRecorderNode";
 import CameraNode from "./CameraNode";
 import FileUploadNode from "./FileUploadNode";
 
@@ -38,9 +38,9 @@ export const nodeTypes = {
   memory: MemoryNode,
   triggerButton: TriggerButtonNode,
   audioPlayer: AudioPlayerNode,
-  textToSpeech: TextToSpeech,
-  audioRecorder: AudioRecorder,
-  speechToText: SpeechToText,
+  textToSpeech: TextToSpeechNode,
+  audioRecorder: AudioRecorderNode,
+  speechToText: SpeechToTextNode,
   camera: CameraNode,
   fileUpload: FileUploadNode,
 };
