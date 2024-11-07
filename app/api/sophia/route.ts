@@ -19,10 +19,7 @@ const openai = new OpenAI({
   apiKey: API_KEY,
 });
 
-export const config = {
-  maxDuration: 45,
-};
-
+export const maxDuration = 45;
 export async function POST(request: Request) {
   try {
     const requestBody = await request.json();
