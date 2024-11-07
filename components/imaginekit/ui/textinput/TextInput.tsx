@@ -17,6 +17,12 @@ interface TextInputProps {
 function TextInput({ fields, onSubmit, loading }: TextInputProps) {
   const [inputFields, setInputFields] = useState(fields);
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSubmit();
+    }
+  };
+
   const handleSubmit = () => {
     // Trigger the callback with the current input field values
     console.log("Inputs", inputFields);
@@ -42,12 +48,13 @@ function TextInput({ fields, onSubmit, loading }: TextInputProps) {
               className="mt-1"
               value={field.value}
               onChange={(e) => handleInputChange(index, e.target.value)}
+              onKeyDown={handleKeyDown}
             />
           </div>
         ))}
       <div className="flex flex-col w-full m-2">
         {loading ? (
-          <Button className="w-full" onClick={handleSubmit} disabled>
+          <Button className="w-full" disabled>
             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
             Submit
           </Button>
