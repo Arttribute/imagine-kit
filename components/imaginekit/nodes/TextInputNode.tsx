@@ -51,6 +51,7 @@ const TextInputNode: React.FC<TextInputNodeProps> = ({ data, id }) => {
       nameKey="textInputName"
       type="output"
       outputs={outputs}
+      outputPlaceholders={["Text input"]}
       icon={<KeyboardIcon className="w-5 h-5 text-gray-400" />}
       onDataChange={onDataChange}
       onRemoveNode={onRemoveNode}

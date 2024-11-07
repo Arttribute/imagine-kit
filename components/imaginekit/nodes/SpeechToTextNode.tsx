@@ -27,6 +27,8 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({ data, id }) => {
       type="both"
       inputs={inputs}
       outputs={outputs}
+      inputPlaceholders={["Audio Source"]}
+      outputPlaceholders={["Text"]}
       icon={<AudioWaveformIcon className="w-5 h-5 text-gray-400" />}
       onDataChange={onDataChange}
       onRemoveNode={onRemoveNode}

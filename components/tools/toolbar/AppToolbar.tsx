@@ -24,6 +24,7 @@ import {
   MicIcon,
   AudioWaveformIcon,
   CameraIcon,
+  FileIcon,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -198,6 +199,12 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
           label: "Camera",
           type: "Camera",
           color: "green",
+        },
+        {
+          icon: <FileIcon className="w-5 h-5" />,
+          label: "File Upload",
+          type: "FileUpload",
+          color: "red",
         },
       ],
     },

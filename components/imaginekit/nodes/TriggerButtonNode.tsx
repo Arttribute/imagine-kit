@@ -24,6 +24,7 @@ const TriggerButtonNode: React.FC<TriggerButtonNodeProps> = ({ data, id }) => {
       nameKey="triggerButtonName"
       type="output"
       outputs={outputs}
+      outputPlaceholders={["Trigger"]}
       icon={
         <div className="flex items-center">
           <PowerIcon className="w-4 h-4 text-gray-400 mr-1" />

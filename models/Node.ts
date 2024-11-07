@@ -13,6 +13,19 @@ const InputOutputSchema = new mongoose.Schema({
   value: {
     type: String,
   },
+  color: {
+    type: String,
+    default: "",
+  },
+});
+
+const KnowledgeBaseSchema = new mongoose.Schema({
+  name: {
+    type: String,
+  },
+  content: {
+    type: String,
+  },
 });
 
 const NodeSchema = new mongoose.Schema({
@@ -33,6 +46,7 @@ const NodeSchema = new mongoose.Schema({
     outputs: [InputOutputSchema],
     instruction: { type: String },
     memoryFields: [InputOutputSchema],
+    knowledgeBase: KnowledgeBaseSchema, // Add knowledgeBase field
   },
   position: {
     x: { type: Number, required: true },

@@ -38,6 +38,8 @@ const ImageTilesNode: React.FC<ImageTilesNodeProps> = ({ data, id }) => {
       type="both"
       inputs={inputs}
       outputs={outputs}
+      inputPlaceholders={["Image Source"]}
+      outputPlaceholders={["Arranged Images"]}
       icon={
         <div className="flex items-center">
           <LayoutGridIcon className="w-4 h-4 text-gray-400 mr-1" />

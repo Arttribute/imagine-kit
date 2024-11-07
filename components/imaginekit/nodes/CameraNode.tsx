@@ -23,6 +23,7 @@ const CameraNode: React.FC<CameraNodeProps> = ({ data, id }) => {
       nameKey="cameraName"
       type="output"
       outputs={outputs}
+      outputPlaceholders={["Photo"]}
       icon={<CameraIcon className="w-5 h-5 text-gray-400" />}
       onDataChange={onDataChange}
       onRemoveNode={onRemoveNode}

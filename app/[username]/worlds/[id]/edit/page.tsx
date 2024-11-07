@@ -4,7 +4,7 @@ import store from "@/store/store";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { Provider } from "react-redux";
-import Editor from "@/components/Editor";
+import Editor from "@/components/editor/Editor";
 import { useSession } from "next-auth/react"; // Assuming next-auth is used for session
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";

@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import BaseNode from "@/components/imaginekit/nodes/BaseNode";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 interface ChatInterfaceNodeProps {
   data: {
@@ -66,6 +65,8 @@ const ChatInterfaceNode: React.FC<ChatInterfaceNodeProps> = ({ data, id }) => {
       type="both"
       inputs={inputs} // Use dynamic inputs
       outputs={outputs}
+      inputPlaceholders={["Participant"]}
+      outputPlaceholders={["Chat Interactions"]}
       icon={
         <div className="flex items-center">
           <MessageSquare className="w-4 h-4 text-gray-400 mr-1" />

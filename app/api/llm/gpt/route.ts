@@ -42,9 +42,6 @@ export async function POST(request: Request) {
       userContent.push({ type: "image_url", image_url: { url: image } });
     }
 
-    console.log("userContent", userContent);
-    console.log("Prompt", prompt);
-
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [

@@ -14,6 +14,7 @@ import TriggerButton from "@/components/imaginekit/previews/TriggerButtonPreview
 import AudioPlayerPreview from "@/components/imaginekit/previews/AudioPlayerPreview";
 import AudioRecorderPreview from "@/components/imaginekit/previews/AudioRecorderPreview";
 import CameraPreview from "@/components/imaginekit/previews/CameraPreview";
+import FileUploadPreview from "@/components/imaginekit/previews/FileUploadPreview";
 
 interface ComponentPosition {
   x: number;
@@ -28,13 +29,13 @@ interface UIComponent {
   type: string; // Add type to determine which preview to show
 }
 
-interface UIEditorProps {
+interface UIPreviewProps {
   uiComponents: UIComponent[];
   savedPositions: { [key: string]: ComponentPosition };
   savePositions: (positions: { [key: string]: ComponentPosition }) => void;
 }
 
-const UIEditor: React.FC<UIEditorProps> = ({
+const UIPreview: React.FC<UIPreviewProps> = ({
   uiComponents,
   savedPositions,
   savePositions,
@@ -109,6 +110,7 @@ const UIEditor: React.FC<UIEditorProps> = ({
     audioPlayer: AudioPlayerPreview,
     audioRecorder: AudioRecorderPreview,
     camera: CameraPreview,
+    fileUpload: FileUploadPreview,
   };
 
   return (
@@ -149,4 +151,4 @@ const UIEditor: React.FC<UIEditorProps> = ({
   );
 };
 
-export default UIEditor;
+export default UIPreview;
