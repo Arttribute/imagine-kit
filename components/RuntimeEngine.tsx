@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import axios from "axios";
 
 // User-Facing Components
@@ -19,7 +19,7 @@ import AudioRecorder from "@/components/imaginekit/ui/audio/AudioRecorder";
 import Camera from "@/components/imaginekit/ui/camera/Camera";
 import FileUpload from "@/components/imaginekit/ui/fileupload/FileUpload";
 
-// Utility function for calling LLM API
+// Utility function for calling APIs
 import { callGPTApi } from "@/utils/apicalls/gpt";
 import { callDalleApi } from "@/utils/apicalls/dalle";
 import { callTTSApi } from "@/utils/apicalls/opentts";
@@ -33,13 +33,13 @@ interface NodeData {
   data: {
     inputs: { id: string; label: string; value: string }[];
     outputs: { id: string; label: string; value: string }[];
-    knowledgeBase: {
+    knowledgeBase?: {
       name: string;
       content: string;
     };
     instruction?: string;
     memoryFields?: { id: string; label: string; value: string }[];
-    memory?: { inputs: string; outputs: string }[]; // Adding memory here
+    memory?: { inputs: string; outputs: string }[];
   };
   position: {
     x: number;
@@ -81,6 +81,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [loadingWorldComponents, setLoadingWorldComponents] =
     useState<boolean>(false);
+  const loadingCounter = useRef(0);
 
   // Load data from the database
   useEffect(() => {
@@ -98,7 +99,6 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         setEdges(edgesResponse.data);
         setUIComponents(uiComponentsResponse.data);
         setLoadingWorldComponents(false);
-        //setNodeExecutionStack(nodesResponse.data);
       } catch (error) {
         console.error("Failed to fetch data for runtime engine:", error);
       }
@@ -108,52 +108,65 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   }, [appId]);
 
   // Function to execute a single node based on its type
-  const executeNode = async (node: NodeData) => {
-    //remove node from stack
-    setLoading(true);
-    removeNodeFromStack(node.node_id);
-    console.log("Executing node..:", node);
-    switch (node.type) {
-      case "llm":
-        await executeLLMNode(node); // Execute LLM Node
-        break;
-      case "imageGen":
-        await executeImageGeneratorNode(node); // Execute Image Generator Node
-        break;
-      case "textToSpeech":
-        await executeTextToSpeechNode(node); // Execute Text to Speech Node
-        break;
-      case "speechToText":
-        await executeSpeechToTextNode(node); // Execute Speech to Text Node
-        break;
-      case "textInput":
-        await executeTextInputNode(node); // Now handle textInput node execution
-        break;
-      case "triggerButton":
-        await executeTriggerButtonNode(node); // Execute Trigger Button Node
-        break;
-      case "sketchPad":
-        await executeSketchPadNode(node); // Execute Sketch Pad Node
-        break;
-      case "audioRecorder":
-        await executeAudioRecorderNode(node); // Execute Audio Player Node
-        break;
-      case "camera":
-        await executeCameraNode(node); // Execute Camera Node
-        break;
-      case "fileUpload":
-        await executeFileUploadNode(node); // Execute File Upload Node
-        break;
-      default:
-        console.warn(`Unknown node type: ${node.type}`);
-        break;
-    }
-    setLoading(false);
-  };
+  const executeNode = useCallback(
+    async (node: NodeData) => {
+      removeNodeFromStack(node.node_id);
+
+      // Increment loading counter
+      loadingCounter.current += 1;
+      setLoading(true);
+
+      try {
+        console.log("Executing node:", node);
+        switch (node.type) {
+          case "llm":
+            await executeLLMNode(node); // Execute LLM Node
+            break;
+          case "imageGen":
+            await executeImageGeneratorNode(node); // Execute Image Generator Node
+            break;
+          case "textToSpeech":
+            await executeTextToSpeechNode(node); // Execute Text to Speech Node
+            break;
+          case "speechToText":
+            await executeSpeechToTextNode(node); // Execute Speech to Text Node
+            break;
+          case "textInput":
+            executeTextInputNode(node); // Handle Text Input Node
+            break;
+          case "triggerButton":
+            executeTriggerButtonNode(node); // Execute Trigger Button Node
+            break;
+          case "sketchPad":
+            executeSketchPadNode(node); // Execute Sketch Pad Node
+            break;
+          case "audioRecorder":
+            executeAudioRecorderNode(node); // Execute Audio Recorder Node
+            break;
+          case "camera":
+            executeCameraNode(node); // Execute Camera Node
+            break;
+          case "fileUpload":
+            executeFileUploadNode(node); // Execute File Upload Node
+            break;
+          default:
+            console.warn(`Unknown node type: ${node.type}`);
+            break;
+        }
+      } finally {
+        // Decrement loading counter
+        loadingCounter.current -= 1;
+        if (loadingCounter.current === 0) {
+          setLoading(false);
+        }
+      }
+    },
+    [nodes, edges]
+  );
 
   const runExecutionStack = useCallback(async () => {
-    //simply execute the nodes in the stack
-    for (const nodeId of nodeExecutionStack) {
+    const nodesToExecute = [...nodeExecutionStack];
+    for (const nodeId of nodesToExecute) {
       const node = nodes.find((n) => n.node_id === nodeId);
       if (node) {
         await executeNode(node);
@@ -162,17 +175,23 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   }, [nodeExecutionStack, nodes, executeNode]);
 
   const addNodeToStack = (node: NodeData) => {
-    setNodeExecutionStack((prev) => [...prev, node.node_id]);
+    setNodeExecutionStack((prev) => {
+      if (!prev.includes(node.node_id)) {
+        console.log(`Adding node ${node.node_id} to stack`);
+        return [...prev, node.node_id];
+      }
+      return prev;
+    });
   };
 
   const removeNodeFromStack = (nodeId: string) => {
+    console.log(`Removing node ${nodeId} from stack`);
     setNodeExecutionStack((prev) => prev.filter((id) => id !== nodeId));
   };
 
   const runApp = useCallback(async () => {
-    //simply execute the nodes in the stack
     await runExecutionStack();
-  }, [nodes, executeNode]);
+  }, [runExecutionStack]);
 
   useEffect(() => {
     console.log("Node execution stack:", nodeExecutionStack);
@@ -183,29 +202,65 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 
   const propagateDataToConnectedNodes = (node: NodeData) => {
     const connectedEdges = edges.filter((edge) => edge.source === node.node_id);
-    connectedEdges.forEach((edge) => {
-      const targetNodeIndex = nodes.findIndex(
-        (node) => node.node_id === edge.target
-      );
 
-      if (targetNodeIndex !== -1) {
-        const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
-          (input) => input.id === edge.targetHandle
+    // Use functional state update to ensure we're working with the latest state
+    setNodes((prevNodes) => {
+      let updatedNodes = [...prevNodes];
+      const nodesToAddToStack: NodeData[] = [];
+
+      connectedEdges.forEach((edge) => {
+        const targetNodeIndex = updatedNodes.findIndex(
+          (n) => n.node_id === edge.target
         );
 
-        if (targetInputIndex !== -1) {
-          nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
-            node.data.outputs[0].value;
-          addNodeToStack(nodes[targetNodeIndex]);
+        if (targetNodeIndex !== -1) {
+          const targetNode = updatedNodes[targetNodeIndex];
+          const targetInputIndex = targetNode.data.inputs.findIndex(
+            (input) => input.id === edge.targetHandle
+          );
+
+          if (targetInputIndex !== -1) {
+            const inputLabel = targetNode.data.inputs[targetInputIndex].label;
+
+            // Find the output that matches this label
+            const outputValue = node.data.outputs.find(
+              (output) => output.label === inputLabel
+            )?.value;
+
+            // If no matching label, use the first output value
+            const newValue = outputValue ?? node.data.outputs[0]?.value;
+
+            if (newValue !== undefined) {
+              updatedNodes[targetNodeIndex] = {
+                ...targetNode,
+                data: {
+                  ...targetNode.data,
+                  inputs: targetNode.data.inputs.map((input, idx) =>
+                    idx === targetInputIndex
+                      ? { ...input, value: newValue }
+                      : input
+                  ),
+                },
+              };
+              nodesToAddToStack.push(updatedNodes[targetNodeIndex]);
+            }
+          }
         }
-      }
+      });
+
+      // After all updates, add connected nodes to the execution stack
+      nodesToAddToStack.forEach((updatedNode) => {
+        addNodeToStack(updatedNode);
+      });
+
+      return updatedNodes;
     });
   };
 
   // Function to execute a Trigger Button Node
-  const executeTriggerButtonNode = async (node: NodeData) => {
+  const executeTriggerButtonNode = (node: NodeData) => {
     propagateDataToConnectedNodes(node);
-    //reset the button value
+    // Reset the button value
     setNodes((prev) =>
       prev.map((n) =>
         n.node_id === node.node_id
@@ -232,39 +287,35 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     const promptLabel = node.data.inputs[0]?.label;
     if (!promptInput || promptInput === promptLabel) return;
 
-    const { instruction, inputs, outputs } = node.data;
+    const { instruction, inputs, outputs, knowledgeBase } = node.data;
 
-    const inputOutputmemory = node.data.memory;
-    const CurrentnputValues = inputs.map((input) => input.value).join(" ");
+    const inputOutputMemory = node.data.memory;
+    const currentInputValues = inputs.map((input) => input.value).join(" ");
     const outputFormat = outputs.map((output) => output.label).join(", ");
-    const knowledgeBase = node.data.knowledgeBase.content;
-
-    //lets send current input and  history of the past input and output to the API
-    //inputValues = {input: "current input", memory: [{inputs: "past input", outputs: "past output"}]}
-    //stringify the inputValues object and send it to the API
+    const knowledgeBaseContent = knowledgeBase?.content || "";
 
     try {
       const generatedOutput = await callGPTApi(
         instruction ?? "",
-        CurrentnputValues,
+        currentInputValues,
         outputFormat,
-        JSON.stringify(inputOutputmemory ?? []),
-        knowledgeBase
+        JSON.stringify(inputOutputMemory ?? []),
+        knowledgeBaseContent
       );
 
-      // Remove backticks and sanitize GPT output before parsing - this due to a an issue that is specific to GPT-4o-mini
+      // Remove backticks and sanitize GPT output before parsing
       const cleanedOutput = generatedOutput
-        .replace(/```json/g, "") // Remove "```json" if present
-        .replace(/```/g, "") // Remove trailing "```"
-        .trim(); // Trim any extra spaces or newlines
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
 
       const outputData = JSON.parse(cleanedOutput);
 
-      // Update the nodes memory with the current input and output
+      // Update the node's memory with the current input and output
       const updatedMemory = [
         ...(node.data.memory ?? []),
         {
-          inputs: CurrentnputValues,
+          inputs: currentInputValues,
           outputs: outputData,
         },
       ];
@@ -273,37 +324,53 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         value: outputData[output.label],
       }));
 
-      nodes[nodes.findIndex((n) => n.node_id === node.node_id)].data.memory =
-        updatedMemory;
-      nodes[nodes.findIndex((n) => n.node_id === node.node_id)].data.outputs =
-        updatedOutputs;
-      setNodes([...nodes]);
+      const nodeIndex = nodes.findIndex((n) => n.node_id === node.node_id);
+      if (nodeIndex !== -1) {
+        const updatedNodes = [...nodes];
+        updatedNodes[nodeIndex] = {
+          ...node,
+          data: {
+            ...node.data,
+            memory: updatedMemory,
+            outputs: updatedOutputs,
+          },
+        };
+        setNodes(updatedNodes);
 
-      //propagate data to connected nodes
-      const connectedEdges = edges.filter(
-        (edge) => edge.source === node.node_id
-      );
-      connectedEdges.forEach((edge) => {
-        const targetNodeIndex = nodes.findIndex(
-          (node) => node.node_id === edge.target
+        // Propagate data to connected nodes
+        const connectedEdges = edges.filter(
+          (edge) => edge.source === node.node_id
         );
-
-        if (targetNodeIndex !== -1) {
-          const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
-            (input) => input.id === edge.targetHandle
+        connectedEdges.forEach((edge) => {
+          const targetNodeIndex = updatedNodes.findIndex(
+            (n) => n.node_id === edge.target
           );
 
-          if (targetInputIndex !== -1) {
-            const label =
-              nodes[targetNodeIndex].data.inputs[targetInputIndex].label;
-            nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
-              outputData[label];
-            setNodes([...nodes]);
-            addNodeToStack(nodes[targetNodeIndex]);
-            //executeNode(nodes[targetNodeIndex]);
+          if (targetNodeIndex !== -1) {
+            const targetNode = updatedNodes[targetNodeIndex];
+            const targetInputIndex = targetNode.data.inputs.findIndex(
+              (input) => input.id === edge.targetHandle
+            );
+
+            if (targetInputIndex !== -1) {
+              const label = targetNode.data.inputs[targetInputIndex].label;
+              updatedNodes[targetNodeIndex] = {
+                ...targetNode,
+                data: {
+                  ...targetNode.data,
+                  inputs: targetNode.data.inputs.map((input, idx) =>
+                    idx === targetInputIndex
+                      ? { ...input, value: outputData[label] }
+                      : input
+                  ),
+                },
+              };
+              setNodes(updatedNodes);
+              addNodeToStack(updatedNodes[targetNodeIndex]);
+            }
           }
-        }
-      });
+        });
+      }
     } catch (error) {
       console.error(`Error executing LLM Node (${node.node_id}):`, error);
     }
@@ -317,46 +384,26 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     try {
       const generatedImageUrl = await callDalleApi(promptInput);
 
-      setNodes((prev) =>
-        prev.map((n) =>
-          n.node_id === node.node_id
-            ? {
-                ...n,
-                data: {
-                  ...n.data,
-                  outputs: n.data.outputs.map((output) =>
-                    output.id === "output-0"
-                      ? { ...output, value: generatedImageUrl }
-                      : output
-                  ),
-                },
-              }
-            : n
-        )
+      const updatedOutputs = node.data.outputs.map((output) =>
+        output.id === "output-0"
+          ? { ...output, value: generatedImageUrl }
+          : output
       );
 
-      const connectedEdges = edges.filter(
-        (edge) => edge.source === node.node_id
-      );
-      connectedEdges.forEach((edge) => {
-        const targetNodeIndex = nodes.findIndex(
-          (node) => node.node_id === edge.target
-        );
+      const nodeIndex = nodes.findIndex((n) => n.node_id === node.node_id);
+      if (nodeIndex !== -1) {
+        const updatedNodes = [...nodes];
+        updatedNodes[nodeIndex] = {
+          ...node,
+          data: {
+            ...node.data,
+            outputs: updatedOutputs,
+          },
+        };
+        setNodes(updatedNodes);
 
-        if (targetNodeIndex !== -1) {
-          const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
-            (input) => input.id === edge.targetHandle
-          );
-
-          if (targetInputIndex !== -1) {
-            nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
-              generatedImageUrl;
-
-            setNodes([...nodes]);
-            addNodeToStack(nodes[targetNodeIndex]);
-          }
-        }
-      });
+        propagateDataToConnectedNodes(updatedNodes[nodeIndex]);
+      }
     } catch (error) {
       console.error(
         `Error executing Image Generator Node (${node.node_id}):`,
@@ -429,46 +476,24 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     try {
       const generatedText = await callWhisperApi(audioInput);
 
-      setNodes((prev) =>
-        prev.map((n) =>
-          n.node_id === node.node_id
-            ? {
-                ...n,
-                data: {
-                  ...n.data,
-                  outputs: n.data.outputs.map((output) =>
-                    output.id === "output-0"
-                      ? { ...output, value: generatedText }
-                      : output
-                  ),
-                },
-              }
-            : n
-        )
+      const updatedOutputs = node.data.outputs.map((output) =>
+        output.id === "output-0" ? { ...output, value: generatedText } : output
       );
 
-      const connectedEdges = edges.filter(
-        (edge) => edge.source === node.node_id
-      );
-      connectedEdges.forEach((edge) => {
-        const targetNodeIndex = nodes.findIndex(
-          (node) => node.node_id === edge.target
-        );
+      const nodeIndex = nodes.findIndex((n) => n.node_id === node.node_id);
+      if (nodeIndex !== -1) {
+        const updatedNodes = [...nodes];
+        updatedNodes[nodeIndex] = {
+          ...node,
+          data: {
+            ...node.data,
+            outputs: updatedOutputs,
+          },
+        };
+        setNodes(updatedNodes);
 
-        if (targetNodeIndex !== -1) {
-          const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
-            (input) => input.id === edge.targetHandle
-          );
-
-          if (targetInputIndex !== -1) {
-            nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
-              generatedText;
-
-            setNodes([...nodes]);
-            addNodeToStack(nodes[targetNodeIndex]);
-          }
-        }
-      });
+        propagateDataToConnectedNodes(updatedNodes[nodeIndex]);
+      }
     } catch (error) {
       console.error(
         `Error executing Speech to Text Node (${node.node_id}):`,
@@ -477,23 +502,23 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   };
 
-  const executeSketchPadNode = async (node: NodeData) => {
+  const executeSketchPadNode = (node: NodeData) => {
     propagateDataToConnectedNodes(node);
   };
 
-  const executeTextInputNode = async (node: NodeData) => {
+  const executeTextInputNode = (node: NodeData) => {
     propagateDataToConnectedNodes(node);
   };
 
-  const executeAudioRecorderNode = async (node: NodeData) => {
+  const executeAudioRecorderNode = (node: NodeData) => {
     propagateDataToConnectedNodes(node);
   };
 
-  const executeCameraNode = async (node: NodeData) => {
+  const executeCameraNode = (node: NodeData) => {
     propagateDataToConnectedNodes(node);
   };
 
-  const executeFileUploadNode = async (node: NodeData) => {
+  const executeFileUploadNode = (node: NodeData) => {
     propagateDataToConnectedNodes(node);
   };
 
@@ -503,37 +528,37 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     nodeName: string
   ) => {
     setNodes((prevNodes) => {
-      const updatedNodes = prevNodes.map((node) =>
-        node.node_id === nodeId
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                outputs: Array.isArray(data)
-                  ? data.map(({ label, value }) => ({
-                      id: label,
-                      label,
-                      value,
-                    }))
-                  : [
-                      {
-                        ...node.data.outputs[0],
-                        value: data,
-                      },
-                    ],
+      const nodeIndex = prevNodes.findIndex((n) => n.node_id === nodeId);
+      if (nodeIndex !== -1) {
+        const node = prevNodes[nodeIndex];
+        const updatedOutputs = Array.isArray(data)
+          ? data.map(({ label, value }) => ({
+              id: label,
+              label,
+              value,
+            }))
+          : [
+              {
+                ...node.data.outputs[0],
+                value: data,
               },
-            }
-          : node
-      );
+            ];
 
-      // Find the updated node to add to the stack
-      const updatedNode = updatedNodes.find((n) => n.node_id === nodeId);
-      if (updatedNode) {
-        addNodeToStack(updatedNode);
-        console.log(`${nodeName} added to stack:`, updatedNode);
+        const updatedNodes = [...prevNodes];
+        updatedNodes[nodeIndex] = {
+          ...node,
+          data: {
+            ...node.data,
+            outputs: updatedOutputs,
+          },
+        };
+
+        addNodeToStack(updatedNodes[nodeIndex]);
+        console.log(`${nodeName} added to stack:`, updatedNodes[nodeIndex]);
+
+        return updatedNodes;
       }
-
-      return updatedNodes;
+      return prevNodes;
     });
   };
 
@@ -556,7 +581,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     const columns: { [key: number]: any[] } = {};
     components.forEach((component) => {
       const x = component.position.x;
-      // Calculate the column by dividing x by columnWidth (adjust this width as needed)
+      // Calculate the column by dividing x by columnWidth
       const column = Math.floor(x / columnWidth);
 
       if (!columns[column]) {
@@ -596,12 +621,12 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
             <div
               key={component.component_id}
               style={{
-                position: isMobile ? "relative" : "absolute", // Absolute for desktop, relative for mobile
+                position: isMobile ? "relative" : "absolute",
                 left: isMobile ? "auto" : position.x,
                 top: isMobile ? "auto" : position.y,
                 width: position.width,
                 height: position.height,
-                marginBottom: isMobile ? "20px" : "0", // Add spacing between components for mobile
+                marginBottom: isMobile ? "20px" : "0",
               }}
             >
               {renderUIComponent(
@@ -614,7 +639,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
           );
         })}
         {loadingWorldComponents && (
-          <div style={{ display: "absolute", width: "80vw" }}>
+          <div style={{ position: "absolute", width: "80vw" }}>
             <LoadingWorld />
           </div>
         )}
