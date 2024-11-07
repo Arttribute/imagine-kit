@@ -33,6 +33,10 @@ interface NodeData {
   data: {
     inputs: { id: string; label: string; value: string }[];
     outputs: { id: string; label: string; value: string }[];
+    knowledgeBase: {
+      name: string;
+      content: string;
+    };
     instruction?: string;
     memoryFields?: { id: string; label: string; value: string }[];
     memory?: { inputs: string; outputs: string }[]; // Adding memory here
@@ -233,6 +237,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     const inputOutputmemory = node.data.memory;
     const CurrentnputValues = inputs.map((input) => input.value).join(" ");
     const outputFormat = outputs.map((output) => output.label).join(", ");
+    const knowledgeBase = node.data.knowledgeBase.content;
 
     //lets send current input and  history of the past input and output to the API
     //inputValues = {input: "current input", memory: [{inputs: "past input", outputs: "past output"}]}
@@ -243,7 +248,8 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         instruction ?? "",
         CurrentnputValues,
         outputFormat,
-        JSON.stringify(inputOutputmemory ?? [])
+        JSON.stringify(inputOutputmemory ?? []),
+        knowledgeBase
       );
 
       // Remove backticks and sanitize GPT output before parsing - this due to a an issue that is specific to GPT-4o-mini
