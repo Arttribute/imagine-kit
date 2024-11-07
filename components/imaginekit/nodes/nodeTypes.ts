@@ -92,6 +92,10 @@ export const NODE_TYPE_MAPPING = {
       outputs: [{ id: "output-0", label: "Output", value: "", color: "" }],
       instruction: "",
       botName: "Bot Name",
+      knowledgeBase: {
+        name: "",
+        content: "",
+      },
     },
     ImageGen: {
       inputs: [{ id: "input-0", label: "Prompt", value: "", color: "" }],

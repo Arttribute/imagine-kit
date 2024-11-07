@@ -1,17 +1,23 @@
+// LLMNode.tsx
 "use client";
 import React, { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Handle, Position } from "reactflow";
-import { Bot, Plus, CircleX, Trash2 } from "lucide-react";
+import { Bot, Plus, CircleX, Trash2, CloudUploadIcon } from "lucide-react";
+import { getPDFText } from "@/utils/fileProcessing";
 
 interface LLMNodeProps {
   data: {
-    inputs: { id: string; value: string; color?: string }[]; // Add optional color field
-    outputs: { id: string; value: string; color?: string }[]; // Add optional color field
+    inputs: { id: string; value: string; color?: string }[];
+    outputs: { id: string; value: string; color?: string }[];
     instruction: string;
     botName: string;
+    knowledgeBase?: {
+      name: string;
+      content: string;
+    };
     onRemoveNode: (id: string) => void;
     onDataChange: (id: string, data: any) => void;
   };
@@ -69,6 +75,42 @@ const LLMNode: React.FC<LLMNodeProps> = ({ data, id }) => {
     onDataChange(id, { ...data, outputs: newOutputs });
   };
 
+  // Handle file upload
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        //turn file into base64 and get text from pdf
+        const base64data = reader.result as string;
+        if (base64data) {
+          console.log("Base64 file:", base64data);
+          getPDFText(base64data).then((text) => {
+            console.log("PDF text:", text);
+            onDataChange(id, {
+              ...data,
+              knowledgeBase: {
+                name: file.name,
+                content: text,
+              },
+            });
+          });
+        }
+      };
+    }
+  };
+
+  // Remove knowledge base
+  const removeKnowledgeBase = () => {
+    onDataChange(id, {
+      ...data,
+      knowledgeBase: undefined,
+    });
+  };
+
   return (
     <div className="bg-white rounded-xl border p-4 m-1 w-80 shadow-sm">
       <div className="flex justify-between mb-3">
@@ -105,11 +147,57 @@ const LLMNode: React.FC<LLMNodeProps> = ({ data, id }) => {
           value={data.instruction}
           onChange={(e) => handleInstructionChange(e.target.value)}
           className="nodrag overflow-auto"
-          onWheelCapture={(e) => e.stopPropagation()} // Prevent canvas zooming when scrolling
+          onWheelCapture={(e) => e.stopPropagation()}
         />
       </div>
 
-      {/* Inputs with dynamically positioned handles */}
+      {/* Knowledge Base Upload */}
+      <div className="flex flex-col mb-3">
+        <div className="flex items-center mb-1">
+          <p className=" text-sm font-semibold">Knowledge Base</p>
+          <p className="text-xs text-gray-500 ml-1">
+            {"(Optional) upload pdf"}
+          </p>
+        </div>
+
+        {data.knowledgeBase && data.knowledgeBase.name !== "" ? (
+          <div className="flex border items-center border-indigo-400 rounded-lg pl-3 pr-1 py-1">
+            <div className="truncate w-full">
+              <p className="text-sm  text-ellipsis overflow-hidden">
+                {data.knowledgeBase.name}
+              </p>
+            </div>
+            <Button
+              onClick={removeKnowledgeBase}
+              className="ml-2"
+              variant="ghost"
+              size="sm"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        ) : (
+          <>
+            <input
+              type="file"
+              name="file"
+              id="file"
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+            <label htmlFor="file" className="w-full">
+              <div className="flex w-full border border-dashed border-gray-500 p-1 rounded-lg">
+                <div className="flex items-center justify-center border border-gray-900 text-gray-900 px-4 py-1.5 rounded-lg">
+                  <CloudUploadIcon className="w-5 h-5 mr-1 text-gray-900" />
+                  <p className="text-xs">Upload file</p>
+                </div>
+              </div>
+            </label>
+          </>
+        )}
+      </div>
+
+      {/* Inputs */}
       <div className="flex flex-col mb-3">
         <p className="mb-1 text-sm font-semibold">Inputs</p>
         {data.inputs.map((input, index) => (
@@ -123,7 +211,6 @@ const LLMNode: React.FC<LLMNodeProps> = ({ data, id }) => {
                 marginLeft: "-18px",
                 height: "12px",
                 width: "12px",
-                // Apply color if defined, otherwise default
                 backgroundColor: input.color || "#3949ab",
               }}
             />
@@ -149,7 +236,7 @@ const LLMNode: React.FC<LLMNodeProps> = ({ data, id }) => {
         </Button>
       </div>
 
-      {/* Outputs with dynamically positioned handles */}
+      {/* Outputs */}
       <div className="flex flex-col mb-3">
         <p className="mb-1 text-sm font-semibold">Outputs</p>
         {data.outputs.map((output, index) => (
@@ -177,7 +264,6 @@ const LLMNode: React.FC<LLMNodeProps> = ({ data, id }) => {
                 marginRight: "-18px",
                 height: "12px",
                 width: "12px",
-                // Apply color if defined, otherwise default
                 backgroundColor: output.color || "#00838f",
               }}
             />

@@ -14,8 +14,17 @@ const InputOutputSchema = new mongoose.Schema({
     type: String,
   },
   color: {
-    type: String, // New field to store color of each input/output connector
-    default: "", // Default to an empty string if color is not set
+    type: String,
+    default: "",
+  },
+});
+
+const KnowledgeBaseSchema = new mongoose.Schema({
+  name: {
+    type: String,
+  },
+  content: {
+    type: String,
   },
 });
 
@@ -37,6 +46,7 @@ const NodeSchema = new mongoose.Schema({
     outputs: [InputOutputSchema],
     instruction: { type: String },
     memoryFields: [InputOutputSchema],
+    knowledgeBase: KnowledgeBaseSchema, // Add knowledgeBase field
   },
   position: {
     x: { type: Number, required: true },

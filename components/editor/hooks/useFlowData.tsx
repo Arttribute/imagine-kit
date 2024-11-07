@@ -59,6 +59,13 @@ function useFlowData(appId: string) {
           ...node,
           id: node.node_id,
           position: node.position,
+          data: {
+            ...node.data,
+            knowledgeBase: node.data.knowledgeBase || {
+              name: "",
+              content: "",
+            },
+          },
         }));
         const fetchedEdges = edgesResponse.data.map((edge: any) => ({
           ...edge,
@@ -168,6 +175,10 @@ function useFlowData(appId: string) {
             outputs: node.data.outputs || [],
             instruction: node.data.instruction || "",
             memoryFields: node.data.memoryFields || [],
+            knowledgeBase: node.data.knowledgeBase || {
+              name: "",
+              content: "",
+            },
           },
           position: {
             x: node.position.x || 0,

@@ -6,9 +6,8 @@ export async function callGPTApi(
 ) {
   try {
     let image = null;
-    let fileBase64 = null;
 
-    // Separate text, image, and file (base64) inputs from the inputs string
+    // Separate text, and image inputs from the inputs string
     const inputArray = inputs.split(" ");
     let textInputs = inputArray
       .filter((input) => {
@@ -19,28 +18,10 @@ export async function callGPTApi(
         ) {
           image = input; // This is the image input (base64 or URL)
           return false; // Exclude image from text inputs
-        } else if (input.startsWith("data:application")) {
-          fileBase64 = input; // This is the file input (base64)
-          return false; // Exclude file from text inputs
         }
         return true; // Keep non-image, non-file inputs as text
       })
       .join(" "); // Combine the text inputs back
-
-    // If a base64 file is detected, process it
-    if (fileBase64) {
-      const fileInfo = await fetch("/api/filesearch", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ base64File: fileBase64 }),
-      }).then((res) => res.json());
-
-      // Append extracted file info to text inputs
-      textInputs += ` ${fileInfo.fileInfo}`;
-      console.log("File info extracted:", fileInfo.fileInfo);
-    }
 
     // Create request body object for the GPT route
     const requestBody: any = {

@@ -75,20 +75,45 @@ const Editor: React.FC<EditorProps> = ({ appId, owner }) => {
           if (edge.source === id) {
             const targetNode = nodes.find((node) => node.id === edge.target);
             if (targetNode) {
+              // Extract indices from the edge handles
               const outputIndex = parseInt(
                 edge.data.sourceHandle?.replace(/^(output-|field-)/, "") || "0",
                 10
               );
+              const inputIndex = parseInt(
+                edge.data.targetHandle?.replace(/^(input-|field-)/, "") || "0",
+                10
+              );
+
+              // Clone the target node's inputs
               const newInputs = [...(targetNode.data.inputs || [])];
-              newInputs[outputIndex] = {
-                ...newInputs[outputIndex],
-                value: data.outputs[outputIndex].value,
-                color: edge.data.color,
-              };
-              handleDataChange(edge.target, {
-                ...targetNode.data,
-                inputs: newInputs,
-              });
+
+              // Debug logs
+              console.log("newInputs", newInputs);
+              console.log("inputIndex", inputIndex);
+              console.log(
+                "data.outputs[outputIndex].value",
+                data.outputs[outputIndex]?.value
+              );
+
+              // Safely update the target node's input
+              if (data.outputs[outputIndex] && newInputs[inputIndex]) {
+                newInputs[inputIndex] = {
+                  ...newInputs[inputIndex],
+                  value: data.outputs[outputIndex].value,
+                  color: edge.data.color,
+                };
+
+                // Recursively update the target node
+                handleDataChange(edge.target, {
+                  ...targetNode.data,
+                  inputs: newInputs,
+                });
+              } else {
+                console.warn(
+                  `Undefined data at outputIndex ${outputIndex} or inputIndex ${inputIndex}`
+                );
+              }
             }
           }
         });
