@@ -179,7 +179,10 @@ export default function EditWorldMetadata({ appData }: { appData: appData }) {
 
               <label htmlFor="file" className="cursor-pointer w-full">
                 <Image
-                  src={worldImageUrl}
+                  src={
+                    worldImageUrl ||
+                    "https://res.cloudinary.com/arttribute/image/upload/v1723823036/m25z496he3yykfk3elsz.jpg"
+                  }
                   width={400}
                   height={400}
                   alt={"app"}

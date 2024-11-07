@@ -21,7 +21,7 @@ function ChatIntefaceInterface() {
   ];
 
   return (
-    <div className="bg-gray-50 rounded-xl py-1 px-2 w-96">
+    <div className="bg-gray-50 rounded-xl py-1 px-2 w-96 h-96">
       {InteractionData &&
         InteractionData.map((interaction: any, index: number) => (
           <div key={index} className="mb-4">

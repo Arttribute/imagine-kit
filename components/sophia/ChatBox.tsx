@@ -17,6 +17,7 @@ import ReactFlow, { Controls, Background, Edge } from "reactflow";
 import "reactflow/dist/style.css";
 import axios from "axios";
 import nodeTypes from "@/components/imaginekit/nodes/nodeTypes";
+import { set } from "lodash";
 
 interface NodeDiagramProps {
   data: {
@@ -64,6 +65,8 @@ function ChatBox({
   saveToHistory,
 }: ChatBoxProps) {
   const [input, setInput] = useState("");
+  const [userInputLoadingPlaceholder, setUserInputLoadingPlaceholder] =
+    useState("");
   const [loadingResponse, setLoadingResponse] = useState(false);
   const [openDialog, setOpenDialog] = useState<number | null>(null); // Change to track index
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -85,9 +88,9 @@ function ChatBox({
       console.error("User ID or App ID is missing.");
       return;
     }
-
+    setUserInputLoadingPlaceholder(input);
     setLoadingResponse(true);
-
+    setInput("");
     try {
       // Send data to backend
       const response = await axios.post("/api/sophia", {
@@ -134,8 +137,6 @@ function ChatBox({
       await axios.post("/api/buildchat", {
         interactionData: interactionToSave,
       });
-
-      setInput("");
     } catch (error) {
       console.error("Error communicating with Sophia:", error);
     } finally {
@@ -233,7 +234,9 @@ function ChatBox({
             <>
               <div className="flex justify-end">
                 <div className="bg-sky-100 p-3 rounded-2xl shadow-sm max-w-full">
-                  <p className="text-sm text-gray-800">{input}</p>
+                  <p className="text-sm text-gray-800">
+                    {userInputLoadingPlaceholder}
+                  </p>
                 </div>
               </div>
               <div className="flex flex-col items-start">

@@ -64,7 +64,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   }, [interaction]);
 
   return (
-    <div className="flex flex-col h-[60vh] w-96 m-2  border shadow-xl rounded-xl">
+    <div className="flex flex-col h-96 w-96 m-2  border border-gray-300 shadow-xl rounded-xl">
       <div className="bg-gray-50 border border-indigo-200 rounded-xl p-2 m-2 h-full overflow-y-auto">
         <div className="flex items-center text-indigo-500 mb-3">
           <MessageSquareIcon className="h-4 w-4 mr-1" />
