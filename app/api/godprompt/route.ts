@@ -156,6 +156,7 @@ export async function POST(request: Request) {
 
     It is also VERY IMPORTANT you have a comprehensive understanding of how the runtime engine works in order to create a functional app and avoid errors.
     Here is a brief overview of how the runtime engine works:${RuntimeEngineWorking}
+    You need to understand how the nodes interact with each other and how the data flows through the edges and avoid creating any conflicts in the data flow. for example one node output should not be connected to another node output or to itself. An an input node should alwys be connected to an output node and one input node cannot be connected to multiple output nodes.
 
     Hint: For apps that may require complex behavior or logical understanding, use the LLM to process the input giving it the necessary instructions to follow to poduce the desired output.
     If the app gets too long to generate avoid generating the UI components and focus on the nodes and edges.

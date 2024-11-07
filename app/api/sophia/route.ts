@@ -31,15 +31,15 @@ export async function POST(request: Request) {
 
     The current state of the node editor is as follows:
     - Nodes:
-    ${JSON.stringify(nodes)}
+    ${JSON.stringify(nodes, null, 2)}
     - Edges:
-    ${JSON.stringify(edges)}
+    ${JSON.stringify(edges, null, 2)}
 
     The app metadata is:
-    ${JSON.stringify(appData)}
+    ${JSON.stringify(appData, null, 2)}
 
     The interaction history is:
-    ${JSON.stringify(interactionData)}
+    ${JSON.stringify(interactionData, null, 2)}
 
     Your task is to:
     - Analyze the user's message and the current node editor state.
@@ -63,6 +63,7 @@ export async function POST(request: Request) {
     Sometimes the user might ask for ideas and just chat with you, in that case, you can just chat back with them no need to provide a node diagram immediately.
     So in cases where you don't have any suggestions for the node diagram, you can just chat with the user. 
     In the case you provide a node diagram, provide the full flow of the diagram with all the nodes and edges and keep the text VERY VERY SHORT and focus on the node diagram - if the user needs more explanation they can ask you. 
+    Make sure the node diagram is in a position where the user can easily see(prefarably center of the canvas) and it is not cluttered.
  
     The following is all you need to know about the imagineKit's Node, Edge and UIComponent structure:
     Here are the mongoose schamas for Nodes and Edges:
@@ -141,24 +142,15 @@ export async function POST(request: Request) {
 
         The following are the node names that are available:
         ${AllNodeNames}
-
-        The following are the uiComponents types that are available:
-        ${AllUIComponentTypes}
     
-        DO NOT GO OUTSIDE THE SCOPE OF THE NODE TYPES, NODE NAMES AND UI COMPONENTS TYPES PROVIDED
-
-        Here are examples of how apps can be created:
-
-        ${SketchAppExample}
-
-        ${TextToImageExample}
-
-        ${AITarotExample}
-
-        ${MosaicsExample}
+        DO NOT GO OUTSIDE THE SCOPE OF THE NODE TYPES, NODE NAMES PROVIDED
+       
 
         It is also VERY IMPORTANT you have a comprehensive understanding of how the runtime engine works in order to create a functional app and avoid errors.
         Here is a brief overview of how the runtime engine works:${RuntimeEngineWorking}
+        You need to understand how the nodes interact with each other and how the data flows through the edges and avoid creating any conflicts in the data flow. for example one node output should not be connected to another node output or to itself. An an input node should alwys be connected to an output node and one input node cannot be connected to multiple output nodes.
+
+
 
         Try and understand what the user is trying to achieve.Ask questions if you need more information and do not work with vague assumptions. If you make any assumptions, state them clearly in your response.
         
