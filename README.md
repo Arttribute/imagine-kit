@@ -13,7 +13,8 @@ The core idea behind ImagineKit is to empower users, even those with minimal tec
 ### Create a flow on Imagine Kit
 
 #### Creating Hadithi AI: African Storytelling Workflow with ImagineKit
-<img width="1440" alt="Screenshot 2024-11-11 at 15 44 06" src="https://github.com/user-attachments/assets/d6ef9331-451e-4ab3-aaaa-cfadc9d71a05">
+
+![hadithi](https://github.com/user-attachments/assets/dc47e579-56e5-44fe-a1ec-0d5f4a17869b)
 
 This tutorial walks you through building a workflow on ImagineKit that generates African short stories, complete with images and audio. Follow these steps to bring your storytelling experience to life.
 
@@ -66,7 +67,8 @@ This tutorial walks you through building a workflow on ImagineKit that generates
    - Link it to the output from the **Image Generator** node.
   
 Your flow should look something like this by now
-<img width="1440" alt="Screenshot 2024-11-11 at 15 45 58" src="https://github.com/user-attachments/assets/723e104d-8a44-462c-a207-b2a8e94de1c7">
+
+![Flow](https://github.com/user-attachments/assets/b7e03820-aedc-462e-8424-359543ab0409)
 
 ##### 6. Finalize and Publish
 
