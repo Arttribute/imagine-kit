@@ -432,25 +432,32 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     try {
       const generatedAudio = (await callTTSApi(textInput)) as string;
 
-      setNodes((prev) =>
-        prev.map((n) =>
-          n.node_id === node.node_id
-            ? {
-                ...n,
-                data: {
-                  ...n.data,
-                  outputs: n.data.outputs.map((output) =>
-                    output.id === "output-0"
-                      ? { ...output, value: generatedAudio, executionId }
-                      : output
-                  ),
-                },
-              }
-            : n
-        )
+      // Create updated outputs with the new audio and executionId
+      const updatedOutputs = node.data.outputs.map((output) =>
+        output.id === "output-0"
+          ? { ...output, value: generatedAudio, executionId }
+          : output
       );
 
-      propagateDataToConnectedNodes(node, executionId);
+      // Find the index of the current node
+      const nodeIndex = nodes.findIndex((n) => n.node_id === node.node_id);
+      if (nodeIndex !== -1) {
+        // Create a copy of nodes and update the current node
+        const updatedNodes = [...nodes];
+        updatedNodes[nodeIndex] = {
+          ...node,
+          data: {
+            ...node.data,
+            outputs: updatedOutputs,
+          },
+        };
+
+        // Update the state with the new nodes array
+        setNodes(updatedNodes);
+
+        // Call propagateDataToConnectedNodes with the updated node
+        propagateDataToConnectedNodes(updatedNodes[nodeIndex], executionId);
+      }
     } catch (error) {
       console.error(
         `Error executing Text to Speech Node (${node.node_id}):`,

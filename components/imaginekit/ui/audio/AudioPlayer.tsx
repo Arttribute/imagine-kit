@@ -29,7 +29,7 @@ export default function AudioPlayer({
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Function to convert base64 audio data to Blob and return a URL
-  const base64ToBlob = (base64Data: string) => {
+  const base64ToBlobUrl = (base64Data: string) => {
     const byteString = atob(base64Data.split(",")[1]); // Decode Base64 string
     const mimeString = base64Data.split(",")[0].split(":")[1].split(";")[0]; // Get MIME type
 
@@ -37,8 +37,33 @@ export default function AudioPlayer({
     for (let i = 0; i < byteString.length; i++) {
       byteArray[i] = byteString.charCodeAt(i);
     }
-    return new Blob([byteArray], { type: mimeString });
+    const blob = new Blob([byteArray], { type: mimeString });
+    return URL.createObjectURL(blob);
   };
+
+  // Process the audio prop and set the audio URL
+  useEffect(() => {
+    if (isValidUrl(audio)) {
+      if (audio.startsWith("data:audio")) {
+        // If it's a base64 data URL, convert it to a blob URL
+        const url = base64ToBlobUrl(audio);
+        setAudioUrl(url);
+      } else {
+        // If it's already a valid URL, use it directly
+        setAudioUrl(audio);
+      }
+    } else {
+      setAudioUrl(null);
+    }
+
+    // Clean up the object URL when the component unmounts or audio changes
+    return () => {
+      if (audioUrl && audioUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audio]);
 
   // Handle play and pause
   const playAudio = () => {
@@ -72,15 +97,6 @@ export default function AudioPlayer({
     }
   };
 
-  // Create an object URL for the base64 audio if valid
-  useEffect(() => {
-    if (isValidUrl(audio)) {
-      const audioBlob = base64ToBlob(audio);
-      const url = URL.createObjectURL(audioBlob);
-      setAudioUrl(url);
-    }
-  }, [audio]);
-
   // Add and remove event listener for "ended" event
   useEffect(() => {
     const audioElement = audioRef.current;
@@ -92,20 +108,20 @@ export default function AudioPlayer({
         audioElement.removeEventListener("ended", handleAudioEnd);
       };
     }
-  }, [audioRef.current]);
+  }, []);
 
   return (
     <div className="">
       <div>
         {/* If not loading and the audio URL is valid */}
-        {!loading && isValidUrl(audio) && (
+        {!loading && audioUrl && (
           <div className="flex flex-col items-center justify-center w-96 p-2 pr-8 border rounded-full">
             <div className="flex items-center space-x-2 w-full">
               <audio
                 ref={audioRef}
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={handleLoadedMetadata}
-                src={audio}
+                src={audioUrl}
               />
               <button
                 onClick={playAudio}
@@ -141,7 +157,7 @@ export default function AudioPlayer({
         )}
 
         {/* If the audio URL is not valid */}
-        {!loading && !isValidUrl(audio) && (
+        {!loading && !audioUrl && (
           <div className="flex items-center justify-center w-96 p-2 pr-8 border rounded-full">
             <div className="p-2 border rounded-full">
               <Volume2Icon className="w-5 h-5 text-gray-700" />
