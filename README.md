@@ -9,6 +9,7 @@ ImagineKit is a comprehensive toolkit designed for creators to build and monetiz
 The core idea behind ImagineKit is to empower users, even those with minimal technical expertise, to leverage cutting-edge AI and blockchain technologies.
 
 ## Try it Live:
+You can try Imagine Kit [here](https://www.imaginekit.io/)
 
 ### Create a flow on Imagine Kit
 
@@ -25,13 +26,12 @@ This tutorial walks you through building a workflow on ImagineKit that generates
 
 ##### 2. Create the Storytelling Logic
 
-1. **Add an Assistant Node**:
-
+**Add an Assistant Node**:
    - Drag the **Assistant** node into the workflow and configure it to act as the storyteller.
    - Set the **Instruction** field to: _"You are a storyteller. Tell intriguing African tales accompanied by images."_
    - (Optional) Upload a knowledge base to provide the Assistant with more context if desired.
 
-2. **Define Inputs and Outputs**:
+**Define Inputs and Outputs**:
    - Connect the **Trigger Button** to the **Assistant** node’s input labeled **Run**.
    - Add outputs:
      - **Story**: The main text of the generated story.
@@ -45,19 +45,17 @@ This tutorial walks you through building a workflow on ImagineKit that generates
 
 ##### 4. Convert Text to Speech
 
-1. **Add a Text-to-Speech Node**:
-
+**Add a Text-to-Speech Node**:
    - Place the **Text-to-Speech** node to convert the story into audio.
    - Connect the `Story` output as the text source to be converted to audio.
 
-2. **Add an Audio Player**:
+**Add an Audio Player**:
    - Use the **Audio Player** node to play the generated audio.
    - Connect it to the **Text-to-Speech** node’s audio output.
 
 ##### 5. Generate and Display Story Images
 
-1. **Add an Image Generator Node**:
-
+**Add an Image Generator Node**:
    - Insert the **Image Generator** node to create an image based on the story.
    - Connect it to the `Story Image Prompt` output from the **Assistant** node.
    - Adjust the **Image Generator** settings to align with the storytelling theme.
@@ -71,7 +69,6 @@ Your flow should look something like this by now
 ![Flow](https://github.com/user-attachments/assets/b7e03820-aedc-462e-8424-359543ab0409)
 
 ##### 6. Finalize and Publish
-
 - **Test the Workflow**: Click on the **Experience** button to test the storytelling flow.
 - **Adjust Configurations**: Make any necessary adjustments to nodes or settings to ensure a smooth experience.
 - **Publish the Workflow**: Once satisfied, publish your Hadithi AI experience for users to explore and enjoy.
