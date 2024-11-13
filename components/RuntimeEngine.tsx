@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import axios from "axios";
+import { v4 as uuidv4 } from "uuid"; // For generating execution IDs
 
 // User-Facing Components
 import ImageDisplay from "@/components/imaginekit/ui/display/ImageDisplay";
@@ -26,13 +27,27 @@ import { callTTSApi } from "@/utils/apicalls/opentts";
 import { callWhisperApi } from "@/utils/apicalls/whisper";
 
 // Types for node, edge, and UI component data
+interface InputData {
+  id: string;
+  label: string;
+  value: string;
+  executionId?: string;
+}
+
+interface OutputData {
+  id: string;
+  label: string;
+  value: string;
+  executionId?: string;
+}
+
 interface NodeData {
   node_id: string;
   type: string;
   name: string;
   data: {
-    inputs: { id: string; label: string; value: string }[];
-    outputs: { id: string; label: string; value: string }[];
+    inputs: InputData[];
+    outputs: OutputData[];
     knowledgeBase?: {
       name: string;
       content: string;
@@ -77,7 +92,9 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   const [nodes, setNodes] = useState<NodeData[]>([]);
   const [edges, setEdges] = useState<EdgeData[]>([]);
   const [uiComponents, setUIComponents] = useState<UIComponentData[]>([]);
-  const [nodeExecutionStack, setNodeExecutionStack] = useState<string[]>([]);
+  const [nodeExecutionStack, setNodeExecutionStack] = useState<
+    { nodeId: string; executionId: string }[]
+  >([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [loadingWorldComponents, setLoadingWorldComponents] =
     useState<boolean>(false);
@@ -109,45 +126,48 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 
   // Function to execute a single node based on its type
   const executeNode = useCallback(
-    async (node: NodeData) => {
-      removeNodeFromStack(node.node_id);
+    async (node: NodeData, executionId: string) => {
+      removeNodeFromStack(node.node_id, executionId);
 
       // Increment loading counter
       loadingCounter.current += 1;
       setLoading(true);
 
       try {
-        console.log("Executing node:", node);
+        console.log(
+          `Executing node ${node.node_id} with executionId ${executionId}:`,
+          node
+        );
         switch (node.type) {
           case "llm":
-            await executeLLMNode(node); // Execute LLM Node
+            await executeLLMNode(node, executionId); // Execute LLM Node
             break;
           case "imageGen":
-            await executeImageGeneratorNode(node); // Execute Image Generator Node
+            await executeImageGeneratorNode(node, executionId); // Execute Image Generator Node
             break;
           case "textToSpeech":
-            await executeTextToSpeechNode(node); // Execute Text to Speech Node
+            await executeTextToSpeechNode(node, executionId); // Execute Text to Speech Node
             break;
           case "speechToText":
-            await executeSpeechToTextNode(node); // Execute Speech to Text Node
+            await executeSpeechToTextNode(node, executionId); // Execute Speech to Text Node
             break;
           case "textInput":
-            executeTextInputNode(node); // Handle Text Input Node
+            executeTextInputNode(node, executionId); // Handle Text Input Node
             break;
           case "triggerButton":
-            executeTriggerButtonNode(node); // Execute Trigger Button Node
+            executeTriggerButtonNode(node, executionId); // Execute Trigger Button Node
             break;
           case "sketchPad":
-            executeSketchPadNode(node); // Execute Sketch Pad Node
+            executeSketchPadNode(node, executionId); // Execute Sketch Pad Node
             break;
           case "audioRecorder":
-            executeAudioRecorderNode(node); // Execute Audio Recorder Node
+            executeAudioRecorderNode(node, executionId); // Execute Audio Recorder Node
             break;
           case "camera":
-            executeCameraNode(node); // Execute Camera Node
+            executeCameraNode(node, executionId); // Execute Camera Node
             break;
           case "fileUpload":
-            executeFileUploadNode(node); // Execute File Upload Node
+            executeFileUploadNode(node, executionId); // Execute File Upload Node
             break;
           default:
             console.warn(`Unknown node type: ${node.type}`);
@@ -166,27 +186,40 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 
   const runExecutionStack = useCallback(async () => {
     const nodesToExecute = [...nodeExecutionStack];
-    for (const nodeId of nodesToExecute) {
+    for (const { nodeId, executionId } of nodesToExecute) {
       const node = nodes.find((n) => n.node_id === nodeId);
       if (node) {
-        await executeNode(node);
+        await executeNode(node, executionId);
       }
     }
   }, [nodeExecutionStack, nodes, executeNode]);
 
-  const addNodeToStack = (node: NodeData) => {
+  const addNodeToStack = (node: NodeData, executionId: string) => {
     setNodeExecutionStack((prev) => {
-      if (!prev.includes(node.node_id)) {
-        console.log(`Adding node ${node.node_id} to stack`);
-        return [...prev, node.node_id];
+      if (
+        !prev.find(
+          (item) =>
+            item.nodeId === node.node_id && item.executionId === executionId
+        )
+      ) {
+        console.log(
+          `Adding node ${node.node_id} to stack with executionId ${executionId}`
+        );
+        return [...prev, { nodeId: node.node_id, executionId }];
       }
       return prev;
     });
   };
 
-  const removeNodeFromStack = (nodeId: string) => {
-    console.log(`Removing node ${nodeId} from stack`);
-    setNodeExecutionStack((prev) => prev.filter((id) => id !== nodeId));
+  const removeNodeFromStack = (nodeId: string, executionId: string) => {
+    console.log(
+      `Removing node ${nodeId} from stack with executionId ${executionId}`
+    );
+    setNodeExecutionStack((prev) =>
+      prev.filter(
+        (item) => !(item.nodeId === nodeId && item.executionId === executionId)
+      )
+    );
   };
 
   const runApp = useCallback(async () => {
@@ -200,7 +233,10 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   }, [runApp, nodeExecutionStack]);
 
-  const propagateDataToConnectedNodes = (node: NodeData) => {
+  const propagateDataToConnectedNodes = (
+    node: NodeData,
+    executionId: string
+  ) => {
     const connectedEdges = edges.filter((edge) => edge.source === node.node_id);
 
     // Use functional state update to ensure we're working with the latest state
@@ -237,7 +273,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
                   ...targetNode.data,
                   inputs: targetNode.data.inputs.map((input, idx) =>
                     idx === targetInputIndex
-                      ? { ...input, value: newValue }
+                      ? { ...input, value: newValue, executionId }
                       : input
                   ),
                 },
@@ -250,7 +286,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 
       // After all updates, add connected nodes to the execution stack
       nodesToAddToStack.forEach((updatedNode) => {
-        addNodeToStack(updatedNode);
+        addNodeToStack(updatedNode, executionId);
       });
 
       return updatedNodes;
@@ -258,8 +294,8 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   };
 
   // Function to execute a Trigger Button Node
-  const executeTriggerButtonNode = (node: NodeData) => {
-    propagateDataToConnectedNodes(node);
+  const executeTriggerButtonNode = (node: NodeData, executionId: string) => {
+    propagateDataToConnectedNodes(node, executionId);
     // Reset the button value
     setNodes((prev) =>
       prev.map((n) =>
@@ -282,7 +318,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   };
 
   // Function to execute an LLM Node
-  const executeLLMNode = async (node: NodeData) => {
+  const executeLLMNode = async (node: NodeData, executionId: string) => {
     const promptInput = node.data.inputs[0]?.value || "start";
     const promptLabel = node.data.inputs[0]?.label;
     if (!promptInput || promptInput === promptLabel) return;
@@ -322,6 +358,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
       const updatedOutputs = outputs.map((output) => ({
         ...output,
         value: outputData[output.label],
+        executionId,
       }));
 
       const nodeIndex = nodes.findIndex((n) => n.node_id === node.node_id);
@@ -338,45 +375,17 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         setNodes(updatedNodes);
 
         // Propagate data to connected nodes
-        const connectedEdges = edges.filter(
-          (edge) => edge.source === node.node_id
-        );
-        connectedEdges.forEach((edge) => {
-          const targetNodeIndex = updatedNodes.findIndex(
-            (n) => n.node_id === edge.target
-          );
-
-          if (targetNodeIndex !== -1) {
-            const targetNode = updatedNodes[targetNodeIndex];
-            const targetInputIndex = targetNode.data.inputs.findIndex(
-              (input) => input.id === edge.targetHandle
-            );
-
-            if (targetInputIndex !== -1) {
-              const label = targetNode.data.inputs[targetInputIndex].label;
-              updatedNodes[targetNodeIndex] = {
-                ...targetNode,
-                data: {
-                  ...targetNode.data,
-                  inputs: targetNode.data.inputs.map((input, idx) =>
-                    idx === targetInputIndex
-                      ? { ...input, value: outputData[label] }
-                      : input
-                  ),
-                },
-              };
-              setNodes(updatedNodes);
-              addNodeToStack(updatedNodes[targetNodeIndex]);
-            }
-          }
-        });
+        propagateDataToConnectedNodes(updatedNodes[nodeIndex], executionId);
       }
     } catch (error) {
       console.error(`Error executing LLM Node (${node.node_id}):`, error);
     }
   };
 
-  const executeImageGeneratorNode = async (node: NodeData) => {
+  const executeImageGeneratorNode = async (
+    node: NodeData,
+    executionId: string
+  ) => {
     const promptInput = node.data.inputs[0]?.value;
     const promptLabel = node.data.inputs[0]?.label;
     if (!promptInput || promptInput === promptLabel) return;
@@ -386,7 +395,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
 
       const updatedOutputs = node.data.outputs.map((output) =>
         output.id === "output-0"
-          ? { ...output, value: generatedImageUrl }
+          ? { ...output, value: generatedImageUrl, executionId }
           : output
       );
 
@@ -402,7 +411,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         };
         setNodes(updatedNodes);
 
-        propagateDataToConnectedNodes(updatedNodes[nodeIndex]);
+        propagateDataToConnectedNodes(updatedNodes[nodeIndex], executionId);
       }
     } catch (error) {
       console.error(
@@ -412,7 +421,10 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   };
 
-  const executeTextToSpeechNode = async (node: NodeData) => {
+  const executeTextToSpeechNode = async (
+    node: NodeData,
+    executionId: string
+  ) => {
     const textInput = node.data.inputs[0]?.value;
     const textLabel = node.data.inputs[0]?.label;
     if (!textInput || textInput === textLabel) return;
@@ -429,7 +441,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
                   ...n.data,
                   outputs: n.data.outputs.map((output) =>
                     output.id === "output-0"
-                      ? { ...output, value: generatedAudio }
+                      ? { ...output, value: generatedAudio, executionId }
                       : output
                   ),
                 },
@@ -438,28 +450,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         )
       );
 
-      const connectedEdges = edges.filter(
-        (edge) => edge.source === node.node_id
-      );
-      connectedEdges.forEach((edge) => {
-        const targetNodeIndex = nodes.findIndex(
-          (node) => node.node_id === edge.target
-        );
-
-        if (targetNodeIndex !== -1) {
-          const targetInputIndex = nodes[targetNodeIndex].data.inputs.findIndex(
-            (input) => input.id === edge.targetHandle
-          );
-
-          if (targetInputIndex !== -1) {
-            nodes[targetNodeIndex].data.inputs[targetInputIndex].value =
-              generatedAudio;
-
-            setNodes([...nodes]);
-            addNodeToStack(nodes[targetNodeIndex]);
-          }
-        }
-      });
+      propagateDataToConnectedNodes(node, executionId);
     } catch (error) {
       console.error(
         `Error executing Text to Speech Node (${node.node_id}):`,
@@ -468,7 +459,10 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   };
 
-  const executeSpeechToTextNode = async (node: NodeData) => {
+  const executeSpeechToTextNode = async (
+    node: NodeData,
+    executionId: string
+  ) => {
     const audioInput = node.data.inputs[0]?.value;
     const audioLabel = node.data.inputs[0]?.label;
     if (!audioInput || audioInput === audioLabel) return;
@@ -477,7 +471,9 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
       const generatedText = await callWhisperApi(audioInput);
 
       const updatedOutputs = node.data.outputs.map((output) =>
-        output.id === "output-0" ? { ...output, value: generatedText } : output
+        output.id === "output-0"
+          ? { ...output, value: generatedText, executionId }
+          : output
       );
 
       const nodeIndex = nodes.findIndex((n) => n.node_id === node.node_id);
@@ -492,7 +488,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         };
         setNodes(updatedNodes);
 
-        propagateDataToConnectedNodes(updatedNodes[nodeIndex]);
+        propagateDataToConnectedNodes(updatedNodes[nodeIndex], executionId);
       }
     } catch (error) {
       console.error(
@@ -502,24 +498,24 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   };
 
-  const executeSketchPadNode = (node: NodeData) => {
-    propagateDataToConnectedNodes(node);
+  const executeSketchPadNode = (node: NodeData, executionId: string) => {
+    propagateDataToConnectedNodes(node, executionId);
   };
 
-  const executeTextInputNode = (node: NodeData) => {
-    propagateDataToConnectedNodes(node);
+  const executeTextInputNode = (node: NodeData, executionId: string) => {
+    propagateDataToConnectedNodes(node, executionId);
   };
 
-  const executeAudioRecorderNode = (node: NodeData) => {
-    propagateDataToConnectedNodes(node);
+  const executeAudioRecorderNode = (node: NodeData, executionId: string) => {
+    propagateDataToConnectedNodes(node, executionId);
   };
 
-  const executeCameraNode = (node: NodeData) => {
-    propagateDataToConnectedNodes(node);
+  const executeCameraNode = (node: NodeData, executionId: string) => {
+    propagateDataToConnectedNodes(node, executionId);
   };
 
-  const executeFileUploadNode = (node: NodeData) => {
-    propagateDataToConnectedNodes(node);
+  const executeFileUploadNode = (node: NodeData, executionId: string) => {
+    propagateDataToConnectedNodes(node, executionId);
   };
 
   const handleDataSubmit = (
@@ -527,6 +523,8 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     data: string | Array<{ label: string; value: string }>,
     nodeName: string
   ) => {
+    const executionId = uuidv4(); // Generate a unique execution ID
+
     setNodes((prevNodes) => {
       const nodeIndex = prevNodes.findIndex((n) => n.node_id === nodeId);
       if (nodeIndex !== -1) {
@@ -536,11 +534,13 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
               id: label,
               label,
               value,
+              executionId, // Include execution ID
             }))
           : [
               {
                 ...node.data.outputs[0],
                 value: data,
+                executionId, // Include execution ID
               },
             ];
 
@@ -553,7 +553,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
           },
         };
 
-        addNodeToStack(updatedNodes[nodeIndex]);
+        addNodeToStack(updatedNodes[nodeIndex], executionId);
         console.log(`${nodeName} added to stack:`, updatedNodes[nodeIndex]);
 
         return updatedNodes;
@@ -743,6 +743,7 @@ const renderUIComponent = (
             id: input.id,
             label: input.label,
             value: input.value,
+            executionId: input.executionId, // Pass executionId
           }))}
           loading={loading}
         />

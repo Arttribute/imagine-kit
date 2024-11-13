@@ -9,6 +9,7 @@ interface ChatInterfaceProps {
     id: string;
     label: string;
     value: string;
+    executionId?: string;
   }>;
   loading?: boolean;
 }
@@ -18,7 +19,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   loading,
 }) => {
   const [interactionData, setInteractionData] = useState<
-    Array<{ id: string; role: string; message: string }>
+    Array<{ id: string; role: string; message: string; executionId?: string }>
   >([]);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -36,10 +37,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   useEffect(() => {
     if (interaction && interaction.length > 0) {
-      // Filter out interactions that already exist in the interactionData state
+      // Filter out interactions that already exist in the interactionData state based on executionId, role, and message
       const newInteractions = interaction.filter((i) => {
         return !interactionData.some(
-          (data) => data.id === i.id && data.message === i.value
+          (data) =>
+            data.executionId === i.executionId &&
+            data.role === i.label &&
+            data.message === i.value
         );
       });
 
@@ -48,6 +52,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         id: i.id,
         role: i.label, // Use label as the role
         message: i.value, // Use value as the message
+        executionId: i.executionId,
       }));
 
       // Append new interactions to the existing interactionData state
@@ -61,10 +66,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [interaction]);
+  }, [interactionData]);
 
   return (
-    <div className="flex flex-col h-96 w-96 m-2  border border-gray-300 shadow-xl rounded-xl">
+    <div className="flex flex-col h-96 w-96 m-2 border border-gray-300 shadow-xl rounded-xl">
       <div className="bg-gray-50 border border-indigo-200 rounded-xl p-2 m-2 h-full overflow-y-auto">
         <div className="flex items-center text-indigo-500 mb-3">
           <MessageSquareIcon className="h-4 w-4 mr-1" />
@@ -96,7 +101,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
         {loading && (
           <div className="flex justify-left">
-            <div className="p-3  max-w-full">
+            <div className="p-3 max-w-full">
               <LoadingChat />
             </div>
           </div>
