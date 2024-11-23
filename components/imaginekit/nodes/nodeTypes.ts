@@ -222,15 +222,7 @@ export const NODE_TYPE_MAPPING = {
       fileUploadName: "File Upload",
     },
     MultiInputForm: {
-      fields: [
-        {
-          id: "field-0",
-          label: "Field 1",
-          type: "text",
-          value: "",
-          color: "",
-        },
-      ],
+      inputs: [],
       outputs: [
         {
           id: "field-0",

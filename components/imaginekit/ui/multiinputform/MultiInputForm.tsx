@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import DrawingCanvas from "@/components/imaginekit/ui/sketchpad/DrawingCanvas";
 
 interface Field {
   id: string;
@@ -46,12 +47,164 @@ const MultiInputForm: React.FC<MultiInputFormProps> = ({
   const fileRefs = useRef<{ [key: string]: any }>({});
   const textRefs = useRef<{ [key: string]: string }>({});
 
+  const [isCanvasDirty, setIsCanvasDirty] = useState(false); // Track if canvas has changes
+
   const handleInputChange = (fieldId: string, value: any) => {
     setInputFields((prevFields) =>
       prevFields.map((field) =>
         field.id === fieldId ? { ...field, value } : field
       )
     );
+    console.log("Input Fields", inputFields);
+    console.log("Audio Refs", audioRefs.current);
+    console.log("Camera Refs", cameraRefs.current);
+    console.log("Sketch Refs", sketchRefs.current);
+    console.log("File Refs", fileRefs.current);
+    console.log("Text Refs", textRefs.current);
+  };
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [cameraStarted, setCameraStarted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Start camera stream
+  const startCamera = async () => {
+    try {
+      // Check if HTTPS is required
+      if (
+        window.location.protocol !== "https:" &&
+        process.env.NODE_ENV === "production"
+      ) {
+        throw new Error("Camera access requires HTTPS in production.");
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }, // Use 'user' for the front camera
+        audio: false,
+      });
+      if (videoRef.current) {
+        console.log("Camera access granted.");
+        videoRef.current.srcObject = stream;
+      }
+      setIsStreaming(true);
+      setError(null);
+    } catch (err) {
+      console.error("Error accessing the camera", err);
+      setError(
+        "Unable to access the camera. Please check permissions and ensure you're using HTTPS."
+      );
+    }
+  };
+
+  const handleStartCamera = () => {
+    setCameraStarted(true);
+    startCamera();
+  };
+
+  const handleStopCamera = () => {
+    setIsStreaming(false);
+    (videoRef.current?.srcObject as MediaStream)
+      ?.getTracks()
+      .forEach((track) => {
+        track.stop();
+      });
+    setCameraStarted(false);
+  };
+
+  useEffect(() => {
+    startCamera();
+    setCameraStarted(true);
+  }, []);
+
+  // Capture photo
+  const takePhoto = (field: { id: string }) => {
+    if (canvasRef.current && videoRef.current) {
+      const context = canvasRef.current.getContext("2d");
+      if (context) {
+        canvasRef.current.width = videoRef.current.videoWidth;
+        canvasRef.current.height = videoRef.current.videoHeight;
+        context.drawImage(
+          videoRef.current,
+          0,
+          0,
+          videoRef.current.videoWidth,
+          videoRef.current.videoHeight
+        );
+        const photoData = canvasRef.current.toDataURL("image/png");
+        handleInputChange(field.id, photoData);
+        cameraRefs.current[field.id] = { photoData };
+      }
+    }
+  };
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [audioUrl, setAudioUrl] = useState<string | null>(null); // Audio URL to play
+
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]); // Store all chunks of the recording
+
+  const startRecording = async (field: { id: string }) => {
+    setIsRecording(true);
+    setStatusMessage("Listening");
+    audioChunksRef.current = [];
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Your browser does not support audio recording");
+      return;
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mediaRecorder = new MediaRecorder(stream);
+    mediaRecorderRef.current = mediaRecorder;
+
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        audioChunksRef.current.push(event.data);
+      }
+    };
+
+    mediaRecorder.onstop = async () => {
+      setStatusMessage("");
+      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
+      setAudioUrl(URL.createObjectURL(audioBlob)); // Set the temporary URL for playback
+      if (audioBlob) {
+        console.log("Audio Blob:", audioBlob);
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = () => {
+          const base64data = reader.result?.toString().split(",")[1];
+          if (base64data) {
+            console.log("Base64 audio:", base64data);
+            handleInputChange(field.id, base64data);
+
+            audioRefs.current[field.id] = { audioData: base64data };
+          }
+        };
+      }
+    };
+
+    mediaRecorder.start();
+  };
+
+  const resetRecording = () => {
+    setAudioUrl(null);
+    setIsRecording(false); // Reset recording state
+    audioChunksRef.current = []; // Clear all recorded chunks
+
+    // Reset the media recorder references
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current = null;
+    }
+  };
+
+  const stopRecording = (field: { id: string }) => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
   };
 
   const handleSubmit = () => {
@@ -83,9 +236,9 @@ const MultiInputForm: React.FC<MultiInputFormProps> = ({
   };
 
   return (
-    <div className="w-96 border p-2 rounded-xl shadow-lg">
+    <div className="w-96 border p-3 rounded-xl shadow-lg">
       {inputFields.map((field) => (
-        <div key={field.id} className="flex flex-col ">
+        <div key={field.id} className="flex flex-col my-2">
           <Label>{field.label}</Label>
           {/* Text Input Field */}
           {field.type === "text" && (
@@ -101,7 +254,7 @@ const MultiInputForm: React.FC<MultiInputFormProps> = ({
           )}
           {/* File Upload Field */}
           {field.type === "file" && (
-            <div className="flex items-center border p-2 bg-white rounded-xl shadow-lg w-full">
+            <div className="flex items-center border p-2 bg-white rounded-xl shadow-lg w-full my-2">
               <input
                 type="file"
                 name={`file-${field.id}`}
@@ -153,23 +306,26 @@ const MultiInputForm: React.FC<MultiInputFormProps> = ({
           )}
           {/* Camera Field */}
           {field.type === "camera" && (
-            <div className="flex flex-col items-center w-full h-96 border border-gray-300 shadow-2xl p-2 rounded-xl">
-              <video
-                ref={(el) => {
-                  if (el)
-                    cameraRefs.current[field.id] = {
-                      ...cameraRefs.current[field.id],
-                      videoRef: el,
-                    };
-                }}
-                className="w-full h-auto rounded-lg border border-indigo-300"
-                autoPlay
-                playsInline
-                muted
-              ></video>
+            <div className="flex flex-col items-center w-full h-80 border border-gray-300 shadow-2xl p-2 rounded-xl my-2">
+              {isStreaming && !error && (
+                <video
+                  ref={videoRef}
+                  className="w-full h-56 rounded-lg border border-indigo-300 object-cover aspect-[1/1]"
+                  autoPlay
+                  playsInline
+                  muted
+                ></video>
+              )}
+              {/* Placeholder waiting for camera feed */}
+              {!isStreaming && !error && (
+                <div className="flex flex-col items-center justify-center w-full h-60 bg-gray-100 rounded-lg border border-indigo-300">
+                  <CameraIcon className="w-12 h-12 text-gray-400" />
+                  <p className="text-sm text-gray-500">Waiting for camera...</p>
+                </div>
+              )}
               {/* Camera controls */}
               <div className="flex items-center justify-center w-full mt-1">
-                <div className="flex-none w-16">
+                <div className="flex-none w-12">
                   {field.value && (
                     <Dialog>
                       <DialogTrigger asChild>
@@ -199,157 +355,108 @@ const MultiInputForm: React.FC<MultiInputFormProps> = ({
                 </div>
                 <div className="grow flex justify-center items-center">
                   <button
-                    onClick={() => {
-                      // Capture Photo
-                      const video = cameraRefs.current[field.id]?.videoRef;
-                      const canvas = cameraRefs.current[field.id]?.canvasRef;
-                      if (video && canvas) {
-                        const context = canvas.getContext("2d");
-                        if (context) {
-                          canvas.width = video.videoWidth;
-                          canvas.height = video.videoHeight;
-                          context.drawImage(
-                            video,
-                            0,
-                            0,
-                            canvas.width,
-                            canvas.height
-                          );
-                          const photoData = canvas.toDataURL("image/png");
-                          handleInputChange(field.id, photoData);
-                          cameraRefs.current[field.id].photoData = photoData;
-                        }
-                      }
-                    }}
+                    onClick={() => takePhoto(field)}
                     className="p-1 mt-2 border rounded-full shadow-md hover:bg-gray-50"
                   >
                     <div className="p-3 border border-red-200 rounded-full">
                       <CameraIcon className="w-5 h-5 text-red-500" />
                     </div>
                   </button>
+
+                  {!cameraStarted ? (
+                    <button
+                      onClick={handleStartCamera}
+                      className="flex items-center justify-center m-2 mt-4 rounded-lg"
+                    >
+                      <CirclePowerIcon className="w-5 h-5 text-gray-600" />
+                      <div className="h-1 w-1 m-0.5 bg-red-400 rounded-full"></div>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleStopCamera}
+                      className="flex items-center justify-center m-2 mt-4 rounded-lg"
+                    >
+                      <CirclePowerIcon className="w-5 h-5 text-gray-600" />
+                      <div className="h-1 w-1 m-0.5 bg-green-500 rounded-full"></div>
+                    </button>
+                  )}
                 </div>
               </div>
-              <canvas
-                ref={(el) => {
-                  if (el)
-                    cameraRefs.current[field.id] = {
-                      ...cameraRefs.current[field.id],
-                      canvasRef: el,
-                    };
-                }}
-                className="hidden"
-              ></canvas>
+              <canvas ref={canvasRef} className="hidden"></canvas>
             </div>
           )}
           {/* Sketchpad Field */}
           {field.type === "sketchpad" && (
-            <div className="w-full">
-              <canvas
-                ref={(el) => {
-                  if (el) sketchRefs.current[field.id] = el;
-                }}
-                className="border mt-2"
-                style={{ width: "100%", height: "200px" }}
-              ></canvas>
+            <div className="w-full my-2">
+              <div className="h-80 mb-16">
+                <DrawingCanvas
+                  ref={sketchRefs}
+                  isCanvasDirty={isCanvasDirty}
+                  onSubmit={() => {}} // No need to submit here
+                />
+              </div>
             </div>
           )}
           {/* Audio Recorder Field */}
           {field.type === "audio" && (
-            <div className="flex flex-col items-center p-2 space-y-3 border rounded-3xl shadow-xl w-full">
+            <div className="flex flex-col my-2 ">
               {/* Audio Recorder Controls */}
-              {(audioRefs.current[field.id]?.audioUrl ||
-                !audioRefs.current[field.id]?.isRecording) && (
-                <audio
-                  controls
-                  src={audioRefs.current[field.id]?.audioUrl}
-                  className="w-full"
-                >
-                  Your browser does not support the audio element.
-                </audio>
-              )}
-              {!audioRefs.current[field.id]?.isRecording &&
-                !audioRefs.current[field.id]?.audioUrl && (
-                  <div className="w-full">
-                    <div className="flex bg-gray-100 rounded-full p-4 w-full">
-                      <div className="flex justify-center items-center w-full">
-                        <MicIcon className="h-4 w-4 text-gray-300 mr-1" />
-                        <p className="text-xs text-gray-400">Start recording</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              {/* Controls */}
+
               <div className="flex items-center justify-center w-full">
-                <div className="flex-none w-20">
-                  {/* Reset Button */}
-                  {audioRefs.current[field.id]?.audioUrl && (
-                    <button
-                      onClick={() => {
-                        // Reset recording
-                        audioRefs.current[field.id] = {};
-                        handleInputChange(field.id, null);
-                      }}
-                      className="flex items-center p-2 rounded"
-                    >
-                      <RefreshCcwIcon className="h-5 w-5 text-gray-800" />
-                      <p className="text-xs text-gray-500 ml-2">Reset</p>
-                    </button>
-                  )}
-                </div>
                 <div className="grow flex justify-center items-center">
                   {/* Start Recording */}
-                  {!audioRefs.current[field.id]?.isRecording &&
-                    !audioRefs.current[field.id]?.audioUrl && (
+                  <div className="flex items-center mr-1">
+                    <div
+                      className={`bg-white rounded-full p-1  border ${
+                        isRecording ? "" : ""
+                      }`}
+                    >
                       <button
-                        onClick={() => {
-                          // Start recording
-                          navigator.mediaDevices
-                            .getUserMedia({ audio: true })
-                            .then((stream) => {
-                              const mediaRecorder = new MediaRecorder(stream);
-                              audioRefs.current[field.id] = {
-                                ...audioRefs.current[field.id],
-                                mediaRecorder,
-                                audioChunks: [],
-                                isRecording: true,
-                              };
-                              mediaRecorder.start();
-                              mediaRecorder.ondataavailable = (event) => {
-                                audioRefs.current[field.id].audioChunks.push(
-                                  event.data
-                                );
-                              };
-                              mediaRecorder.onstop = () => {
-                                const audioBlob = new Blob(
-                                  audioRefs.current[field.id].audioChunks,
-                                  { type: "audio/wav" }
-                                );
-                                const audioUrl = URL.createObjectURL(audioBlob);
-                                audioRefs.current[field.id] = {
-                                  ...audioRefs.current[field.id],
-                                  audioUrl,
-                                  audioData: audioUrl, // For simplicity, you might convert it to base64
-                                  isRecording: false,
-                                };
-                                handleInputChange(field.id, audioUrl);
-                              };
-                            });
-                        }}
-                        className="p-4 text-white bg-blue-500 rounded-full hover:bg-blue-700"
+                        onClick={() =>
+                          isRecording
+                            ? stopRecording(field)
+                            : startRecording(field)
+                        }
+                        className={`p-3   rounded-full ${
+                          isRecording
+                            ? "bg-white border animate-pulse text-blue-500"
+                            : "bg-blue-500 text-white"
+                        }`}
                       >
                         <MicIcon className="h-5 w-5" />
                       </button>
-                    )}
-                  {/* Stop Recording */}
-                  {audioRefs.current[field.id]?.isRecording && (
+                    </div>
+
+                    <div className="flex items-center justify-center mt-2">
+                      {statusMessage !== "" && (
+                        <p className="text-gray-500 text-xs mr-1">
+                          {statusMessage}
+                        </p>
+                      )}
+                      {isRecording && (
+                        <div className="h-2 w-2 rounded-full animate-ping bg-blue-600"></div>
+                      )}
+                    </div>
+                  </div>
+                  {!isRecording && audioUrl && (
+                    <>
+                      <audio
+                        ref={audioPlayerRef}
+                        controls
+                        src={audioUrl}
+                        className="w-full"
+                      >
+                        Your browser does not support the audio element.
+                      </audio>
+                    </>
+                  )}
+                  {/* Reset Buttons */}
+                  {audioUrl && (
                     <button
-                      onClick={() => {
-                        // Stop recording
-                        audioRefs.current[field.id].mediaRecorder.stop();
-                      }}
-                      className="p-1 text-white bg-red-500 rounded-full hover:bg-red-600"
+                      onClick={resetRecording}
+                      className="flex items-center p-2 rounded"
                     >
-                      <CircleStopIcon className="h-4 w-4" />
+                      <RefreshCcwIcon className="h-4 w-4 text-gray-800" />
                     </button>
                   )}
                 </div>
