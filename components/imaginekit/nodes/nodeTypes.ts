@@ -19,6 +19,7 @@ import SpeechToTextNode from "./SpeechToTextNode";
 import AudioRecorderNode from "./AudioRecorderNode";
 import CameraNode from "./CameraNode";
 import FileUploadNode from "./FileUploadNode";
+import MultiInputFormNode from "./MultiInputFormNode";
 
 // Object to map node types to their respective components
 export const nodeTypes = {
@@ -43,6 +44,7 @@ export const nodeTypes = {
   speechToText: SpeechToTextNode,
   camera: CameraNode,
   fileUpload: FileUploadNode,
+  multiInputForm: MultiInputFormNode,
 };
 
 // Object to map node type names and default data configurations
@@ -69,6 +71,7 @@ export const NODE_TYPE_MAPPING = {
     SpeechToText: "speechToText",
     Camera: "camera",
     FileUpload: "fileUpload",
+    MultiInputForm: "multiInputForm",
   },
   ui: [
     "imageDisplay",
@@ -85,6 +88,7 @@ export const NODE_TYPE_MAPPING = {
     "audioRecorder",
     "camera",
     "fileUpload",
+    "multiInputForm",
   ],
   defaultData: {
     LLMNode: {
@@ -216,6 +220,27 @@ export const NODE_TYPE_MAPPING = {
       inputs: [],
       outputs: [{ id: "output-0", label: "File", value: "", color: "" }],
       fileUploadName: "File Upload",
+    },
+    MultiInputForm: {
+      fields: [
+        {
+          id: "field-0",
+          label: "Field 1",
+          type: "text",
+          value: "",
+          color: "",
+        },
+      ],
+      outputs: [
+        {
+          id: "field-0",
+          label: "Field 1",
+          value: "",
+          type: "text",
+          color: "",
+        },
+      ],
+      multiInputFormName: "Multi Input Form",
     },
     CustomNode: {
       inputs: [],

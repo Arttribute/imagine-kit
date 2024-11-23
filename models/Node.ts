@@ -17,6 +17,10 @@ const InputOutputSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  type: {
+    type: String,
+    default: "text",
+  },
 });
 
 const KnowledgeBaseSchema = new mongoose.Schema({

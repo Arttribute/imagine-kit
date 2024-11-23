@@ -15,6 +15,7 @@ import AudioPlayerPreview from "@/components/imaginekit/previews/AudioPlayerPrev
 import AudioRecorderPreview from "@/components/imaginekit/previews/AudioRecorderPreview";
 import CameraPreview from "@/components/imaginekit/previews/CameraPreview";
 import FileUploadPreview from "@/components/imaginekit/previews/FileUploadPreview";
+import MultiInputFormPreview from "../imaginekit/previews/MultiInputFormNodePreview";
 
 interface ComponentPosition {
   x: number;
@@ -111,6 +112,7 @@ const UIPreview: React.FC<UIPreviewProps> = ({
     audioRecorder: AudioRecorderPreview,
     camera: CameraPreview,
     fileUpload: FileUploadPreview,
+    multiInputForm: MultiInputFormPreview,
   };
 
   return (

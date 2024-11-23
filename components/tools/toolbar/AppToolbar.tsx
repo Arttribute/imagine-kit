@@ -25,6 +25,7 @@ import {
   AudioWaveformIcon,
   CameraIcon,
   FileIcon,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -122,6 +123,12 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
       section: "UI Elements",
       icon: <LayoutTemplate className="w-3 h-3 text-gray-600 mt-1" />,
       tools: [
+        {
+          icon: <ClipboardList className="w-5 h-5" />,
+          label: "Multi Form",
+          type: "MultiInputForm",
+          color: "blue",
+        },
         {
           icon: <PowerIcon className="w-5 h-5" />,
           label: "Button",
