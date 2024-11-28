@@ -281,18 +281,21 @@ const MultiInputForm: React.FC<MultiInputFormProps> = ({
     <div className="w-96 border p-3 rounded-xl shadow-lg">
       {inputFields.map((field) => (
         <div key={field.id} className="flex flex-col my-2">
-          <Label>{field.label}</Label>
           {/* Text Input Field */}
           {field.type === "text" && (
-            <Input
-              placeholder={field.label}
-              className="mt-1"
-              value={field.value || ""}
-              onChange={(e) => {
-                handleInputChange(field.id, e.target.value);
-                textRefs.current[field.id] = e.target.value;
-              }}
-            />
+            <>
+              {" "}
+              <Label>{field.label}</Label>
+              <Input
+                placeholder={field.label}
+                className="mt-1"
+                value={field.value || ""}
+                onChange={(e) => {
+                  handleInputChange(field.id, e.target.value);
+                  textRefs.current[field.id] = e.target.value;
+                }}
+              />
+            </>
           )}
           {/* File Upload Field */}
           {field.type === "file" && (
