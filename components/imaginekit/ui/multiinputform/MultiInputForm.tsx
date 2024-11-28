@@ -5,15 +5,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
   MicIcon,
-  PauseIcon,
-  CircleStopIcon,
   RefreshCcwIcon,
   CameraIcon,
   CirclePowerIcon,
-  PaperclipIcon,
   CloudUploadIcon,
   FileIcon,
-  ArrowUpIcon,
   Loader2,
 } from "lucide-react";
 import Image from "next/image";
@@ -38,7 +34,9 @@ const MultiInputForm: React.FC<MultiInputFormProps> = ({
   onSubmit,
   loading,
 }) => {
-  const [inputFields, setInputFields] = useState(fields);
+  const [inputFields, setInputFields] = useState(
+    fields.map((field) => ({ ...field }))
+  );
 
   // Refs and states for various input types
   const audioRefs = useRef<{ [key: string]: any }>({});
@@ -65,6 +63,7 @@ const MultiInputForm: React.FC<MultiInputFormProps> = ({
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const sketchPadRef = useRef<HTMLCanvasElement | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [cameraStarted, setCameraStarted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -207,6 +206,46 @@ const MultiInputForm: React.FC<MultiInputFormProps> = ({
     }
   };
 
+  // Add event listeners to detect drawing on the canvas
+  useEffect(() => {
+    const canvas = sketchPadRef.current;
+    if (!canvas) return;
+
+    const handleMouseDown = () => setIsCanvasDirty(true);
+    const handleTouchStart = () => setIsCanvasDirty(true);
+
+    canvas.addEventListener("mousedown", handleMouseDown);
+    canvas.addEventListener("touchstart", handleTouchStart);
+
+    return () => {
+      canvas.removeEventListener("mousedown", handleMouseDown);
+      canvas.removeEventListener("touchstart", handleTouchStart);
+    };
+  }, []);
+
+  const onSubmitSketch = (field: { id: string }) => {
+    const originalCanvas = sketchPadRef.current;
+    if (!originalCanvas) return;
+    const originalContext = originalCanvas.getContext("2d");
+    if (!originalContext) return;
+    // Create a new canvas with the same dimensions
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = originalCanvas.width;
+    tempCanvas.height = originalCanvas.height;
+    const tempContext = tempCanvas.getContext("2d");
+    if (!tempContext) return;
+    // Fill the new canvas with a white background
+    tempContext.fillStyle = "#ffffff"; // White color
+    tempContext.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+    // Draw the original canvas content on top of the white background
+    tempContext.drawImage(originalCanvas, 0, 0);
+    const imageData = tempCanvas.toDataURL();
+    handleInputChange(field.id, imageData);
+    sketchRefs.current[field.id] = { sketchData: imageData };
+    setIsCanvasDirty(false);
+  };
+
   const handleSubmit = () => {
     // Collect data from all fields
     const collectedFields = inputFields.map((field) => {
@@ -217,7 +256,7 @@ const MultiInputForm: React.FC<MultiInputFormProps> = ({
         const photoData = cameraRefs.current[field.id]?.photoData;
         return { ...field, value: photoData };
       } else if (field.type === "sketchpad") {
-        const sketchData = sketchRefs.current[field.id]?.toDataURL();
+        const sketchData = sketchRefs.current[field.id]?.sketchData;
         return { ...field, value: sketchData };
       } else if (field.type === "file") {
         const fileData = fileRefs.current[field.id]?.fileData;
@@ -231,8 +270,11 @@ const MultiInputForm: React.FC<MultiInputFormProps> = ({
     });
     console.log("Collected Inputs", collectedFields);
     onSubmit(collectedFields);
-    // Clear the input fields after submission
-    setInputFields(fields.map((field) => ({ ...field, value: "" })));
+
+    // Clear the input fields after submission by resetting their values
+    setInputFields((prevFields) =>
+      prevFields.map((field) => ({ ...field, value: "" }))
+    );
   };
 
   return (
@@ -390,9 +432,9 @@ const MultiInputForm: React.FC<MultiInputFormProps> = ({
             <div className="w-full my-2">
               <div className="h-80 mb-16">
                 <DrawingCanvas
-                  ref={sketchRefs}
+                  ref={sketchPadRef}
                   isCanvasDirty={isCanvasDirty}
-                  onSubmit={() => {}} // No need to submit here
+                  onSubmit={() => onSubmitSketch(field)}
                 />
               </div>
             </div>
