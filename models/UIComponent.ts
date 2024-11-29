@@ -11,6 +11,9 @@ const UIComponentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  field_types: {
+    type: [String],
+  },
   label: {
     type: String,
   },
