@@ -9,6 +9,7 @@ interface UIComponent {
   id: string;
   label: string;
   type: string;
+  fieldTypes?: string[];
 }
 
 interface ComponentPosition {
@@ -118,6 +119,8 @@ function useFlowData(appId: string) {
         id: node.id,
         label: node.data.label,
         type: node.type ?? "",
+        fieldTypes:
+          node.data.outputs.map((output: { type: any }) => output.type) || [],
       }));
 
     console.log("Filtered UI Components from nodes: ", uiNodes); // Debugging log for UI nodes

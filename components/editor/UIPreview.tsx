@@ -15,6 +15,7 @@ import AudioPlayerPreview from "@/components/imaginekit/previews/AudioPlayerPrev
 import AudioRecorderPreview from "@/components/imaginekit/previews/AudioRecorderPreview";
 import CameraPreview from "@/components/imaginekit/previews/CameraPreview";
 import FileUploadPreview from "@/components/imaginekit/previews/FileUploadPreview";
+import MultiInputFormPreview from "../imaginekit/previews/MultiInputFormNodePreview";
 
 interface ComponentPosition {
   x: number;
@@ -27,6 +28,7 @@ interface UIComponent {
   id: string;
   label: string;
   type: string; // Add type to determine which preview to show
+  fieldTypes?: string[]; // For multiInputForm
 }
 
 interface UIPreviewProps {
@@ -96,7 +98,7 @@ const UIPreview: React.FC<UIPreviewProps> = ({
   }, [positions, savePositions, unsavedChanges]);
 
   // Mapping component types to their preview components
-  const componentPreviews: { [key: string]: React.FC } = {
+  const componentPreviews: { [key: string]: React.FC<any> } = {
     sketchPad: SketchPadPreview,
     imageDisplay: ImagesDisplayPreview,
     wordSelector: WordSelectorPreview,
@@ -111,6 +113,7 @@ const UIPreview: React.FC<UIPreviewProps> = ({
     audioRecorder: AudioRecorderPreview,
     camera: CameraPreview,
     fileUpload: FileUploadPreview,
+    multiInputForm: MultiInputFormPreview,
   };
 
   return (
@@ -119,6 +122,8 @@ const UIPreview: React.FC<UIPreviewProps> = ({
         const position =
           positions[component.id] || calculateInitialPosition(index);
         const PreviewComponent = componentPreviews[component.type];
+        const PreviewFeildTypes = component.fieldTypes;
+        console.log("Component feild types", PreviewFeildTypes); // Debugging log
         console.log("Component previews", componentPreviews); // Debugging log
         console.log("Component preview", PreviewComponent); // Debugging log
         console.log(`Rendering component: ${component.type}`); // Debugging log
@@ -139,7 +144,7 @@ const UIPreview: React.FC<UIPreviewProps> = ({
               }}
             >
               {PreviewComponent ? (
-                <PreviewComponent />
+                <PreviewComponent {...component} />
               ) : (
                 <div>No Preview for {component.type}</div>
               )}

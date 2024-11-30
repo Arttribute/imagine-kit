@@ -16,6 +16,8 @@ const UIComponentToolbar: React.FC = () => {
     { id: "audioPlayer", label: "Audio Player" },
     { id: "audioRecorder", label: "Audio Recorder" },
     { id: "camera", label: "Camera" },
+    { id: "fileUpload", label: "File Upload" },
+    { id: "multiInputForm", label: "Multi Input Form" },
   ];
 
   return (

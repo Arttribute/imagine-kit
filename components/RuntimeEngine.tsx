@@ -19,6 +19,7 @@ import AudioPlayer from "@/components/imaginekit/ui/audio/AudioPlayer";
 import AudioRecorder from "@/components/imaginekit/ui/audio/AudioRecorder";
 import Camera from "@/components/imaginekit/ui/camera/Camera";
 import FileUpload from "@/components/imaginekit/ui/fileupload/FileUpload";
+import MultiInputForm from "@/components/imaginekit/ui/multiinputform/MultiInputForm";
 
 // Utility function for calling APIs
 import { callGPTApi } from "@/utils/apicalls/gpt";
@@ -168,6 +169,9 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
             break;
           case "fileUpload":
             executeFileUploadNode(node, executionId); // Execute File Upload Node
+            break;
+          case "multiInputForm":
+            executeMultiInputFormNode(node, executionId); // Execute Multi Input Form Node
             break;
           default:
             console.warn(`Unknown node type: ${node.type}`);
@@ -505,6 +509,10 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     }
   };
 
+  const executeMultiInputFormNode = (node: NodeData, executionId: string) => {
+    propagateDataToConnectedNodes(node, executionId);
+  };
+
   const executeSketchPadNode = (node: NodeData, executionId: string) => {
     propagateDataToConnectedNodes(node, executionId);
   };
@@ -785,6 +793,21 @@ const renderUIComponent = (
         <FileUpload
           onUpload={(fileData: string) =>
             handleDataSubmit(nodeData?.node_id, fileData, "File Upload")
+          }
+          loading={loading}
+        />
+      );
+    case "multiInputForm":
+      return (
+        <MultiInputForm
+          fields={nodeData?.data.outputs.map((output: any) => ({
+            id: output.id,
+            label: output.label,
+            type: output.type,
+            value: "",
+          }))}
+          onSubmit={(fields) =>
+            handleDataSubmit(nodeData?.node_id, fields, "Multi Input Form")
           }
           loading={loading}
         />

@@ -25,8 +25,10 @@ import {
   AudioWaveformIcon,
   CameraIcon,
   FileIcon,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AppToolBarProps {
   addNewNode: any;
@@ -123,6 +125,12 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
       icon: <LayoutTemplate className="w-3 h-3 text-gray-600 mt-1" />,
       tools: [
         {
+          icon: <ClipboardList className="w-5 h-5" />,
+          label: "Multi Form",
+          type: "MultiInputForm",
+          color: "blue",
+        },
+        {
           icon: <PowerIcon className="w-5 h-5" />,
           label: "Button",
           type: "TriggerButton",
@@ -141,24 +149,6 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
           color: "yellow",
         },
         {
-          icon: <LayoutGrid className="w-5 h-5" />,
-          label: "Image tiles",
-          type: "ImageTiles",
-          color: "teal",
-        },
-        {
-          icon: <MousePointer className="w-5 h-5" />,
-          label: "Selector",
-          type: "WordSelector",
-          color: "pink",
-        },
-        {
-          icon: <ShuffleIcon className="w-5 h-5" />,
-          label: "Arranger",
-          type: "WordArranger",
-          color: "indigo",
-        },
-        {
           icon: <Keyboard className="w-5 h-5" />,
           label: "Text Input",
           type: "TextInput",
@@ -175,12 +165,6 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
           label: "Sketch pad",
           type: "SketchPad",
           color: "cyan",
-        },
-        {
-          icon: <StickyNote className="w-5 h-5" />,
-          label: "Flip card",
-          type: "FlipCard",
-          color: "rose",
         },
         {
           icon: <Volume2Icon className="w-5 h-5" />,
@@ -206,6 +190,30 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
           type: "FileUpload",
           color: "red",
         },
+        {
+          icon: <LayoutGrid className="w-5 h-5" />,
+          label: "Image tiles",
+          type: "ImageTiles",
+          color: "teal",
+        },
+        {
+          icon: <MousePointer className="w-5 h-5" />,
+          label: "Selector",
+          type: "WordSelector",
+          color: "pink",
+        },
+        {
+          icon: <ShuffleIcon className="w-5 h-5" />,
+          label: "Arranger",
+          type: "WordArranger",
+          color: "indigo",
+        },
+        {
+          icon: <StickyNote className="w-5 h-5" />,
+          label: "Flip card",
+          type: "FlipCard",
+          color: "rose",
+        },
       ],
     },
   ];
@@ -221,19 +229,38 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
         </div>
       </Link>
       <div className="flex flex-col gap-4">
-        {buttons.map(({ section, icon, tools }) => (
-          <ToolSection key={section} title={section} icon={icon}>
-            {tools.map(({ icon, label, type, color }) => (
-              <ToolButton
-                key={label}
-                icon={icon}
-                label={label}
-                onClick={() => addNewNode(type)}
-                color={color}
-              />
+        {buttons
+          .filter(({ section }) => section === "Gen AI")
+          .map(({ section, icon, tools }) => (
+            <ToolSection key={section} title={section} icon={icon}>
+              {tools.map(({ icon, label, type, color }) => (
+                <ToolButton
+                  key={label}
+                  icon={icon}
+                  label={label}
+                  onClick={() => addNewNode(type)}
+                  color={color}
+                />
+              ))}
+            </ToolSection>
+          ))}
+        <ScrollArea className="h-96 -mr-3 pr-3">
+          {buttons
+            .filter(({ section }) => section === "UI Elements")
+            .map(({ section, icon, tools }) => (
+              <ToolSection key={section} title={section} icon={icon}>
+                {tools.map(({ icon, label, type, color }) => (
+                  <ToolButton
+                    key={label}
+                    icon={icon}
+                    label={label}
+                    onClick={() => addNewNode(type)}
+                    color={color}
+                  />
+                ))}
+              </ToolSection>
             ))}
-          </ToolSection>
-        ))}
+        </ScrollArea>
       </div>
     </div>
   );

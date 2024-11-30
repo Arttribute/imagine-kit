@@ -7,6 +7,7 @@ const openai = new OpenAI({
 });
 
 export const revalidate = 0;
+export const maxDuration = 45;
 
 export async function POST(request: Request) {
   try {
