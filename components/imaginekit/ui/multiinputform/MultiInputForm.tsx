@@ -278,7 +278,7 @@ const MultiInputForm: React.FC<MultiInputFormProps> = ({
   };
 
   return (
-    <div className="w-96 border p-3 rounded-xl shadow-lg">
+    <div className="bg-white w-96 border p-3 rounded-xl shadow-lg">
       {inputFields.map((field) => (
         <div key={field.id} className="flex flex-col my-2">
           {/* Text Input Field */}
