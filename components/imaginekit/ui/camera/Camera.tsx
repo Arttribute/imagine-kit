@@ -132,7 +132,7 @@ export default function Camera({
       {isStreaming && !error && (
         <video
           ref={videoRef}
-          className="w-full h-auto rounded-lg border border-indigo-300"
+          className="w-full h-72 rounded-lg border border-indigo-300 object-cover aspect-[1/1]"
           autoPlay
           playsInline
           muted

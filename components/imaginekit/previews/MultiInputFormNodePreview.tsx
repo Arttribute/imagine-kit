@@ -17,11 +17,6 @@ const MultiInputFormPreview: React.FC<MultiInputFormPreviewProps> = ({
 }) => {
   return (
     <div className="flex flex-col  border p-2 rounded-xl shadow-lg">
-      {/* Form Header */}
-      <div className="flex items-center mb-2">
-        <ClipboardList className="w-5 h-5 text-gray-400 mr-2" />
-        <p className="text-gray-400 text-sm">Multi Input Form Preview</p>
-      </div>
       {/* Input Previews */}
       <div className="space-y-2">
         {fieldTypes &&
