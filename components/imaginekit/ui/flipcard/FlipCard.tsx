@@ -1,13 +1,26 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import DotPattern from "@/components/magicui/dot-pattern";
-import { Loader2 } from "lucide-react";
+import { Loader2, ImageIcon } from "lucide-react";
 
 // Helper function to stop event propagation
 const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
+
+// Helper function to validate URLs
+const isValidUrl = (url: string): boolean => {
+  if (!url) {
+    return false;
+  }
+  try {
+    new URL(url);
+    return true;
+  } catch (_) {
+    return false;
+  }
+};
 
 interface FlipCardProps {
   frontTitle?: string;
@@ -62,8 +75,6 @@ const CardSide: React.FC<{
         </div>
       )}
 
-      {/* Back content */}
-
       {/* Dialog trigger for front content text */}
       {!loading && contentText && showDialog && imageUrl && (
         <div className="absolute bottom-2 w-full flex justify-center items-center">
@@ -110,6 +121,34 @@ const FlipCard: React.FC<FlipCardProps> = ({
 }) => {
   const [isFlipped, setIsFlipped] = useState(true);
 
+  // Internal state for validated image URLs
+  const [validFrontImageUrl, setValidFrontImageUrl] = useState<
+    string | undefined
+  >(frontImageUrl);
+  const [validBackImageUrl, setValidBackImageUrl] = useState<
+    string | undefined
+  >(backImageUrl);
+
+  // useEffect to validate and set frontImageUrl
+  useEffect(() => {
+    if (isValidUrl(frontImageUrl || "")) {
+      setValidFrontImageUrl(frontImageUrl);
+    } else {
+      setValidFrontImageUrl(undefined);
+      console.warn(`Invalid frontImageUrl detected: "${frontImageUrl}"`);
+    }
+  }, [frontImageUrl]);
+
+  // useEffect to validate and set backImageUrl
+  useEffect(() => {
+    if (isValidUrl(backImageUrl || "")) {
+      setValidBackImageUrl(backImageUrl);
+    } else {
+      setValidBackImageUrl(undefined);
+      console.warn(`Invalid backImageUrl detected: "${backImageUrl}"`);
+    }
+  }, [backImageUrl]);
+
   const flipCard = () => {
     if (!loading) {
       setIsFlipped(!isFlipped);
@@ -133,8 +172,9 @@ const FlipCard: React.FC<FlipCardProps> = ({
         <CardSide
           title={frontTitle}
           contentText={frontContentText}
-          imageUrl={frontImageUrl}
+          imageUrl={validFrontImageUrl}
           showDialog={!!frontContentText}
+          loading={loading}
         />
 
         {/* Back Side */}
@@ -149,8 +189,9 @@ const FlipCard: React.FC<FlipCardProps> = ({
             <CardSide
               title={backTitle}
               contentText={backContentText}
-              imageUrl={backImageUrl}
+              imageUrl={validBackImageUrl}
               isBack={true}
+              loading={loading}
             />
           )}
           {loading && (
@@ -158,7 +199,7 @@ const FlipCard: React.FC<FlipCardProps> = ({
               <Loader2 className="w-8 h-8 animate-spin text-gray-300" />
             </div>
           )}
-          {!backImageUrl && (
+          {!loading && !isValidUrl(backImageUrl || "") && (
             <DotPattern
               className={cn(
                 "[mask-image:radial-gradient(300px_circle_at_center,white,transparent)]"
