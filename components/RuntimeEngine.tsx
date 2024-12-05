@@ -639,7 +639,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
                 position: isMobile ? "relative" : "absolute",
                 left: isMobile ? "auto" : position.x,
                 top: isMobile ? "auto" : position.y,
-                width: position.width,
+                width: isMobile ? "100%" : position.width,
                 height: position.height,
                 marginBottom: isMobile ? "20px" : "0",
               }}
