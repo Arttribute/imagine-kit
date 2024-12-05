@@ -1,21 +1,21 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Loader2, ImageIcon, DownloadIcon } from "lucide-react";
 import { getImageBlob } from "@/utils/imageProcesing";
 
 function isValidUrl(url: string) {
-  if (url) {
-    return (
-      url.startsWith("/") ||
-      url.startsWith("http://") ||
-      url.startsWith("https://") ||
-      url.startsWith("data:image")
-    );
+  if (!url) {
+    return false;
+  }
+  try {
+    new URL(url);
+    return true;
+  } catch (_) {
+    return false;
   }
 }
 
-// Function to download the image file
 const handleDownload = async (imageSrc: string, fileName: string) => {
   try {
     const blob = await getImageBlob(imageSrc);
@@ -38,6 +38,7 @@ const handleDownload = async (imageSrc: string, fileName: string) => {
     console.error("Error downloading the image:", error);
   }
 };
+
 export default function ImagesDisplay({
   images,
   loading,
@@ -45,27 +46,48 @@ export default function ImagesDisplay({
   images: string[];
   loading: boolean;
 }) {
+  const [displayImages, setDisplayImages] = useState<string[]>([]);
+
+  useEffect(() => {
+    // images contains only the string "image" and not the actual image data do not set displayImages
+    if (images.length === 1 && images[0] === "image") {
+      return;
+    }
+    setDisplayImages(images);
+  }, [images]);
+
+  const hasValidImages =
+    displayImages && displayImages.length > 0 && displayImages.some(isValidUrl);
+
   return (
     <div className="border p-0.5 rounded-xl w-96">
       <div className="grid grid-cols-2">
+        {loading && (
+          <div className="col-span-2 p-2 h-96 p-1">
+            <div className="bg-gray-100 h-full rounded-xl p-1">
+              <div className="flex flex-col items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-700 mt-40" />
+              </div>
+            </div>
+          </div>
+        )}
+
         {!loading &&
-          images.length > 0 &&
-          isValidUrl(images[0]) &&
-          images &&
-          images.map((image, index) => (
+          hasValidImages &&
+          displayImages.map((image, index) => (
             <div
-              key={index}
+              key={image}
               className={`p-0.5 ${
-                images.length == 1 ? "col-span-2" : "col-span-1"
+                displayImages.length == 1 ? "col-span-2" : "col-span-1"
               }`}
             >
               <Dialog>
                 <DialogTrigger>
                   <Image
                     src={image}
-                    alt={image}
-                    width={images.length == 1 ? 400 : 200}
-                    height={images.length == 1 ? 400 : 200}
+                    alt={`Image ${index}`}
+                    width={displayImages.length == 1 ? 400 : 200}
+                    height={displayImages.length == 1 ? 400 : 200}
                     className="rounded-lg"
                   />
                 </DialogTrigger>
@@ -73,7 +95,7 @@ export default function ImagesDisplay({
                   <div className="flex flex-col items-center">
                     <Image
                       src={image}
-                      alt={image}
+                      alt={`Image ${index}`}
                       width={512}
                       height={512}
                       className="rounded-lg m-1"
@@ -102,27 +124,8 @@ export default function ImagesDisplay({
               </div>
             </div>
           ))}
-        {!isValidUrl(images[0]) ||
-          (images.length === 0 && (
-            <div className="col-span-2 p-2 h-96 p-1">
-              <div className="bg-gray-100 h-full rounded-xl p-1">
-                <div className="flex flex-col items-center justify-center">
-                  <Loader2 className="w-8 h-8 animate-spin text-gray-700 mt-40" />
-                </div>
-              </div>
-            </div>
-          ))}
-        {loading && (
-          <div className="col-span-2 p-2 h-96 p-1">
-            <div className="bg-gray-100 h-full rounded-xl p-1">
-              <div className="flex flex-col items-center justify-center ">
-                <Loader2 className="w-8 h-8 animate-spin text-gray-700 mt-40" />
-              </div>
-            </div>
-          </div>
-        )}
 
-        {!loading && !isValidUrl(images[0]) && (
+        {!loading && !hasValidImages && (
           <div className="col-span-2 p-2 h-96 p-1">
             <div className="bg-gray-100 h-full rounded-xl">
               <div className="flex flex-col items-center justify-center p-4 ">
