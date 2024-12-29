@@ -80,7 +80,7 @@ export async function callGPTApi(
     // Create request body object
     const requestBody: any = {
       instruction,
-      inputs: textInputs || "What’s in this image?",
+      inputs: textInputs || "What's in this image?",
       outputs,
     };
 

@@ -1,20 +1,7 @@
 import { callDalleApi } from "@/utils/apicalls/dalle";
 import { callGPTApi } from "@/utils/apicalls/gpt";
 import ky from "ky";
-import {
-  find,
-  findIndex,
-  forEach,
-  get,
-  groupBy,
-  keyBy,
-  map,
-  uniq,
-  isEqual,
-  cloneDeep,
-} from "lodash";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { find, groupBy, keyBy, map, uniq } from "lodash";
 import { inspect } from "util";
 
 export class Node extends EventTarget {
@@ -22,6 +9,7 @@ export class Node extends EventTarget {
   upstreamNodes: Node[] = [];
   inputs: any;
   outputs: any;
+  engine: RuntimeEngine | undefined;
   // state: any = {};
   //   upstreamNodes: Node[] = [];
 
@@ -178,8 +166,8 @@ export class ImageGenNode extends Node {
 }
 
 export class RuntimeEngine extends EventTarget {
-  nodes: Node[] = [];
-  isRunning: boolean = false;
+  public nodes: Node[] = [];
+  public isRunning: boolean = false;
   //   edges: any[] = [];
 
   private state: { nodes: any[]; edges: any[] } = { nodes: [], edges: [] };
@@ -192,10 +180,16 @@ export class RuntimeEngine extends EventTarget {
   public async load(appId: string) {
     const [nodesResponse, edgesResponse] = await Promise.all([
       ky
-        .get(`api/nodes?appId=${appId}`, { prefixUrl: process.env.PREFIX_URL })
+        .get(`api/nodes?appId=${appId}`, {
+          prefixUrl: process.env.PREFIX_URL,
+          timeout: 60000,
+        })
         .json<any[]>(),
       ky
-        .get(`api/edges?appId=${appId}`, { prefixUrl: process.env.PREFIX_URL })
+        .get(`api/edges?appId=${appId}`, {
+          prefixUrl: process.env.PREFIX_URL,
+          timeout: 60000,
+        })
         .json<any[]>(),
     ]);
 
@@ -250,6 +244,7 @@ export class RuntimeEngine extends EventTarget {
         // console.log(node);
         this.markForRun(node);
       });
+      node.engine = this;
     });
 
     console.log("Compiled nodes");
@@ -330,90 +325,4 @@ export class RuntimeEngine extends EventTarget {
       callback(node);
     });
   }
-}
-
-export function useRuntimeEngine(appId?: string) {
-  const [engine, setEngine] = useState<RuntimeEngine>(new RuntimeEngine());
-
-  useEffect(() => {
-    if (appId) {
-      engine.load(appId).then(() => {
-        engine.compile();
-      });
-    }
-  }, []);
-
-  const form = useForm({});
-
-  useEffect(() => {
-    const subscription = form.watch((value, info) => {
-      // We can try something like each node is an object and has nested inputs
-      // like and llm node would be:
-      // {
-      // 	[node.id]: {
-      // 		"input1": "value1",
-      // 		"input2": "value2"
-      // 	}
-      // }
-
-      const { name, type, values } = info;
-
-      if (name && type == "change") {
-        const [node_id, label_id] = name?.split(".") || [];
-        const inputValue = get(values, name);
-
-        // Get the node
-
-        const node = find(engine?.nodes, { state: { node_id } });
-        if (!node) {
-          return;
-        }
-
-        // Get the inputs
-        const input = { [label_id]: inputValue };
-
-        // Set the node's input values
-        // Run the node
-        node.setInputs((prevInputs) => {
-          //   const prevInputs = [..._];
-          let label;
-          if ("label" in input) {
-            label = input.label;
-          } else {
-            label = Object.keys(input)[0];
-          }
-
-          if (!prevInputs) {
-            return [input];
-          }
-
-          const index = findIndex(prevInputs, (input) => {
-            if ("label" in input) {
-              return label == input.label;
-            } else {
-              return label == Object.keys(input)[0];
-            }
-          });
-
-          if (index > -1) {
-            prevInputs?.splice(index, 1, input);
-          } else {
-            prevInputs?.push(input);
-          }
-
-          return [...prevInputs];
-        });
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [form.watch]);
-
-  //   engine?.nodes.forEach((node) => {
-  //     form.watch(node.state.node_id);
-  //   });
-
-  // form.register("node_id.label_id")
-
-  return [form, engine] as const;
 }

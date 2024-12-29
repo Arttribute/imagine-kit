@@ -1,6 +1,5 @@
 "use client";
 
-import { useRuntimeEngine } from "@/components/NewRuntimeEngine";
 import {
   Form,
   FormControl,
@@ -13,12 +12,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect } from "react";
+import { useRuntimeEngine } from "@/components/NewRuntimeEngineRenderer";
 
 function TestPage() {
-  const [form, engine] = useRuntimeEngine(process.env.NEXT_PUBLIC_APP_ID);
+  const [form, engine, Renderer] = useRuntimeEngine(
+    process.env.NEXT_PUBLIC_APP_ID
+  );
 
   const onSubmit = useCallback(() => {
     engine?.run();
+
     engine.listen("TextOutput-4", "outputs_change", (node) => {
       console.log("Listening to TextOutput-4 - Changed");
       console.log(node);
@@ -47,6 +50,9 @@ function TestPage() {
   return (
     <div>
       <h1>Test Page</h1>
+      <div>
+        <Renderer />
+      </div>
 
       <Form {...form}>
         <form
@@ -62,7 +68,6 @@ function TestPage() {
                 <FormControl>
                   <Input placeholder="Test Input" {...field} />
                 </FormControl>
-                {/* <FormDescription>This is a test input.</FormDescription> */}
                 <FormMessage />
               </FormItem>
             )}
@@ -76,7 +81,6 @@ function TestPage() {
                 <FormControl>
                   <div>{field.value}</div>
                 </FormControl>
-                {/* <FormDescription>This is a test input.</FormDescription> */}
                 <FormMessage />
               </FormItem>
             )}
@@ -90,7 +94,6 @@ function TestPage() {
                 <FormControl>
                   <div>{field.value}</div>
                 </FormControl>
-                {/* <FormDescription>This is a test input.</FormDescription> */}
                 <FormMessage />
               </FormItem>
             )}
