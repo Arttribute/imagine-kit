@@ -12,13 +12,18 @@ export const maxDuration = 45;
 export async function POST(request: Request) {
   try {
     const requestBody = await request.json();
-    const { instruction, inputs, outputs, memory, image } = requestBody;
+    const { instruction, externalContext, inputs, outputs, memory, image } =
+      requestBody;
 
     const prompt = `
       You are an assistant designed to output JSON.
       Follow this intruction: ${instruction}
 
+      Here is some context: ${externalContext}
       Here is the past interaction data: ${JSON.stringify(memory)}
+
+      If the context is present and not empty it means the user is currently on a webpage and you need to provide a response relevant to the webpage context.
+
       The past interaction data is provided so that you do not repeat yourself. That means you need to keep track of inputs and ouputs of the past interactions to provide a more relevant response.
       Note that In the case of the past interaction data, the inputs are the past data that you have received and the outputs are the responses that you have provided. 
       Strictly use the past interaction data to provide an appropriate response.
