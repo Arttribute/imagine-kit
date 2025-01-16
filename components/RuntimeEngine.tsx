@@ -338,20 +338,30 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     const { instruction, inputs, outputs, knowledgeBase } = node.data;
     window.parent.postMessage({ type: "REQUEST_PAGE_CONTEXT" }, "*");
 
-    let externalContext = "";
+    const getPageContext = () => {
+      return new Promise<string>((resolve) => {
+        function handleMessage(event: MessageEvent) {
+          if (event.data?.type === "PAGE_CONTEXT_RESPONSE") {
+            const pageText = event.data.pageText;
+            console.log(
+              "[ImagineKit] Got page context of length:",
+              pageText.length
+            );
+            console.log("[ImagineKit] Page context:", pageText);
+            window.removeEventListener("message", handleMessage); // Clean up the event listener
+            resolve(pageText);
+          }
+        }
+        window.addEventListener("message", handleMessage);
+      });
+    };
 
-    function handleMessage(event: MessageEvent) {
-      if (event.data?.type === "PAGE_CONTEXT_RESPONSE") {
-        const pageText = event.data.pageText;
-        console.log(
-          "[ImagineKit] Got page context of length:",
-          pageText.length
-        );
-        console.log("[ImagineKit] Page context:", pageText);
-        externalContext = pageText;
-      }
+    let externalContext = "";
+    try {
+      externalContext = await getPageContext(); // Wait for the page context response
+    } catch (error) {
+      console.error("Error getting external context:", error);
     }
-    window.addEventListener("message", handleMessage);
 
     console.log("[ImagineKit] External context:", externalContext);
 
@@ -645,7 +655,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   return (
     <div
       className={`${
-        isMobile && "fixed left-0 right-0 flex items-center justify-center"
+        isMobile && "fixed left-0 right-0 items-center justify-center"
       } p-1 `}
       style={{
         display: "flex",
@@ -662,14 +672,21 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
           return (
             <div
               key={component.component_id}
-              style={{
-                position: isMobile ? "relative" : "absolute",
-                left: isMobile ? "auto" : position.x,
-                top: isMobile ? "auto" : position.y,
-                width: isMobile ? "100%" : position.width,
-                height: position.height,
-                marginBottom: isMobile ? "20px" : "0",
-              }}
+              style={
+                isMobile
+                  ? {
+                      width: "100%",
+                      marginBottom: "10px",
+                    }
+                  : {
+                      position: "absolute",
+                      left: position.x,
+                      top: position.y,
+                      width: position.width,
+                      height: position.height,
+                      marginBottom: "0",
+                    }
+              }
             >
               {renderUIComponent(
                 component,
