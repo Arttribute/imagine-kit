@@ -370,7 +370,9 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     if (!promptInput || promptInput === promptLabel) return;
 
     const { instruction, inputs, outputs, knowledgeBase, context } = node.data;
+    console.log("[ImagineKit] Current LLm node context: ", context);
     const externalContext = context ? `\n[CONTEXT]: ${context}\n` : "";
+    console.log("[ImagineKit]: External Context:", externalContext);
 
     const inputOutputMemory = node.data.memory;
     const currentInputValues = inputs.map((input) => input.value).join(" ");
