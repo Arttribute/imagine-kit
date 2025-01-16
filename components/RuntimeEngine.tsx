@@ -126,9 +126,20 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     fetchData();
   }, [appId]);
 
-  const insertGeneratedContent = (text: string) => {
+  const insertGeneratedContent = (
+    contentType: string,
+    contentData: string,
+    attributes?: Record<string, string>
+  ) => {
     window.parent.postMessage(
-      { type: "INSERT_IN_PAGE", payload: { text } },
+      {
+        type: "INSERT_IN_PAGE",
+        payload: {
+          type: contentType,
+          data: contentData,
+          attributes, // optional
+        },
+      },
       "*"
     );
   };
@@ -702,11 +713,29 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
             <LoadingWorld />
           </div>
         )}
-        <button
-          onClick={() => insertGeneratedContent("Hello from ImagineKit!")}
-        >
-          Insert Content
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() =>
+              insertGeneratedContent("text", "Hello from ImagineKit!")
+            }
+          >
+            Insert Text
+          </button>
+          <button
+            onClick={() =>
+              insertGeneratedContent(
+                "image",
+                "https://gateway.pinata.cloud/ipfs/QmfVvGtkipxMK2Ex7QVG8uMXJXfrBTLAF4Cd5dfTVoFBWC",
+                {
+                  alt: "An iMgae of a scroll",
+                  class: "inserted-image",
+                }
+              )
+            }
+          >
+            Insert Image
+          </button>
+        </div>
       </div>
     </div>
   );
