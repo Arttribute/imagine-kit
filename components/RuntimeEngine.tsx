@@ -126,6 +126,46 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     fetchData();
   }, [appId]);
 
+  useEffect(() => {
+    // For example, once your runtime starts, ask for context
+    window.parent.postMessage({ type: "REQUEST_PAGE_CONTEXT" }, "*");
+
+    function handleMessage(event: MessageEvent) {
+      if (event.data?.type === "PAGE_CONTEXT_RESPONSE") {
+        const pageText = event.data.pageText;
+        console.log(
+          "[ImagineKit] Got page context of length:",
+          pageText.length
+        );
+        //store that in node.data.context
+        setNodes((prevNodes) =>
+          prevNodes.map((node) => {
+            if (node.type === "llm") {
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  context: pageText,
+                },
+              };
+            }
+            return node;
+          })
+        );
+      }
+    }
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  const insertGeneratedContent = (text: string) => {
+    window.parent.postMessage(
+      { type: "INSERT_IN_PAGE", payload: { text } },
+      "*"
+    );
+  };
+
   // Function to execute a single node based on its type
   const executeNode = useCallback(
     async (node: NodeData, executionId: string) => {
@@ -661,6 +701,11 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
             <LoadingWorld />
           </div>
         )}
+        <button
+          onClick={() => insertGeneratedContent("Hello from ImagineKit!")}
+        >
+          Insert Content
+        </button>
       </div>
     </div>
   );
