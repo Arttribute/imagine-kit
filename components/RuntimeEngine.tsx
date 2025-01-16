@@ -137,6 +137,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
           "[ImagineKit] Got page context of length:",
           pageText.length
         );
+        console.log("[ImagineKit] Page context:", pageText);
         //store that in node.data.context
         setNodes((prevNodes) =>
           prevNodes.map((node) => {
