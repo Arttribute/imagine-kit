@@ -126,40 +126,6 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     fetchData();
   }, [appId]);
 
-  useEffect(() => {
-    // For example, once your runtime starts, ask for context
-    window.parent.postMessage({ type: "REQUEST_PAGE_CONTEXT" }, "*");
-
-    function handleMessage(event: MessageEvent) {
-      if (event.data?.type === "PAGE_CONTEXT_RESPONSE") {
-        const pageText = event.data.pageText;
-        console.log(
-          "[ImagineKit] Got page context of length:",
-          pageText.length
-        );
-        console.log("[ImagineKit] Page context:", pageText);
-        //store that in node.data.context
-        setNodes((prevNodes) =>
-          prevNodes.map((node) => {
-            if (node.type === "llm") {
-              return {
-                ...node,
-                data: {
-                  ...node.data,
-                  context: pageText,
-                },
-              };
-            }
-            return node;
-          })
-        );
-      }
-    }
-
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, []);
-
   const insertGeneratedContent = (text: string) => {
     window.parent.postMessage(
       { type: "INSERT_IN_PAGE", payload: { text } },
@@ -369,10 +335,25 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     const promptLabel = node.data.inputs[0]?.label;
     if (!promptInput || promptInput === promptLabel) return;
 
-    const { instruction, inputs, outputs, knowledgeBase, context } = node.data;
-    console.log("[ImagineKit] Current LLm node context: ", context);
-    const externalContext = context ? `\n[CONTEXT]: ${context}\n` : "";
-    console.log("[ImagineKit]: External Context:", externalContext);
+    const { instruction, inputs, outputs, knowledgeBase } = node.data;
+    window.parent.postMessage({ type: "REQUEST_PAGE_CONTEXT" }, "*");
+
+    let externalContext = "";
+
+    function handleMessage(event: MessageEvent) {
+      if (event.data?.type === "PAGE_CONTEXT_RESPONSE") {
+        const pageText = event.data.pageText;
+        console.log(
+          "[ImagineKit] Got page context of length:",
+          pageText.length
+        );
+        console.log("[ImagineKit] Page context:", pageText);
+        externalContext = pageText;
+      }
+    }
+    window.addEventListener("message", handleMessage);
+
+    console.log("[ImagineKit] External context:", externalContext);
 
     const inputOutputMemory = node.data.memory;
     const currentInputValues = inputs.map((input) => input.value).join(" ");
