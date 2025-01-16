@@ -56,6 +56,7 @@ interface NodeData {
     instruction?: string;
     memoryFields?: { id: string; label: string; value: string }[];
     memory?: { inputs: string; outputs: string }[];
+    context?: string;
   };
   position: {
     x: number;
@@ -327,7 +328,8 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     const promptLabel = node.data.inputs[0]?.label;
     if (!promptInput || promptInput === promptLabel) return;
 
-    const { instruction, inputs, outputs, knowledgeBase } = node.data;
+    const { instruction, inputs, outputs, knowledgeBase, context } = node.data;
+    const externalContext = context ? `\n[CONTEXT]: ${context}\n` : "";
 
     const inputOutputMemory = node.data.memory;
     const currentInputValues = inputs.map((input) => input.value).join(" ");
@@ -338,6 +340,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
       const generatedOutput = await callGPTApi(
         instruction ?? "",
         currentInputValues,
+        externalContext,
         outputFormat,
         JSON.stringify(inputOutputMemory ?? []),
         knowledgeBaseContent

@@ -2,6 +2,7 @@ import { getPDFText } from "@/utils/fileProcessing";
 export async function callGPTApi(
   instruction: string,
   inputs: string,
+  externalContext: string,
   outputs: string,
   memory: string,
   knowledgeBase?: string
@@ -53,6 +54,7 @@ export async function callGPTApi(
     const requestBody: any = {
       instruction,
       inputs: textInputs || "What’s in this image?",
+      externalContext,
       outputs,
       memory,
     };
