@@ -347,34 +347,47 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
     if (!promptInput || promptInput === promptLabel) return;
 
     const { instruction, inputs, outputs, knowledgeBase } = node.data;
-    window.parent.postMessage({ type: "REQUEST_PAGE_CONTEXT" }, "*");
+    let externalContextText = "";
+    let externalContextSnapshot = "";
 
-    const getPageContext = () => {
-      return new Promise<string>((resolve) => {
-        function handleMessage(event: MessageEvent) {
-          if (event.data?.type === "PAGE_CONTEXT_RESPONSE") {
-            const pageText = event.data.pageText;
-            console.log(
-              "[ImagineKit] Got page context of length:",
-              pageText.length
-            );
-            console.log("[ImagineKit] Page context:", pageText);
-            window.removeEventListener("message", handleMessage); // Clean up the event listener
-            resolve(pageText);
+    // Check if the page is embedded in an iframe
+    if (window.self !== window.top) {
+      window.parent.postMessage({ type: "REQUEST_PAGE_CONTEXT" }, "*");
+
+      const getPageContext = () => {
+        return new Promise<string>((resolve) => {
+          function handleMessage(event: MessageEvent) {
+            if (event.data?.type === "PAGE_CONTEXT_RESPONSE") {
+              const pageText = event.data.pageText;
+              const pageSnapshot = event.data.pageSnapshot;
+              const pageContext = { pageText, pageSnapshot };
+              console.log(
+                "[ImagineKit] Got page context of length:",
+                pageText.length
+              );
+              console.log("[ImagineKit] Page context:", pageText);
+              window.removeEventListener("message", handleMessage); // Clean up the event listener
+              resolve(JSON.stringify(pageContext));
+            }
           }
-        }
-        window.addEventListener("message", handleMessage);
-      });
-    };
+          window.addEventListener("message", handleMessage);
+        });
+      };
 
-    let externalContext = "";
-    try {
-      externalContext = await getPageContext(); // Wait for the page context response
-    } catch (error) {
-      console.error("Error getting external context:", error);
+      try {
+        const pageContext = JSON.parse(await getPageContext());
+        externalContextText = pageContext.pageText;
+        externalContextSnapshot = pageContext.pageSnapshot;
+      } catch (error) {
+        console.error("Error getting external context:", error);
+      }
+
+      console.log("[ImagineKit] External context:", externalContextText);
+      console.log(
+        "[ImagineKit] External context snapshot:",
+        externalContextSnapshot
+      );
     }
-
-    console.log("[ImagineKit] External context:", externalContext);
 
     const inputOutputMemory = node.data.memory;
     const currentInputValues = inputs.map((input) => input.value).join(" ");
@@ -385,7 +398,8 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
       const generatedOutput = await callGPTApi(
         instruction ?? "",
         currentInputValues,
-        externalContext,
+        externalContextText,
+        externalContextSnapshot,
         outputFormat,
         JSON.stringify(inputOutputMemory ?? []),
         knowledgeBaseContent
