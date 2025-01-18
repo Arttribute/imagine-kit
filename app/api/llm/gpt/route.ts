@@ -12,14 +12,21 @@ export const maxDuration = 45;
 export async function POST(request: Request) {
   try {
     const requestBody = await request.json();
-    const { instruction, externalContext, inputs, outputs, memory, image } =
-      requestBody;
+    const {
+      instruction,
+      externalContextText,
+      externalContextSnapshot,
+      inputs,
+      outputs,
+      memory,
+      image,
+    } = requestBody;
 
     const prompt = `
       You are an assistant designed to output JSON.
       Follow this intruction: ${instruction}
 
-      Here is some context: ${externalContext}
+      Here is some context: ${externalContextText}
       Here is the past interaction data: ${JSON.stringify(memory)}
 
       If the context is present and not empty it means the user is currently on a webpage and you need to provide a response relevant to the webpage context.
@@ -46,6 +53,12 @@ export async function POST(request: Request) {
 
     if (image) {
       userContent.push({ type: "image_url", image_url: { url: image } });
+    }
+    if (externalContextSnapshot) {
+      userContent.push({
+        type: "image_url",
+        image_url: { url: externalContextSnapshot },
+      });
     }
 
     const response = await openai.chat.completions.create({

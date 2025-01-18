@@ -2,7 +2,8 @@ import { getPDFText } from "@/utils/fileProcessing";
 export async function callGPTApi(
   instruction: string,
   inputs: string,
-  externalContext: string,
+  externalContextText: string,
+  externalContextSnapshot: string,
   outputs: string,
   memory: string,
   knowledgeBase?: string
@@ -54,13 +55,17 @@ export async function callGPTApi(
     const requestBody: any = {
       instruction,
       inputs: textInputs || "What’s in this image?",
-      externalContext,
+      externalContextText,
       outputs,
       memory,
     };
 
     if (image) {
       requestBody.image = image;
+    }
+
+    if (externalContextSnapshot !== "") {
+      requestBody.externalContextSnapshot = externalContextSnapshot;
     }
 
     // Call the original GPT API route
