@@ -122,7 +122,7 @@ function ChatBox({
         ...prevData,
         {
           user_message: input,
-          system_message: aiResponse,
+          system_message: aiResponse.text,
         },
       ]);
 
@@ -131,7 +131,7 @@ function ChatBox({
         owner: userId,
         app_id: appId,
         user_message: input,
-        system_message: aiResponse, // Save the entire system message object
+        system_message: aiResponse.text, // Save the entire system message object
       };
 
       await axios.post("/api/buildchat", {
