@@ -2,51 +2,58 @@
 import { NextResponse } from "next/server";
 
 /**
- * GET /api/download-image?url=...&filename=...
+ * GET /api/download?url=...&filename=...
  *
- * - url:   URL of the image to fetch
- * - filename: (optional) desired filename for the downloaded image
- *
- * Returns the remote image with "Content-Disposition: attachment" headers,
- * prompting a file download in most browsers.
+ * 1) Attempts to fetch the remote image.
+ * 2) If successful, returns the image with "Content-Disposition: attachment"
+ *    so the browser prompts a download.
+ * 3) If it fails, the endpoint redirects to the raw "url" so the user at least
+ *    sees the image in their browser.
  */
-export async function GET(req: Request) {
+export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const url = searchParams.get("url"); // Image URL
+    const { searchParams } = new URL(request.url);
+    const url = searchParams.get("url");
     const filename = searchParams.get("filename") || "download.png";
 
     if (!url) {
-      return new NextResponse("Missing 'url' parameter.", { status: 400 });
+      return NextResponse.json(
+        { error: "Missing 'url' parameter." },
+        { status: 400 }
+      );
     }
 
-    // Fetch the actual image from the provided URL
+    // Attempt to fetch the actual image from the provided URL
     const response = await fetch(url);
     if (!response.ok) {
-      return new NextResponse("Failed to fetch the image.", { status: 500 });
+      // Fallback #1: If fetch fails, just redirect user to the raw image URL
+      return NextResponse.redirect(url);
     }
 
-    // Extract the content type from the response
-    const contentType =
-      response.headers.get("content-type") || "application/octet-stream";
-
-    // Convert the response to a Blob, then get the array buffer
+    // Convert the fetched image to a Blob, then ArrayBuffer
     const blob = await response.blob();
     const arrayBuffer = await blob.arrayBuffer();
 
-    // Force file download by specifying Content-Disposition
+    // Derive content type from the fetched response
+    const contentType =
+      response.headers.get("content-type") || "application/octet-stream";
+
+    // Force file download by specifying the Content-Disposition header
     const headers = new Headers({
       "Content-Type": contentType,
       "Content-Disposition": `attachment; filename="${filename}"`,
     });
 
-    // Return the file as NextResponse
+    // Return the file with a forced download header
     return new NextResponse(arrayBuffer, {
       status: 200,
       headers,
     });
   } catch (error) {
-    console.error("Error in /api/download-image route:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    console.error("Error in /api/download route:", error);
+    // Fallback #2: If something else goes wrong, direct user to the raw URL again
+    const { searchParams } = new URL(request.url);
+    const url = searchParams.get("url") || "/";
+    return NextResponse.redirect(url);
   }
 }
