@@ -727,7 +727,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
             <LoadingWorld />
           </div>
         )}
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <button
             onClick={() =>
               insertGeneratedContent("text", "Hello from ImagineKit!")
@@ -749,7 +749,7 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
           >
             Insert Image
           </button>
-        </div>
+        </div>*/}
       </div>
     </div>
   );
