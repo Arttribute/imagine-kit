@@ -405,14 +405,11 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         knowledgeBaseContent
       );
 
-      // Remove backticks and sanitize GPT output before parsing
-      const cleanedOutput = generatedOutput
-        .replace(/```json/g, "")
-        .replace(/```/g, "")
-        .trim();
-
-      const outputData = JSON.parse(cleanedOutput);
-
+      const outputData = JSON.parse(generatedOutput);
+      console.log(
+        `Generated output for LLM Node (${node.node_id}):`,
+        outputData
+      );
       // Update the node's memory with the current input and output
       const updatedMemory = [
         ...(node.data.memory ?? []),
