@@ -90,6 +90,26 @@ interface RuntimeEngineProps {
   appId: string; // ID of the app being run
 }
 
+// Helper functions to filter out base64 file content from memory
+const filterBase64Content = (value: string): string => {
+  if (value && value.startsWith("data:") && value.includes("base64,")) {
+    return "[File content omitted]";
+  }
+  return value;
+};
+
+const filterBase64FromObject = (obj: any): any => {
+  const newObj: any = {};
+  for (const key in obj) {
+    if (typeof obj[key] === "string") {
+      newObj[key] = filterBase64Content(obj[key]);
+    } else {
+      newObj[key] = obj[key];
+    }
+  }
+  return newObj;
+};
+
 const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
   const [nodes, setNodes] = useState<NodeData[]>([]);
   const [edges, setEdges] = useState<EdgeData[]>([]);
@@ -405,22 +425,23 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
         knowledgeBaseContent
       );
 
-      // Remove backticks and sanitize GPT output before parsing
-      const cleanedOutput = generatedOutput
-        .replace(/```json/g, "")
-        .replace(/```/g, "")
-        .trim();
-
-      const outputData = JSON.parse(cleanedOutput);
-
+      const outputData = JSON.parse(generatedOutput);
+      console.log(
+        `Generated output for LLM Node (${node.node_id}):`,
+        outputData
+      );
       // Update the node's memory with the current input and output
+      // Filter out base64 file strings before storing in memory
+      const filteredInput = filterBase64Content(currentInputValues);
+      const filteredOutput = filterBase64FromObject(outputData);
       const updatedMemory = [
         ...(node.data.memory ?? []),
         {
-          inputs: currentInputValues,
-          outputs: outputData,
+          inputs: filteredInput,
+          outputs: filteredOutput,
         },
       ];
+
       const updatedOutputs = outputs.map((output) => ({
         ...output,
         value: outputData[output.label],
