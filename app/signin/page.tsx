@@ -97,8 +97,16 @@ function SignupPage() {
         </div>
       </div>
       <div className="z-10 flex items-center justify-center text-center mt-10 text-xs px-8 text-gray-600">
-        By authenticating, you agree to our Terms of Service and Privacy Policy.
+        By authenticating, you agree to our <br />
+        <a href="/terms" className="mx-1 text-gray-900 hover:text-blue-600 ">
+          Terms of Service
+        </a>
+        and
+        <a href="/privacy" className="mx-1 text-gray-900 hover:text-blue-600">
+          Privacy Policy
+        </a>.
       </div>
+
       <RetroGrid />
     </div>
   );
