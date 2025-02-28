@@ -59,7 +59,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       <TooltipTrigger>
         <div
           onClick={onClick}
-          className={`flex flex-col col-span-1 p-2 items-center justify-center border rounded cursor-pointer border-${color}-500 bg-${color}-50 text-${color}-600`}
+          className={`flex flex-col col-span-1 p-2 items-center justify-center border border-0.5 rounded cursor-pointer  bg-${color}-50 text-${color}-600`}
         >
           {icon}
         </div>
@@ -77,9 +77,9 @@ const ToolSection: React.FC<{
   children: React.ReactNode;
 }> = ({ title, icon, children }) => (
   <div className="flex flex-col gap-2 mt-2">
-    <div className="flex items-center">
+    <div className="flex items-center ">
       {icon}
-      <p className="text-xs text-gray-500 font-semibold ml-1">{title}</p>
+      <p className="text-xs text-gray-800 font-semibold ml-1">{title}</p>
     </div>
     <div className="grid grid-cols-1 gap-1">{children}</div>
   </div>
@@ -89,7 +89,7 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
   const buttons = [
     {
       section: "AI",
-      icon: <Sparkles className="w-3 h-3 text-gray-600 mt-1" />,
+      icon: <Sparkles className="w-4 h-4 text-gray-600 ml-1" />,
       tools: [
         {
           icon: <Bot className="w-5 h-5" />,
@@ -107,7 +107,7 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
           icon: <AudioLinesIcon className="w-5 h-5" />,
           label: "Text to speech",
           type: "TextToSpeech",
-          color: "pink",
+          color: "violet",
         },
         {
           icon: <AudioWaveformIcon className="w-5 h-5" />,
@@ -137,25 +137,25 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
     // },
     {
       section: "UI",
-      icon: <LayoutTemplate className="w-3 h-3 text-gray-600 mt-1" />,
+      icon: <LayoutTemplate className="w-4 h-4 text-gray-600 ml-1" />,
       tools: [
         {
           icon: <ClipboardList className="w-5 h-5" />,
           label: "Multi-input Form",
           type: "MultiInputForm",
-          color: "blue",
+          color: "teal",
         },
         {
           icon: <PowerIcon className="w-5 h-5" />,
           label: "Button",
           type: "TriggerButton",
-          color: "green",
+          color: "fuchsia",
         },
         {
           icon: <MessageSquare className="w-5 h-5" />,
           label: "Chat interface",
           type: "ChatInterface",
-          color: "red",
+          color: "sky",
         },
         {
           icon: <ImageIcon className="w-5 h-5" />,
@@ -234,7 +234,13 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
   ];
 
   return (
-    <div className="p-2 bg-white rounded-xl shadow-lg shadow-indigo-300  border border-purple-300 m-4 w-16 h-[80vh]">
+    <div className="p-2 bg-white rounded-lg shadow-lg shadow-indigo-300  border border-purple-300 m-4 w-16 h-[80vh]">
+      <div className="hidden">
+        bg-violet-50 text-violet-600 bg-blue-50 text-blue-600 bg-sky-50
+        text-sky-600 bg-teal-50 text-teal-600 bg-cyan-50 text-cyan-600
+        bg-yellow-50 text-yellow-600 bg-amber-50 text-amber-600 bg-indigo-50
+        text-indigo-600 bg-fuchsia-50 text-fuchsia-600 bg-rose-50 text-rose-600
+      </div>
       <div className="flex flex-col gap-4">
         {buttons
           .filter(({ section }) => section === "AI")
@@ -251,7 +257,7 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
               ))}
             </ToolSection>
           ))}
-        <ScrollArea className="h-[34vh] -mr-3 pr-3">
+        <ScrollArea className="h-[46vh] -mr-3 pr-3">
           {buttons
             .filter(({ section }) => section === "UI")
             .map(({ section, icon, tools }) => (

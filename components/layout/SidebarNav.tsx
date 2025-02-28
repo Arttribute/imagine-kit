@@ -10,6 +10,7 @@ import {
   MessageSquareHeart,
   PlusCircle,
   Sparkles,
+  Earth,
   X,
 } from "lucide-react";
 
@@ -77,10 +78,8 @@ export function SidebarNav() {
 
       <nav className="mt-2 px-3">
         <ul className="space-y-1">
-          <NavItem icon={Sparkles} label="Community" isOpen={isOpen} />
-          <NavItem icon={BookOpen} label="Library" isOpen={isOpen} />
-          <NavItem icon={FolderKanban} label="Projects" isOpen={isOpen} />
-          <NavItem icon={MessageSquareHeart} label="Feedback" isOpen={isOpen} />
+          <NavItem icon={Earth} label="All Worlds" isOpen={isOpen} />
+          <NavItem icon={BookOpen} label="How to" isOpen={isOpen} />
         </ul>
       </nav>
 

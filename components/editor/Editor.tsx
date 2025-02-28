@@ -193,7 +193,7 @@ const Editor: React.FC<EditorProps> = ({ appId, owner }) => {
 
   return (
     <div
-      className="overflow-hidden "
+      className="overflow-hidden bg-ground-100"
       style={{ display: "flex", height: "100vh" }}
     >
       <SidebarNav />
