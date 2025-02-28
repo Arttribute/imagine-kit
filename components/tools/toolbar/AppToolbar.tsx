@@ -30,6 +30,13 @@ import {
 import Link from "next/link";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 interface AppToolBarProps {
   addNewNode: any;
 }
@@ -47,13 +54,21 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   onClick,
   color,
 }) => (
-  <div
-    onClick={onClick}
-    className={`flex flex-col col-span-1 p-2 items-center justify-center border rounded cursor-pointer border-${color}-500 bg-${color}-50 text-${color}-600`}
-  >
-    {icon}
-    <p className={`text-xs text-${color}-600`}>{label}</p>
-  </div>
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger>
+        <div
+          onClick={onClick}
+          className={`flex flex-col col-span-1 p-2 items-center justify-center border rounded cursor-pointer border-${color}-500 bg-${color}-50 text-${color}-600`}
+        >
+          {icon}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="right" align="center">
+        <p>{label}</p>
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
 );
 
 const ToolSection: React.FC<{
@@ -64,39 +79,39 @@ const ToolSection: React.FC<{
   <div className="flex flex-col gap-2 mt-2">
     <div className="flex items-center">
       {icon}
-      <p className="text-sm text-gray-500 font-semibold ml-1">{title}</p>
+      <p className="text-xs text-gray-500 font-semibold ml-1">{title}</p>
     </div>
-    <div className="grid grid-cols-2 gap-1">{children}</div>
+    <div className="grid grid-cols-1 gap-1">{children}</div>
   </div>
 );
 
 const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
   const buttons = [
     {
-      section: "Gen AI",
+      section: "AI",
       icon: <Sparkles className="w-3 h-3 text-gray-600 mt-1" />,
       tools: [
         {
           icon: <Bot className="w-5 h-5" />,
-          label: "Assistant",
+          label: "AI assistant",
           type: "LLMNode",
           color: "blue",
         },
         {
           icon: <Sparkles className="w-5 h-5" />,
-          label: "ImageGen",
+          label: "Image generator",
           type: "ImageGen",
           color: "purple",
         },
         {
           icon: <AudioLinesIcon className="w-5 h-5" />,
-          label: "TTSpeech",
+          label: "Text to speech",
           type: "TextToSpeech",
           color: "pink",
         },
         {
           icon: <AudioWaveformIcon className="w-5 h-5" />,
-          label: "SpeechTText",
+          label: "Speech to text",
           type: "SpeechToText",
           color: "indigo",
         },
@@ -121,12 +136,12 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
     //   ],
     // },
     {
-      section: "UI Elements",
+      section: "UI",
       icon: <LayoutTemplate className="w-3 h-3 text-gray-600 mt-1" />,
       tools: [
         {
           icon: <ClipboardList className="w-5 h-5" />,
-          label: "Multi Form",
+          label: "Multi-input Form",
           type: "MultiInputForm",
           color: "blue",
         },
@@ -138,19 +153,19 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
         },
         {
           icon: <MessageSquare className="w-5 h-5" />,
-          label: "Chat",
+          label: "Chat interface",
           type: "ChatInterface",
           color: "red",
         },
         {
           icon: <ImageIcon className="w-5 h-5" />,
-          label: "Display",
+          label: "Image gisplay",
           type: "ImagesDisplay",
           color: "yellow",
         },
         {
           icon: <Keyboard className="w-5 h-5" />,
-          label: "Text Input",
+          label: "Text input field",
           type: "TextInput",
           color: "gray",
         },
@@ -168,13 +183,13 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
         },
         {
           icon: <Volume2Icon className="w-5 h-5" />,
-          label: "Player",
+          label: "Audio player",
           type: "AudioPlayer",
           color: "indigo",
         },
         {
           icon: <MicIcon className="w-5 h-5" />,
-          label: "Recorder",
+          label: "Audio recorder",
           type: "AudioRecorder",
           color: "purple",
         },
@@ -186,7 +201,7 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
         },
         {
           icon: <FileIcon className="w-5 h-5" />,
-          label: "File Upload",
+          label: "File upload",
           type: "FileUpload",
           color: "red",
         },
@@ -198,13 +213,13 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
         },
         {
           icon: <MousePointer className="w-5 h-5" />,
-          label: "Selector",
+          label: "Word selector",
           type: "WordSelector",
           color: "pink",
         },
         {
           icon: <ShuffleIcon className="w-5 h-5" />,
-          label: "Arranger",
+          label: "Word arranger",
           type: "WordArranger",
           color: "indigo",
         },
@@ -219,18 +234,10 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
   ];
 
   return (
-    <div className="p-4 bg-white rounded-xl shadow-lg shadow-indigo-200  border border-purple-200 m-4 w-64">
-      <Link href="/">
-        <div className="flex  justify-center">
-          <p className="p-1 whitespace-pre-wrap bg-gradient-to-r from-orange-500 via-pink-500 to-indigo-500 bg-clip-text text-center text-xl font-bold leading-none tracking-tighter text-transparent">
-            Imagine kit
-          </p>
-          <Sparkles className="h-4 w-4 mt-0.5 text-indigo-500" />
-        </div>
-      </Link>
+    <div className="p-2 bg-white rounded-xl shadow-lg shadow-indigo-300  border border-purple-300 m-4 w-16 h-[80vh]">
       <div className="flex flex-col gap-4">
         {buttons
-          .filter(({ section }) => section === "Gen AI")
+          .filter(({ section }) => section === "AI")
           .map(({ section, icon, tools }) => (
             <ToolSection key={section} title={section} icon={icon}>
               {tools.map(({ icon, label, type, color }) => (
@@ -244,9 +251,9 @@ const AppToolBar: React.FC<AppToolBarProps> = ({ addNewNode }) => {
               ))}
             </ToolSection>
           ))}
-        <ScrollArea className="h-96 -mr-3 pr-3">
+        <ScrollArea className="h-[34vh] -mr-3 pr-3">
           {buttons
-            .filter(({ section }) => section === "UI Elements")
+            .filter(({ section }) => section === "UI")
             .map(({ section, icon, tools }) => (
               <ToolSection key={section} title={section} icon={icon}>
                 {tools.map(({ icon, label, type, color }) => (

@@ -17,6 +17,7 @@ import ReactFlow, { Controls, Background, Edge } from "reactflow";
 import "reactflow/dist/style.css";
 import axios from "axios";
 import nodeTypes from "@/components/imaginekit/nodes/nodeTypes";
+import { set } from "lodash";
 
 interface NodeDiagramProps {
   data: {
@@ -25,7 +26,7 @@ interface NodeDiagramProps {
   };
 }
 
-interface ChatBoxProps {
+interface ChatBoxOldProps {
   nodes: Node[];
   edges: Edge[];
   appData: any;
@@ -51,7 +52,7 @@ function NodeDiagram({ data }: NodeDiagramProps) {
   );
 }
 
-function ChatBox({
+function ChatBoxOld({
   nodes,
   edges,
   appData,
@@ -62,7 +63,7 @@ function ChatBox({
   setNodes,
   setEdges,
   saveToHistory,
-}: ChatBoxProps) {
+}: ChatBoxOldProps) {
   const [input, setInput] = useState("");
   const [userInputLoadingPlaceholder, setUserInputLoadingPlaceholder] =
     useState("");
@@ -157,14 +158,14 @@ function ChatBox({
 
   return (
     <>
-      <div className="h-full">
-        <ScrollArea className="bg-slate-50 rounded-xl p-2  h-[74vh]">
+      <div className="h-full m-1">
+        <ScrollArea className="bg-slate-50 border border-indigo-200 rounded-xl p-2 h-[70vh]">
           {interactionData &&
             interactionData.map((interaction: any, index: number) => (
               <div key={index} className="mb-4">
                 {/* User Message */}
                 <div className="flex justify-end">
-                  <div className="bg-sky-50 border-blue-100 p-3 rounded-2xl  max-w-full">
+                  <div className="bg-sky-100 p-3 rounded-2xl shadow-sm max-w-full">
                     <p className="text-sm text-gray-800">
                       {interaction.user_message}
                     </p>
@@ -173,7 +174,7 @@ function ChatBox({
 
                 {/* System Message */}
                 <div className="flex justify-start mt-4">
-                  <div className="bg-white rounded-2xl p-4 px-5 shadow-sm max-w-full">
+                  <div className="border border-blue-200 bg-white rounded-2xl p-4 px-5 shadow-sm max-w-full">
                     <p className="text-sm text-gray-700">
                       {interaction.system_message.text}
                     </p>
@@ -267,4 +268,4 @@ function ChatBox({
   );
 }
 
-export default ChatBox;
+export default ChatBoxOld;

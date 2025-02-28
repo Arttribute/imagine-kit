@@ -14,6 +14,9 @@ import {
   AlertTriangleIcon,
   Undo2Icon,
   Redo2Icon,
+  WorkflowIcon,
+  LayoutPanelLeft,
+  AppWindowIcon,
 } from "lucide-react";
 import Link from "next/link";
 import LoadingWorld from "@/components/worlds/LoadingWorld";
@@ -23,7 +26,9 @@ import useEditorHistory from "@/components/editor/hooks/useEditorHistory";
 import NodeFlow from "./NodeFlow";
 import { Node } from "reactflow";
 import { NODE_TYPE_MAPPING } from "@/components/imaginekit/nodes/nodeTypes";
-import Sophia from "@/components/sophia/Sophia";
+import Sophia from "@/components//sophia/Sophia";
+import RuntimeEngine from "@/components/RuntimeEngine";
+import { SidebarNav } from "@/components/layout/SidebarNav";
 
 interface EditorProps {
   appId: string;
@@ -188,19 +193,42 @@ const Editor: React.FC<EditorProps> = ({ appId, owner }) => {
 
   return (
     <div
-      className="overflow-hidden bg-slate-50"
+      className="overflow-hidden "
       style={{ display: "flex", height: "100vh" }}
     >
-      <AppToolbar addNewNode={addNewNode} />
-
-      <Tabs defaultValue="nodes" className="w-full">
+      <SidebarNav />
+      <div className="flex flex-col w-[500px]">
+        <div className="m-2">
+          <EditWorldMetadata appData={appData} />
+        </div>
+        <div className="m-2">
+          <Sophia
+            nodes={nodes}
+            edges={edges}
+            appData={appData}
+            setNodes={setNodes}
+            setEdges={setEdges}
+            saveToHistory={saveToHistory}
+          />
+        </div>
+      </div>
+      <Tabs defaultValue="preview" className="w-full">
         <div className="flex">
-          <div className="m-2">
-            <EditWorldMetadata appData={appData} />
-          </div>
-          <TabsList className="grid w-full grid-cols-2 w-[400px] m-2">
-            <TabsTrigger value="nodes">Logic flow</TabsTrigger>
-            <TabsTrigger value="preview">UI preview</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-1 w-[120px] my-2 border border-gray-400 bg-slate-100 rounded-xl">
+            <TabsTrigger value="preview" className="rounded-lg">
+              <AppWindowIcon className="w-4 h-4 mx-2" />
+              Preview
+            </TabsTrigger>
+          </TabsList>
+          <TabsList className="grid w-full grid-cols-2 w-[280px] m-2 border border-gray-400 bg-slate-100 rounded-xl">
+            <TabsTrigger value="nodes" className="rounded-lg">
+              <WorkflowIcon className="w-4 h-4 mx-2" />
+              Logic Editor
+            </TabsTrigger>
+            <TabsTrigger value="ui-editor" className="rounded-lg">
+              <LayoutPanelLeft className="w-4 h-4 mx-2" />
+              UI Editor
+            </TabsTrigger>
           </TabsList>
           <Link href={`/${owner}/worlds/${appId}`} passHref>
             <Button className="m-2 px-6 bg-indigo-500 hover:bg-indigo-600">
@@ -281,15 +309,27 @@ const Editor: React.FC<EditorProps> = ({ appId, owner }) => {
           </div>
         </div>
         {loadingWorldComponents && <LoadingWorld />}
-        <TabsContent value="nodes" className="bg-white">
-          <div style={{ display: "flex", height: "91vh" }}>
-            <div
-              style={{
-                flexGrow: 1,
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
+        <TabsContent value="preview" className="bg-white">
+          <div className="rounded-xl border border-gray-400 mr-2">
+            <div style={{ display: "flex", height: "88vh" }}>
+              <div className="w-full h-full">
+                <RuntimeEngine appId={appId} />
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="nodes">
+          <div
+            className="relative rounded-xl border border-gray-400 mr-4 bg-white"
+            style={{ height: "88vh" }}
+          >
+            {/* Position the toolbar absolutely so it overlaps the flow */}
+            <div className="absolute top-0 left-1 z-10">
+              <AppToolbar addNewNode={addNewNode} />
+            </div>
+
+            {/* Make NodeFlow take full space (underneath the toolbar) */}
+            <div className="w-full h-full">
               <NodeFlow
                 nodes={nodes}
                 setNodes={setNodes}
@@ -303,29 +343,26 @@ const Editor: React.FC<EditorProps> = ({ appId, owner }) => {
             </div>
           </div>
         </TabsContent>
-        <TabsContent value="preview" className="bg-white">
-          <div style={{ display: "flex", height: "86vh", width: "80vw" }}>
-            <UIPreview
-              uiComponents={uiComponents}
-              savedPositions={savedComponentPositions}
-              savePositions={(positions) => {
-                saveComponentPositions(positions);
-                setSaveStatus("save changes"); // Mark as unsaved when UI components are changed
-              }}
-            />
+        <TabsContent value="ui-editor" className="bg-white">
+          <div className="relative rounded-xl border border-gray-400 mr-2">
+            <div className="absolute top-0 left-1 z-10">
+              <AppToolbar addNewNode={addNewNode} />
+            </div>
+            <div style={{ display: "flex", height: "88vh" }}>
+              <div className="w-full h-full">
+                <UIPreview
+                  uiComponents={uiComponents}
+                  savedPositions={savedComponentPositions}
+                  savePositions={(positions) => {
+                    saveComponentPositions(positions);
+                    setSaveStatus("save changes"); // Mark as unsaved when UI components are changed
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </TabsContent>
       </Tabs>
-      <div className="absolute right-0 m-4 bottom-0">
-        <Sophia
-          nodes={nodes}
-          edges={edges}
-          appData={appData}
-          setNodes={setNodes}
-          setEdges={setEdges}
-          saveToHistory={saveToHistory}
-        />
-      </div>
     </div>
   );
 };
