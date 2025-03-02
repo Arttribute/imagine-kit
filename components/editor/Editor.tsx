@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useAppDispatch } from "@/store/store";
 import { addNode, updateNodeData } from "@/store/store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -191,6 +191,14 @@ const Editor: React.FC<EditorProps> = ({ appId, owner }) => {
     };
   }, [handleUndo, handleRedo]);
 
+  const [loadingWorld, setLoadingWorld] = useState(true);
+  useEffect(() => {
+    setLoadingWorld(true);
+    if (nodes.length > 0 && edges.length > 0 && uiComponents.length > 0) {
+      setLoadingWorld(false);
+    }
+  }, [nodes, edges, uiComponents, saveComponentPositions]);
+
   return (
     <div
       className="overflow-hidden bg-ground-100"
@@ -311,11 +319,17 @@ const Editor: React.FC<EditorProps> = ({ appId, owner }) => {
         {loadingWorldComponents && <LoadingWorld />}
         <TabsContent value="preview" className="bg-white">
           <div className="rounded-xl border border-gray-400 mr-2">
-            <div style={{ display: "flex", height: "88vh" }}>
-              <div className="w-full h-full">
-                <RuntimeEngine appId={appId} />
+            {loadingWorld ? (
+              <div className="flex items-center justify-center h-[88vh]">
+                <Loader2Icon className="w-8 h-8 animate-spin" />
               </div>
-            </div>
+            ) : (
+              <div style={{ display: "flex", height: "88vh" }}>
+                <div className="w-full h-full">
+                  <RuntimeEngine data={{ nodes, edges, uiComponents }} />
+                </div>
+              </div>
+            )}
           </div>
         </TabsContent>
         <TabsContent value="nodes">

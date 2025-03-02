@@ -87,7 +87,11 @@ interface UIComponentData {
 }
 
 interface RuntimeEngineProps {
-  appId: string; // ID of the app being run
+  data: {
+    nodes: any[];
+    edges: any[];
+    uiComponents: any[];
+  };
 }
 
 // Helper functions to filter out base64 file content from memory
@@ -110,41 +114,17 @@ const filterBase64FromObject = (obj: any): any => {
   return newObj;
 };
 
-const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
-  const [nodes, setNodes] = useState<NodeData[]>([]);
-  const [edges, setEdges] = useState<EdgeData[]>([]);
-  const [uiComponents, setUIComponents] = useState<UIComponentData[]>([]);
+const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ data }) => {
+  const [nodes, setNodes] = useState<NodeData[]>(data.nodes);
+  const [edges, setEdges] = useState<EdgeData[]>(data.edges);
+  const [uiComponents, setUIComponents] = useState<UIComponentData[]>(
+    data.uiComponents
+  );
   const [nodeExecutionStack, setNodeExecutionStack] = useState<
     { nodeId: string; executionId: string }[]
   >([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [loadingWorldComponents, setLoadingWorldComponents] =
-    useState<boolean>(false);
   const loadingCounter = useRef(0);
-
-  // Load data from the database
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoadingWorldComponents(true);
-        const [nodesResponse, edgesResponse, uiComponentsResponse] =
-          await Promise.all([
-            axios.get(`/api/nodes?appId=${appId}`),
-            axios.get(`/api/edges?appId=${appId}`),
-            axios.get(`/api/uicomponents?appId=${appId}`),
-          ]);
-
-        setNodes(nodesResponse.data);
-        setEdges(edgesResponse.data);
-        setUIComponents(uiComponentsResponse.data);
-        setLoadingWorldComponents(false);
-      } catch (error) {
-        console.error("Failed to fetch data for runtime engine:", error);
-      }
-    };
-
-    fetchData();
-  }, [appId]);
 
   const insertGeneratedContent = (
     contentType: string,
@@ -743,11 +723,6 @@ const RuntimeEngine: React.FC<RuntimeEngineProps> = ({ appId }) => {
             </div>
           );
         })}
-        {loadingWorldComponents && (
-          <div style={{ position: "absolute", width: "80vw" }}>
-            <LoadingWorld />
-          </div>
-        )}
         {/* <div className="flex gap-2">
           <button
             onClick={() =>

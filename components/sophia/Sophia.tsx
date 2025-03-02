@@ -59,7 +59,7 @@ export default function Sophia({
   return (
     <div className="">
       <div
-        className={`border border-indigo-300 bg-white shadow-xl shadow-sky-200 rounded-xl z-20`}
+        className={`border border-indigo-400 bg-white shadow-xl shadow-sky-200 rounded-xl z-20`}
       >
         <Link href="/">
           <div className="flex pt-4 px-4 ">

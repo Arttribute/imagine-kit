@@ -27,6 +27,18 @@ const AppSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    is_remix_of: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "App",
+    },
+    is_remixable: {
+      type: Boolean,
+      default: false,
+    },
+    remix_count: {
+      type: Number,
+      default: 0,
+    },
     likes_count: {
       type: Number,
       default: 0,
