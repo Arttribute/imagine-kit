@@ -33,7 +33,7 @@ const AppSchema = new mongoose.Schema(
     },
     is_remixable: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     remix_count: {
       type: Number,

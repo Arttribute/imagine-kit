@@ -79,6 +79,14 @@ export default function World({ params }: { params: { id: string } }) {
     fetchApp();
   }, [appId]);
 
+  const [loadingComponents, setLoadingComponents] = useState(true);
+  useEffect(() => {
+    setLoadingComponents(true);
+    if (nodes.length > 0 && edges.length > 0 && uiComponents.length > 0) {
+      setLoadingComponents(false);
+    }
+  }, [nodes, edges, uiComponents, uiComponents]);
+
   if (appData.loading) return <LoadingWorld />;
   if (!app) return <div>App not found</div>;
 
@@ -99,13 +107,23 @@ export default function World({ params }: { params: { id: string } }) {
   );
 
   return (
-    <div className="flex justify-center items-center h-screen">
+    <div className="">
       <div className="fixed top-0 left-0 m-3 flex items-center">
         <TopButtons />
       </div>
 
       <div className="fixed top-0 right-0 m-3">
-        <div className="flex flex-col items-center">
+        <div className="flex  items-center">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <WorldLogic data={{ app, nodes, edges }} />
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="center">
+                <p className="text-xs text-gray-700">World Logic</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           {isWorldOwner && (
             <TooltipProvider>
               <Tooltip>
@@ -113,39 +131,35 @@ export default function World({ params }: { params: { id: string } }) {
                   <Link href={`/${app.owner.username}/worlds/${app._id}/edit`}>
                     <Button
                       variant="outline"
-                      className="items-center rounded-full mb-2"
+                      className="items-center rounded-full ml-1"
                     >
                       <PencilIcon className="h-5 w-5 text-indigo-600" />
                     </Button>
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="left" align="center">
+                <TooltipContent side="bottom" align="center">
                   <p className="text-xs text-gray-700">Edit World</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           )}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <WorldLogic data={{ app, nodes, edges }} />
-              </TooltipTrigger>
-              <TooltipContent side="left" align="center">
-                <p className="text-xs text-gray-700">World Logic</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </div>
       </div>
 
       {!isWorldOwner && !app.is_published ? (
         <WorldScaffolding />
-      ) : (
+      ) : !loadingComponents ? (
         <div className="flex items-center justify-center">
-          <div style={{ display: "flex", height: "86vh" }}>
-            <RuntimeEngine data={{ nodes, edges, uiComponents }} />
+          <div className="rounded-xl  mr-2 mt-16 w-[70vw]">
+            <div style={{ display: "flex", height: "88vh" }}>
+              <div className="w-full h-full">
+                <RuntimeEngine data={{ nodes, edges, uiComponents }} />
+              </div>
+            </div>
           </div>
         </div>
+      ) : (
+        <LoadingWorld />
       )}
       {loadingWorld && <LoadingWorld />}
     </div>

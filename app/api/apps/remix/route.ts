@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     const newNodes = oldNodes.map((oldNode) => ({
       node_id: oldNode.node_id,
       type: oldNode.type,
-      name: oldNode.name,
+      name: oldNode.name || oldNode.type,
       data: oldNode.data,
       position: oldNode.position,
       app_id: newApp._id,
