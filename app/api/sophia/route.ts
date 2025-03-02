@@ -1,129 +1,11 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import {
-  SketchAppExample,
-  TextToImageExample,
-  AITarotExample,
-  MosaicsExample,
-} from "@/lib/ptomptEngineering/worldExamples";
-import { ComponentsFormat } from "@/lib/ptomptEngineering/ComponentsFormat";
-import {
   AllNodeTypes,
   AllNodeNames,
   AllUIComponentTypes,
 } from "@/lib/ptomptEngineering/AllNodeTypes";
 import { RuntimeEngineWorking } from "@/lib/ptomptEngineering/RuntimeEngineWorking";
-
-// Define the JSON Schema for the structured output
-const responseSchema = {
-  type: "object",
-  name: "ResponseSchema",
-  properties: {
-    text: {
-      type: "string",
-      description:
-        "A short, simple, informative, and engaging explanation to the user.",
-    },
-    node_diagram: {
-      type: "object",
-      properties: {
-        nodes: {
-          type: "array",
-          description: "An array of node objects.",
-          items: {
-            type: "object",
-            properties: {
-              node_id: { type: "string" },
-              type: { type: "string" },
-              name: { type: "string" },
-              data: {
-                type: "object",
-                properties: {
-                  inputs: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        id: { type: "string" },
-                        label: { type: "string" },
-                        value: { type: "string" },
-                        color: { type: "string" },
-                      },
-                      required: ["id"],
-                      additionalProperties: false,
-                    },
-                  },
-                  outputs: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        id: { type: "string" },
-                        label: { type: "string" },
-                        value: { type: "string" },
-                        color: { type: "string" },
-                      },
-                      required: ["id"],
-                      additionalProperties: false,
-                    },
-                  },
-                  instruction: { type: "string" },
-                  memoryFields: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        id: { type: "string" },
-                        label: { type: "string" },
-                        value: { type: "string" },
-                        color: { type: "string" },
-                      },
-                      required: ["id"],
-                      additionalProperties: false,
-                    },
-                  },
-                },
-                required: ["inputs", "outputs"],
-                additionalProperties: false,
-              },
-              position: {
-                type: "object",
-                properties: {
-                  x: { type: "number" },
-                  y: { type: "number" },
-                },
-                required: ["x", "y"],
-                additionalProperties: false,
-              },
-            },
-            required: ["node_id", "type", "name", "data", "position"],
-            additionalProperties: false,
-          },
-        },
-        edges: {
-          type: "array",
-          description: "An array of edge objects.",
-          items: {
-            type: "object",
-            properties: {
-              source: { type: "string" },
-              target: { type: "string" },
-              sourceHandle: { type: "string" },
-              targetHandle: { type: "string" },
-              color: { type: "string" },
-            },
-            required: ["source", "target", "sourceHandle", "targetHandle"],
-            additionalProperties: false,
-          },
-        },
-      },
-      required: ["nodes", "edges"],
-      additionalProperties: false,
-    },
-  },
-  required: ["text", "node_diagram"],
-  additionalProperties: false,
-};
 
 // Initialize OpenAI with your API key
 const API_KEY = process.env.OPENAI_API_KEY;
@@ -134,7 +16,6 @@ const openai = new OpenAI({
 // Maximum duration for the API response
 export const maxDuration = 45;
 
-// Define TypeScript interfaces for Type Safety (optional but recommended)
 interface RequestBody {
   message: string;
   nodes: any[];
@@ -143,21 +24,11 @@ interface RequestBody {
   interactionData: any;
 }
 
-interface StructuredResponse {
-  text: string;
-  node_diagram: {
-    nodes: any[];
-    edges: any[];
-  };
-}
-
 export async function POST(request: Request) {
   try {
-    // Parse the incoming JSON request
     const requestBody: RequestBody = await request.json();
     const { message, nodes, edges, appData, interactionData } = requestBody;
 
-    // Construct the prompt for the AI model
     const prompt = `
       You are Sophia, an AI copilot integrated into a node-based editor called ImagineKit. Your role is to assist users in creating and improving their node diagrams for AI-driven apps.
       The user has provided the following message:
@@ -206,13 +77,10 @@ export async function POST(request: Request) {
       In the case you provide a node diagram, provide the full flow of the diagram with all the nodes and edges and keep the text VERY VERY SHORT and focus on the node diagram - if the user needs more explanation they can ask you.
       Make sure the node diagram is in a position where the user can easily see (preferably center of the canvas) and it is not cluttered.
 
-      The following is all you need to know about ImagineKit's Node, Edge, and UIComponent structure:
-      Here are the mongoose schemas for Nodes and Edges:
-      
-     The following are the node types that are available:
+      The following are the node types that are available:
         ${AllNodeTypes}
 
-     The following are the node names that are available:
+      The following are the node names that are available:
         ${AllNodeNames}
 
       The following are the uiComponents types that are available:
@@ -226,51 +94,45 @@ export async function POST(request: Request) {
       You need to understand how the nodes interact with each other and how the data flows through the edges and avoid creating any conflicts in the data flow. For example, one node output should not be connected to another node output or to itself. An input node should always be connected to an output node, and one input node cannot be connected to multiple output nodes.
 
       Try and understand what the user is trying to achieve. Ask questions if you need more information and do not work with vague assumptions. If you make any assumptions, state them clearly in your response.
-
-      Now chat with the user and provide any suggestions if necessary based on the user's message and current node editor state.
     `;
 
-    // Define the JSON Schema for Structured Outputs
-    const jsonSchema = responseSchema;
+    const encoder = new TextEncoder();
 
-    // Make the API call with Structured Outputs
-    const response = await openai.beta.chat.completions.parse({
-      model: "gpt-4o-mini-2024-07-18", // Ensure using a supported model
-      messages: [
-        {
-          role: "system",
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 16384,
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          schema: jsonSchema,
-          name: "WorldSchema",
-        },
+    // Create a ReadableStream that streams tokens from OpenAI
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o-mini-2024-07-18",
+            messages: [
+              {
+                role: "system",
+                content: prompt,
+              },
+            ],
+            temperature: 0.7,
+            max_tokens: 16384,
+            stream: true,
+          });
+
+          // Iterate over the async response stream
+          for await (const chunk of response) {
+            // Each chunk may include a delta token (if provided)
+            const token = chunk.choices[0].delta?.content;
+            if (token) {
+              controller.enqueue(encoder.encode(token));
+            }
+          }
+        } catch (error) {
+          console.error("Error during streaming:", error);
+          controller.error(error);
+        }
+        controller.close();
       },
     });
 
-    // Access the parsed response
-    const messageResponse = response.choices[0].message.content;
-
-    // Handle refusals
-    if (messageResponse && messageResponse.includes("refusal")) {
-      return new NextResponse(
-        JSON.stringify({ error: "Request was refused by the model." }),
-        { status: 200 }
-      );
-    }
-
-    // Parse the structured response
-    const parsedResponse: StructuredResponse = messageResponse
-      ? JSON.parse(messageResponse)
-      : { text: "", node_diagram: { nodes: [], edges: [] } };
-
-    return new NextResponse(JSON.stringify(parsedResponse), {
-      status: 200,
+    return new NextResponse(stream, {
+      headers: { "Content-Type": "text/plain" },
     });
   } catch (error: any) {
     return new NextResponse(JSON.stringify({ error: error.message }), {

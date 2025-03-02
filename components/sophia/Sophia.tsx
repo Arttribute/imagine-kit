@@ -42,7 +42,7 @@ export default function Sophia({
 
         const interactions = response.data.map((interaction: any) => ({
           user_message: interaction.user_message,
-          system_message: interaction.system_message,
+          system_message: JSON.parse(interaction.system_message),
         }));
 
         setInteractionData(interactions);
