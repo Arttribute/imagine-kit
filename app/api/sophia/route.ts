@@ -47,9 +47,11 @@ export async function POST(request: Request) {
       ${JSON.stringify(interactionData, null, 2)}
 
       Your task is to:
+      - Help the user build their desired app on ImagineKit.
       - Analyze the user's message and the current node editor state.
-      - Generate suggestions to improve or extend the node diagram.
-      - Provide the suggestions in JSON format, adhering to the following schema:
+      - Respond to the user appropriately with an explanation and if applicable, a node diagram that best fits their intention .
+      - If further information is needed, ask the user for clarification.
+      - Provide the node diagram in JSON format, adhering to the following schema:
         {
           "text": "Your explanation to the user.",
           "node_diagram": {
@@ -58,8 +60,8 @@ export async function POST(request: Request) {
           }
         }
       - Ensure that the node and edge IDs are unique and do not conflict with existing ones.
-      - Include a textual explanation of your suggestions.
-      - Inform the user if they are making a mistake or if there is a better way to achieve their goal.
+      - Always include a textual explanation whnever you generate a node diagram.
+      - Inform the user if you realize they are making a mistake or if there is a better way to achieve their goal.
 
       The response should be a JSON object with the following structure:
       {
