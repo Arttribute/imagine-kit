@@ -213,6 +213,7 @@ const Editor: React.FC<EditorProps> = ({ appId, owner }) => {
           <Sophia
             nodes={nodes}
             edges={edges}
+            uiComponents={uiComponents}
             appData={appData}
             setNodes={setNodes}
             setEdges={setEdges}

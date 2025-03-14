@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     const interactions = await BuildChatInteraction.find({
       app_id,
       owner: user_id,
-    }).sort({ createdAt: -1 });
+    }).sort({ createdAt: 1 });
     return NextResponse.json(interactions, { status: 200 });
   } catch (error: any) {
     console.error("Error fetching interactions:", error.message);

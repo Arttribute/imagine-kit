@@ -10,6 +10,7 @@ import Link from "next/link";
 interface SophiaProps {
   nodes: any[];
   edges: Edge[];
+  uiComponents: any[];
   appData: any;
   setNodes: React.Dispatch<React.SetStateAction<any[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge<any>[]>>;
@@ -20,6 +21,7 @@ export default function Sophia({
   nodes,
   edges,
   appData,
+  uiComponents,
   setNodes,
   setEdges,
   saveToHistory,
@@ -77,6 +79,7 @@ export default function Sophia({
           <ChatBox
             nodes={nodes}
             edges={edges}
+            uiComponents={uiComponents}
             appData={appData}
             userId={userId}
             appId={appId}

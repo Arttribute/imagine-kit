@@ -16,18 +16,12 @@ import {
 } from "@/components/ui/dialog";
 import ReactFlow, { Controls, Background, Edge } from "reactflow";
 import "reactflow/dist/style.css";
-import nodeTypes from "@/components/imaginekit/nodes/nodeTypes";
-
-interface NodeDiagramProps {
-  data: {
-    nodes: any[];
-    edges: any[];
-  };
-}
+import NodeDiagram from "../worlds/NodeDiagram";
 
 interface ChatBoxProps {
   nodes: any[];
   edges: Edge[];
+  uiComponents: any[];
   appData: any;
   userId: string;
   appId: string;
@@ -38,21 +32,10 @@ interface ChatBoxProps {
   saveToHistory: () => void;
 }
 
-function NodeDiagram({ data }: NodeDiagramProps) {
-  const { nodes, edges } = data;
-  return (
-    <div style={{ height: "400px", width: "100%" }}>
-      <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes}>
-        <Controls />
-        <Background />
-      </ReactFlow>
-    </div>
-  );
-}
-
 function ChatBox({
   nodes,
   edges,
+  uiComponents,
   appData,
   userId,
   appId,
@@ -95,8 +78,10 @@ function ChatBox({
     setInteractionData((prevData) => [
       ...prevData,
       {
-        user_message: input,
+        user_message: currentUserInput,
         system_message: { text: "" },
+        diagramLoading: false,
+        messageLoading: true,
       },
     ]);
 
@@ -116,6 +101,7 @@ function ChatBox({
           interactionData,
           nodes,
           edges,
+          uiComponents,
           appData,
         }),
       });
@@ -145,7 +131,9 @@ function ChatBox({
             const lastIndex = updated.length - 1;
             updated[lastIndex] = {
               ...updated[lastIndex],
-              system_message: { text: textPart },
+              system_message: { text: textPart.slice(13, -5) },
+              diagramLoading: true,
+              messageLoading: false,
             };
             return updated;
           });
@@ -158,7 +146,7 @@ function ChatBox({
             const lastIndex = updated.length - 1;
             updated[lastIndex] = {
               ...updated[lastIndex],
-              system_message: { text: fullResponse },
+              system_message: { text: fullResponse.slice(13, -5) },
             };
             return updated;
           });
@@ -175,6 +163,7 @@ function ChatBox({
           updated[lastIndex] = {
             ...updated[lastIndex],
             system_message: parsedResponse,
+            diagramLoading: false,
           };
           return updated;
         });
@@ -183,13 +172,45 @@ function ChatBox({
         console.error("Failed to parse streamed response as JSON:", e);
       }
 
+      const parsedResponse = JSON.parse(fullResponse);
       // Save the complete interaction to the history
+
+      // Map node.node_id to node.id
+      const newNodes = parsedResponse.node_diagram.nodes.map((node: any) => ({
+        ...node,
+        id: node.node_id,
+      }));
+
       const interactionToSave = {
         owner: userId,
         app_id: appId,
         user_message: currentUserInput,
-        system_message: fullResponse,
+        system_message: {
+          text: parsedResponse.text,
+          node_diagram: {
+            nodes: newNodes,
+            edges: parsedResponse.node_diagram.edges,
+          },
+        },
       };
+
+      // Apply changes to the node diagram
+      if (
+        parsedResponse.node_diagram &&
+        parsedResponse.node_diagram.nodes &&
+        parsedResponse.node_diagram.nodes.length > 0
+      ) {
+        // Map node.node_id to node.id
+        const newNodes = parsedResponse.node_diagram.nodes.map((node: any) => ({
+          ...node,
+          id: node.node_id,
+        }));
+        const newEdges = parsedResponse.node_diagram.edges;
+        setNodes(newNodes);
+        setEdges(newEdges);
+        console.log("Node Diagram", parsedResponse.node_diagram);
+        saveToHistory();
+      }
 
       await fetch("/api/buildchat", {
         method: "POST",
@@ -205,7 +226,11 @@ function ChatBox({
 
   const handleAcceptSuggestion = (systemMessage: any) => {
     if (systemMessage.node_diagram) {
-      const newNodes = systemMessage.node_diagram.nodes;
+      // Map node.node_id to node.id
+      const newNodes = systemMessage.node_diagram.nodes.map((node: any) => ({
+        ...node,
+        id: node.node_id,
+      }));
       const newEdges = systemMessage.node_diagram.edges;
       setNodes(newNodes);
       setEdges(newEdges);
@@ -236,8 +261,14 @@ function ChatBox({
                     <p className="text-sm text-gray-700">
                       {interaction.system_message.text}
                     </p>
+                    {/* If message is loading, show spinner instead of streaming raw JSON */}
+                    {interaction.messageLoading && (
+                      <div className="flex items-center space-x-2 mt-2">
+                        <LoaderPinwheel className="w-4 h-4 animate-spin text-indigo-600 mr-2 -mt-2" />
+                      </div>
+                    )}
                     {/* If diagram is loading, show spinner instead of streaming raw JSON */}
-                    {diagramLoading && (
+                    {interaction.diagramLoading && (
                       <div className="flex items-center space-x-2 mt-2">
                         <LoaderPinwheel className="w-4 h-4 animate-spin text-indigo-600 mr-2" />
                         <span className="text-sm text-gray-600">
@@ -276,12 +307,7 @@ function ChatBox({
                                 </DialogDescription>
                               </DialogHeader>
                               <NodeDiagram
-                                data={
-                                  interaction.system_message.node_diagram || {
-                                    nodes: [],
-                                    edges: [],
-                                  }
-                                }
+                                data={interaction.system_message.node_diagram}
                               />
                               <div className="flex justify-end mt-4 space-x-2">
                                 <Button

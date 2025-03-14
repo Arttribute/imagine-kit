@@ -1,7 +1,7 @@
 // Sophia.tsx
 "use client";
 import { useState, useEffect } from "react";
-import ChatBox from "@/components/sophia/ChatBox";
+import ChatBoxOld from "./ChatBoxOld";
 import { Edge } from "reactflow";
 import axios from "axios";
 import { LightbulbIcon, ChevronDownIcon, LoaderPinwheel } from "lucide-react";
@@ -100,7 +100,7 @@ export default function SophiaOld({
               <ChevronDownIcon className="w-5 h-5" />
             </button>
           </div>
-          <ChatBox
+          <ChatBoxOld
             nodes={nodes}
             edges={edges}
             appData={appData}
