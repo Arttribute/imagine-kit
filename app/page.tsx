@@ -18,7 +18,7 @@ export default function Home() {
           </p>
           <Sparkles className="h-6 w-6 text-indigo-500" />
         </div>
-        <p className="text-xl text-center mb-8 text-indigo-950">
+        <p className="text-xl text-center mb-6 text-indigo-950">
           Create fun AI apps and use them anywhere on the web
         </p>
         <div className="lg:w-[42vw] z-10">

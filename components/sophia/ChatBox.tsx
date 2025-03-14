@@ -315,8 +315,8 @@ function ChatBox({
             onKeyDown={handleKeyDown}
             className="flex-grow rounded-xl p-5"
           />
-          <Button className="bg-indigo-500 rounded-xl px-2" onClick={onSubmit}>
-            <ArrowUp className="h-6 w-6" />
+          <Button className="bg-indigo-500 rounded-xl px-3" onClick={onSubmit}>
+            <ArrowUp className="h-4 w-4" />
           </Button>
         </div>
       </div>
