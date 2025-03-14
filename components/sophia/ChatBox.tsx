@@ -72,6 +72,7 @@ function ChatBox({
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    console.log("ChatInteractions", interactionData);
   }, [interactionData, loadingResponse, diagramLoading]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
