@@ -84,22 +84,41 @@ export function SidebarNav({ username }: { username: string }) {
       </div>
 
       <div className="px-3 py-2">
-        <button className="w-full flex items-center justify-center gap-2 bg-indigo-500 text-primary-foreground rounded-md py-2 font-medium text-sm">
-          {isOpen ? (
-            <>
-              <PlusCircle className="h-4 w-4" />
-              New World
-            </>
-          ) : (
-            <PlusCircle className="h-5 w-5" />
-          )}
-        </button>
+        <Link href={`/worlds/create`}>
+          <button className="w-full flex items-center justify-center gap-2 bg-indigo-500 text-primary-foreground rounded-md py-2 font-medium text-sm">
+            {isOpen ? (
+              <>
+                <PlusCircle className="h-4 w-4" />
+                New World
+              </>
+            ) : (
+              <PlusCircle className="h-5 w-5" />
+            )}
+          </button>
+        </Link>
       </div>
 
       <nav className="mt-2 px-3">
         <ul className="space-y-1">
-          <NavItem icon={Earth} label="All Worlds" isOpen={isOpen} />
-          <NavItem icon={BookOpen} label="How to" isOpen={isOpen} />
+          <li>
+            <Link
+              href="/worlds"
+              className="flex items-center gap-3 text-muted-foreground hover:text-foreground py-2 px-2 rounded-md hover:bg-accent transition-colors"
+            >
+              <Earth className="h-5 w-5" />
+              {isOpen && <span className="text-sm">All Worlds</span>}
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="https://docs.imaginekit.io"
+              target="_blank"
+              className="flex items-center gap-3 text-muted-foreground hover:text-foreground py-2 px-2 rounded-md hover:bg-accent transition-colors"
+            >
+              <BookOpen className="h-5 w-5" />
+              {isOpen && <span className="text-sm">How to</span>}
+            </Link>
+          </li>
         </ul>
       </nav>
 
