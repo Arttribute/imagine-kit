@@ -117,7 +117,7 @@ const UIPreview: React.FC<UIPreviewProps> = ({
   };
 
   return (
-    <div className="border h-full w-full rounded-xl">
+    <div className="h-full w-full rounded-xl">
       {uiComponents.map((component, index) => {
         const position =
           positions[component.id] || calculateInitialPosition(index);

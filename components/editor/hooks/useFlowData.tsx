@@ -107,23 +107,27 @@ function useFlowData(appId: string) {
     fetchData();
   }, [appId]);
 
-  // Effect to filter out UI components from nodes
+  // Effect to filter out UI components from nodes and set UI components woth its corresponding worldUIComponents
   useEffect(() => {
     const uiNodes = nodes
       .filter((node) =>
         NODE_TYPE_MAPPING.ui.includes(
           node.type as (typeof NODE_TYPE_MAPPING.ui)[number]
         )
-      )
+      ) //map ui node and set its corresponding worldUIComponents
       .map((node) => ({
         id: node.id,
         label: node.data.label,
+        component_id: node.id,
         type: node.type ?? "",
+        position: savedComponentPositions[node.id],
         fieldTypes:
           node.data.outputs.map((output: { type: any }) => output.type) || [],
       }));
 
     console.log("Filtered UI Components from nodes: ", uiNodes); // Debugging log for UI nodes
+    //map ui node and set its corresponding worldUIComponents
+
     setUIComponents(uiNodes);
   }, [nodes]);
 

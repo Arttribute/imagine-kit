@@ -1,129 +1,12 @@
+// api/sophia/route.ts
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
-import {
-  SketchAppExample,
-  TextToImageExample,
-  AITarotExample,
-  MosaicsExample,
-} from "@/lib/ptomptEngineering/worldExamples";
-import { ComponentsFormat } from "@/lib/ptomptEngineering/ComponentsFormat";
 import {
   AllNodeTypes,
   AllNodeNames,
   AllUIComponentTypes,
 } from "@/lib/ptomptEngineering/AllNodeTypes";
 import { RuntimeEngineWorking } from "@/lib/ptomptEngineering/RuntimeEngineWorking";
-
-// Define the JSON Schema for the structured output
-const responseSchema = {
-  type: "object",
-  name: "ResponseSchema",
-  properties: {
-    text: {
-      type: "string",
-      description:
-        "A short, simple, informative, and engaging explanation to the user.",
-    },
-    node_diagram: {
-      type: "object",
-      properties: {
-        nodes: {
-          type: "array",
-          description: "An array of node objects.",
-          items: {
-            type: "object",
-            properties: {
-              node_id: { type: "string" },
-              type: { type: "string" },
-              name: { type: "string" },
-              data: {
-                type: "object",
-                properties: {
-                  inputs: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        id: { type: "string" },
-                        label: { type: "string" },
-                        value: { type: "string" },
-                        color: { type: "string" },
-                      },
-                      required: ["id"],
-                      additionalProperties: false,
-                    },
-                  },
-                  outputs: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        id: { type: "string" },
-                        label: { type: "string" },
-                        value: { type: "string" },
-                        color: { type: "string" },
-                      },
-                      required: ["id"],
-                      additionalProperties: false,
-                    },
-                  },
-                  instruction: { type: "string" },
-                  memoryFields: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        id: { type: "string" },
-                        label: { type: "string" },
-                        value: { type: "string" },
-                        color: { type: "string" },
-                      },
-                      required: ["id"],
-                      additionalProperties: false,
-                    },
-                  },
-                },
-                required: ["inputs", "outputs"],
-                additionalProperties: false,
-              },
-              position: {
-                type: "object",
-                properties: {
-                  x: { type: "number" },
-                  y: { type: "number" },
-                },
-                required: ["x", "y"],
-                additionalProperties: false,
-              },
-            },
-            required: ["node_id", "type", "name", "data", "position"],
-            additionalProperties: false,
-          },
-        },
-        edges: {
-          type: "array",
-          description: "An array of edge objects.",
-          items: {
-            type: "object",
-            properties: {
-              source: { type: "string" },
-              target: { type: "string" },
-              sourceHandle: { type: "string" },
-              targetHandle: { type: "string" },
-              color: { type: "string" },
-            },
-            required: ["source", "target", "sourceHandle", "targetHandle"],
-            additionalProperties: false,
-          },
-        },
-      },
-      required: ["nodes", "edges"],
-      additionalProperties: false,
-    },
-  },
-  required: ["text", "node_diagram"],
-  additionalProperties: false,
-};
 
 // Initialize OpenAI with your API key
 const API_KEY = process.env.OPENAI_API_KEY;
@@ -134,30 +17,21 @@ const openai = new OpenAI({
 // Maximum duration for the API response
 export const maxDuration = 45;
 
-// Define TypeScript interfaces for Type Safety (optional but recommended)
 interface RequestBody {
   message: string;
   nodes: any[];
   edges: any[];
+  uiComponents: any[];
   appData: any;
   interactionData: any;
 }
 
-interface StructuredResponse {
-  text: string;
-  node_diagram: {
-    nodes: any[];
-    edges: any[];
-  };
-}
-
 export async function POST(request: Request) {
   try {
-    // Parse the incoming JSON request
     const requestBody: RequestBody = await request.json();
-    const { message, nodes, edges, appData, interactionData } = requestBody;
+    const { message, nodes, edges, uiComponents, appData, interactionData } =
+      requestBody;
 
-    // Construct the prompt for the AI model
     const prompt = `
       You are Sophia, an AI copilot integrated into a node-based editor called ImagineKit. Your role is to assist users in creating and improving their node diagrams for AI-driven apps.
       The user has provided the following message:
@@ -168,6 +42,10 @@ export async function POST(request: Request) {
       ${JSON.stringify(nodes, null, 2)}
       - Edges:
       ${JSON.stringify(edges, null, 2)}
+      - UI Components:
+      ${JSON.stringify(uiComponents, null, 2)}
+
+      Please take note of each and every detail included including their positions and connections as the goal is to build upon the existing state. So for example if there is an existing LLMNode-1 thats needs to be connected to the node we dont change the position of the LLMNode-1. We just add the new node and connect it to the LLMNode-1.
 
       The app metadata is:
       ${JSON.stringify(appData, null, 2)}
@@ -176,26 +54,30 @@ export async function POST(request: Request) {
       ${JSON.stringify(interactionData, null, 2)}
 
       Your task is to:
+      - Help the user build their desired app on ImagineKit.
       - Analyze the user's message and the current node editor state.
-      - Generate suggestions to improve or extend the node diagram.
-      - Provide the suggestions in JSON format, adhering to the following schema:
+      - Respond to the user appropriately with an explanation and if applicable, a node diagram that best fits their intention .
+      - If further information is needed, ask the user for clarification.
+      - Provide the node diagram in JSON format, adhering to the following schema:
         {
           "text": "Your explanation to the user.",
           "node_diagram": {
               "nodes": [ ... ],
-              "edges": [ ... ]
+              "edges": [ ... ],
+              "uiComponents": [ ... ]
           }
         }
       - Ensure that the node and edge IDs are unique and do not conflict with existing ones.
-      - Include a textual explanation of your suggestions.
-      - Inform the user if they are making a mistake or if there is a better way to achieve their goal.
+      - Always include a textual explanation whnever you generate a node diagram.
+      - Inform the user if you realize they are making a mistake or if there is a better way to achieve their goal.
 
       The response should be a JSON object with the following structure:
       {
         "text": "Your explanation to the user.",
         "node_diagram": {
             "nodes": [ ... ],
-            "edges": [ ... ]
+            "edges": [ ... ],
+            "uiComponents": [ ... ]
         }
       }
 
@@ -206,13 +88,10 @@ export async function POST(request: Request) {
       In the case you provide a node diagram, provide the full flow of the diagram with all the nodes and edges and keep the text VERY VERY SHORT and focus on the node diagram - if the user needs more explanation they can ask you.
       Make sure the node diagram is in a position where the user can easily see (preferably center of the canvas) and it is not cluttered.
 
-      The following is all you need to know about ImagineKit's Node, Edge, and UIComponent structure:
-      Here are the mongoose schemas for Nodes and Edges:
-      
-     The following are the node types that are available:
+      The following are the node types that are available:
         ${AllNodeTypes}
 
-     The following are the node names that are available:
+      The following are the node names that are available:
         ${AllNodeNames}
 
       The following are the uiComponents types that are available:
@@ -220,57 +99,145 @@ export async function POST(request: Request) {
 
       DO NOT GO OUTSIDE THE SCOPE OF THE NODE TYPES, NODE NAMES PROVIDED
 
+      Here are the mongoose schamas for Node, Edge and UIComponent:
+      InputOutputSchema ={
+          id: {
+              type: String,
+              required: true,
+          },
+          label: {
+              type: String,
+          },
+          value: {
+              type: String,
+          },
+      };
+
+      NodeSchema ={
+          node_id: {
+              type: String,
+              required: true,
+          },
+          type: {
+              type: String,
+              required: true,
+          },
+          name: {
+              type: String,
+              required: true,
+          },
+          data: {
+              inputs: [InputOutputSchema],
+              outputs: [InputOutputSchema],
+              instruction: { type: String },
+              memoryFields: [InputOutputSchema],
+          },
+          position: {
+              x: { type: Number, required: true },
+              y: { type: Number, required: true },
+          },
+          app_id: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: App,
+              required: true,
+          },
+      }
+
+      EdgeSchema = {
+          source: {
+              type: String,
+              required: true,
+          },
+          target: {
+              type: String,
+              required: true,
+          },
+          sourceHandle: {
+              type: String,
+              required: true,
+          },
+          targetHandle: {
+              type: String,
+              required: true,
+          },
+          app_id: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: App,
+              required: true,
+          },
+      };
+
+      UIComponentSchema = {
+          component_id: {
+              type: String,
+              required: true,
+          },
+          type: {
+              type: String,
+              required: true,
+          },
+          label: {
+              type: String,
+          },
+          position: {
+              x: { type: Number, required: true },
+              y: { type: Number, required: true },
+              width: { type: Number },
+              height: { type: Number },
+          },
+          app_id: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: App,
+              required: true,
+          },
+      };
+
+
       It is also VERY IMPORTANT you have a comprehensive understanding of how the runtime engine works in order to create a functional app and avoid errors.
       Here is a brief overview of how the runtime engine works:
       ${RuntimeEngineWorking}
       You need to understand how the nodes interact with each other and how the data flows through the edges and avoid creating any conflicts in the data flow. For example, one node output should not be connected to another node output or to itself. An input node should always be connected to an output node, and one input node cannot be connected to multiple output nodes.
 
       Try and understand what the user is trying to achieve. Ask questions if you need more information and do not work with vague assumptions. If you make any assumptions, state them clearly in your response.
-
-      Now chat with the user and provide any suggestions if necessary based on the user's message and current node editor state.
     `;
 
-    // Define the JSON Schema for Structured Outputs
-    const jsonSchema = responseSchema;
+    const encoder = new TextEncoder();
 
-    // Make the API call with Structured Outputs
-    const response = await openai.beta.chat.completions.parse({
-      model: "gpt-4o-mini-2024-07-18", // Ensure using a supported model
-      messages: [
-        {
-          role: "system",
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 16384,
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          schema: jsonSchema,
-          name: "WorldSchema",
-        },
+    // Create a ReadableStream that streams tokens from OpenAI
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+              {
+                role: "system",
+                content: prompt,
+              },
+            ],
+            temperature: 0,
+            max_tokens: 16384,
+            stream: true,
+          });
+
+          // Iterate over the async response stream
+          for await (const chunk of response) {
+            // Each chunk may include a delta token (if provided)
+            const token = chunk.choices[0].delta?.content;
+            if (token) {
+              controller.enqueue(encoder.encode(token));
+            }
+          }
+        } catch (error) {
+          console.error("Error during streaming:", error);
+          controller.error(error);
+        }
+        controller.close();
       },
     });
 
-    // Access the parsed response
-    const messageResponse = response.choices[0].message.content;
-
-    // Handle refusals
-    if (messageResponse && messageResponse.includes("refusal")) {
-      return new NextResponse(
-        JSON.stringify({ error: "Request was refused by the model." }),
-        { status: 200 }
-      );
-    }
-
-    // Parse the structured response
-    const parsedResponse: StructuredResponse = messageResponse
-      ? JSON.parse(messageResponse)
-      : { text: "", node_diagram: { nodes: [], edges: [] } };
-
-    return new NextResponse(JSON.stringify(parsedResponse), {
-      status: 200,
+    return new NextResponse(stream, {
+      headers: { "Content-Type": "text/plain" },
     });
   } catch (error: any) {
     return new NextResponse(JSON.stringify({ error: error.message }), {

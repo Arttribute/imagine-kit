@@ -208,7 +208,7 @@ const ImageTiles: React.FC<Props> = ({ src, numCols, loading }) => {
           <ImageTilesPreview />
         </div>
       )}
-      {!loading && (
+      {!loading && isValidUrl(src) && (
         <div className="w-96 h-96 relative">
           <canvas ref={canvasRef} style={{ display: "none" }} />
           <div className={`grid grid-cols-${numCols}`}>

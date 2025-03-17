@@ -146,17 +146,27 @@ export default function EditWorldMetadata({ appData }: { appData: appData }) {
     <div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <button className="flex items-center justify-center border border-indigo-200 shadow-lg bg-white shadow-purple-200 rounded-full p-1">
-            <Link href={`/worlds`}>
+          <button className="flex items-center justify-center border border-indigo-500 shadow-md bg-white shadow-sky-200 rounded-full p-1 w-full">
+            {/* <Link href={`/worlds`} className="mr-auto">
               <EarthIcon className="w-6 h-6 text-indigo-500 m-1" />
-            </Link>
-            <div className="p-1  truncate w-36 ">
+            </Link> */}
+            <Image
+              src={
+                worldImageUrl ||
+                "https://res.cloudinary.com/arttribute/image/upload/v1723823036/m25z496he3yykfk3elsz.jpg"
+              }
+              width={40}
+              height={40}
+              alt={"app"}
+              className="rounded-full border aspect-[1/1] w-8 h-8 object-cover mr-auto"
+            />
+            <div className="p-1  truncate w-44">
               <p className="text-sm text-gray-800 font-semibold text-ellipsis overflow-hidden ">
                 {name}
               </p>
             </div>
-            <div className="py-2 px-4 bg-indigo-500 rounded-full text-xs text-white ">
-              {isPublished ? "Published" : "Publish World"}
+            <div className="py-2 px-4 bg-indigo-500 rounded-full text-xs text-white ml-auto">
+              {isPublished ? "Published" : "Publish"}
             </div>
           </button>
         </DialogTrigger>
