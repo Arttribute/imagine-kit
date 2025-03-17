@@ -294,7 +294,7 @@ function ChatBox({
                                 onClick={() => setOpenDialog(index)}
                                 className="rounded-lg border border-indigo-300 text-indigo-700 hover:text-indigo-800"
                               >
-                                View Node Diagram
+                                App Logic
                               </Button>
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-2xl">

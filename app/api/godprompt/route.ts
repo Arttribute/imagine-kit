@@ -83,6 +83,7 @@ const AppSchema = z
   .object({
     name: z.string(),
     description: z.string(),
+    explaintext: z.string(),
     nodes: z.array(NodeSchema),
     edges: z.array(EdgeSchema),
     uiComponents: z.array(UIComponentSchema),
@@ -124,6 +125,7 @@ export async function POST(request: Request) {
     ${MosaicsExample}
 
     Be sure to follow the runtime engine rules: ${RuntimeEngineWorking}
+    Also provide a very brief explanation of what you did eg "Here is a simple app that...It has...which works by...".
     `;
 
     const response = await openai.beta.chat.completions.parse({

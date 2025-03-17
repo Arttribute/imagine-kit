@@ -72,7 +72,7 @@ export default function CreatWorld({}: {}) {
           app_id: appId,
           user_message: createPrompt,
           system_message: {
-            text: genData.description,
+            text: genData.explaintext,
             node_diagram: {
               nodes: interactionNodes,
               edges: genData.edges,
